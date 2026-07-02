@@ -1,0 +1,65 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "A fashion product in the store",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Product name" },
+        "price": { "type": "number", "description": "Product price" },
+        "category": { "type": "string", "description": "Main category (Women, Men, Kids)" },
+        "subCategory": { "type": "string", "description": "Subcategory (Topwear, Bottomwear, etc.)" },
+        "sizes": { "type": "array", "items": { "type": "string" }, "description": "Available sizes" },
+        "image": { "type": "string", "description": "Product image URL" },
+        "description": { "type": "string", "description": "Product description" },
+        "featured": { "type": "boolean", "description": "Whether the product is featured" }
+      },
+      "required": ["name", "price", "category", "subCategory", "image"]
+    },
+    "User": {
+      "title": "User",
+      "description": "A registered user",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "name": { "type": "string", "description": "User's full name" },
+        "email": { "type": "string", "description": "User's email address" },
+        "role": { "type": "string", "enum": ["client", "admin"], "description": "User's role" }
+      },
+      "required": ["uid", "name", "email", "role"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "A customer order",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID of the user who placed the order" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productId": { "type": "string" },
+              "name": { "type": "string" },
+              "price": { "type": "number" },
+              "quantity": { "type": "integer" },
+              "size": { "type": "string" },
+              "image": { "type": "string" }
+            }
+          }
+        },
+        "total": { "type": "number", "description": "Total order amount" },
+        "address": { "type": "string", "description": "Shipping address" },
+        "phone": { "type": "string", "description": "Contact phone number" },
+        "status": { "type": "string", "enum": ["pending", "completed", "cancelled"], "description": "Order status" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Order creation timestamp" }
+      },
+      "required": ["userId", "items", "total", "address", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "products": { "schema": "Product", "description": "Collection of products" },
+    "users": { "schema": "User", "description": "Collection of user profiles" },
+    "orders": { "schema": "Order", "description": "Collection of customer orders" }
+  }
+}

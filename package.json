@@ -1,0 +1,15 @@
+{
+  "name": "sakshi-clothing-workspace",
+  "private": true,
+  "workspaces": [
+    "frontend/customer",
+    "frontend/admin",
+    "backend"
+  ],
+  "scripts": {
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:customer": "npm run dev --workspace=frontend/customer",
+    "dev:admin": "npm run dev --workspace=frontend/admin",
+    "dev": "npm run dev:backend & npm run dev:customer & npm run dev:admin"
+  }
+}
