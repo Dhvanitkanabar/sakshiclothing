@@ -10,6 +10,8 @@ import CategoryForm from './pages/categories/CategoryForm';
 import BrandList from './pages/brands/BrandList';
 import BrandForm from './pages/brands/BrandForm';
 import HomepageManager from './pages/cms/HomepageManager';
+import CartViewer from './pages/customers/CartViewer';
+import WishlistViewer from './pages/customers/WishlistViewer';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -34,6 +36,8 @@ function App() {
             <Route path="/brands/add" element={<BrandForm />} />
             <Route path="/brands/edit/:id" element={<BrandForm />} />
             <Route path="/cms" element={<HomepageManager />} />
+            <Route path="/carts" element={<CartViewer />} />
+            <Route path="/wishlists" element={<WishlistViewer />} />
           </Route>
         </Route>
       </Routes>

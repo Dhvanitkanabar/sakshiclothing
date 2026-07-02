@@ -10,6 +10,7 @@ export const mapBackendProductToFrontend = (backendProduct: any): Product => {
     category: backendProduct.category?.name || 'Women', // Assuming populated
     subCategory: backendProduct.tags?.[0] || '', // Mapping tags to subcategory for UI compatibility
     sizes: backendProduct.variants?.map((v: any) => v.size).filter(Boolean) || ['S', 'M', 'L'], // Fallback sizes
+    variants: backendProduct.variants || [],
     image: backendProduct.thumbnail?.url || backendProduct.images?.[0]?.url || 'https://via.placeholder.com/500',
     description: backendProduct.description || backendProduct.shortDescription || '',
     featured: backendProduct.isFeatured || false,

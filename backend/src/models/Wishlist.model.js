@@ -5,8 +5,11 @@ const wishlistSchema = new Schema(
     user: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
-      unique: true // One wishlist per user
+      // Optional for guest wishlists
+    },
+    guestId: {
+      type: String,
+      // For unauthenticated users
     },
     products: [
       {

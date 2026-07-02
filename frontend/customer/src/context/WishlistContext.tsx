@@ -11,32 +11,83 @@ interface WishlistContextType {
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
 
 export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [wishlist, setWishlist] = useState<Product[]>(() => {
-    const saved = localStorage.getItem('wishlist');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [wishlist, setWishlist] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchWishlist = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/wishlist`, {
+        credentials: 'true'
+      });
+      const data = await res.json();
+      if (data.success && data.data && data.data.products) {
+        const frontendProducts = data.data.products.map((p: any) => ({
+          id: p._id || p.id,
+          name: p.name || 'Product',
+          price: p.pricing?.basePrice || 0,
+          category: p.category?.name || 'Women',
+          subCategory: '',
+          sizes: p.variants?.map((v:any) => v.size) || ['S', 'M', 'L'],
+          variants: p.variants || [],
+          image: p.thumbnail?.url || p.images?.[0]?.url || 'https://via.placeholder.com/500',
+          description: p.description || ''
+        }));
+        setWishlist(frontendProducts);
+      } else {
+        setWishlist([]);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    localStorage.setItem('wishlist', JSON.stringify(wishlist));
-  }, [wishlist]);
+    fetchWishlist();
+  }, []);
 
-  const toggleWishlist = (product: Product) => {
-    setWishlist((prev) => {
-      const exists = prev.find((p) => p.id === product.id);
+  const toggleWishlist = async (product: Product) => {
+    const exists = wishlist.find((p) => p.id === product.id);
+
+    try {
       if (exists) {
-        toast.info(`Removed ${product.name} from wishlist`);
-        return prev.filter((p) => p.id !== product.id);
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/wishlist/remove`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'true',
+          body: JSON.stringify({ productId: product.id })
+        });
+        const data = await res.json();
+        if (data.success) {
+          toast.info(`Removed ${product.name} from wishlist`);
+          fetchWishlist();
+        }
+      } else {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/wishlist/add`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'true',
+          body: JSON.stringify({ productId: product.id })
+        });
+        const data = await res.json();
+        if (data.success) {
+          toast.success(`Added ${product.name} to wishlist`);
+          fetchWishlist();
+        }
       }
-      toast.success(`Added ${product.name} to wishlist`);
-      return [...prev, product];
-    });
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to update wishlist');
+    }
   };
 
   const isInWishlist = (productId: string) => wishlist.some((p) => p.id === productId);
 
   return (
     <WishlistContext.Provider value={{ wishlist, toggleWishlist, isInWishlist }}>
-      {children}
+      {!loading && children}
     </WishlistContext.Provider>
   );
 };

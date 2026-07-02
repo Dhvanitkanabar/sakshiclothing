@@ -30,8 +30,11 @@ const cartSchema = new Schema(
     user: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
-      unique: true // One active cart per user
+      // Optional for guest carts
+    },
+    guestId: {
+      type: String,
+      // For unauthenticated users
     },
     items: [cartItemSchema],
     totalAmount: {

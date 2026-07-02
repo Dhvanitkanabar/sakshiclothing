@@ -5,6 +5,7 @@ export interface Product {
   category: 'Women' | 'Men' | 'Kids';
   subCategory: string;
   sizes: string[];
+  variants?: { _id: string; size: string; color: string; stock: number }[];
   image: string;
   description: string;
   featured?: boolean;
