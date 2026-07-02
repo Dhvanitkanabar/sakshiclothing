@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import ImageUpload from '../../components/ImageUpload';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
@@ -19,8 +20,6 @@ export default function ProductForm() {
     images: [] as { url: string; publicId: string }[]
   });
 
-  const [imageUrl, setImageUrl] = useState('');
-
   useEffect(() => {
     if (isEdit) {
       // Fetch existing
@@ -39,19 +38,6 @@ export default function ProductForm() {
       setFormData(prev => ({ ...prev, [parent]: { ...(prev as any)[parent], [child]: value } }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const addImage = () => {
-    if (imageUrl) {
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, { url: imageUrl, publicId: `img_${Date.now()}` }]
-      }));
-      if (!formData.thumbnail && prev.images.length === 0) {
-        setFormData(p => ({ ...p, thumbnail: { url: imageUrl, publicId: `img_${Date.now()}` } }));
-      }
-      setImageUrl('');
     }
   };
 
@@ -124,15 +110,43 @@ export default function ProductForm() {
 
         <div className="bg-white p-6 rounded shadow space-y-4">
           <h2 className="text-lg font-semibold border-b pb-2">Images</h2>
-          <div className="flex gap-2">
-            <input value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="Paste image URL here" className="flex-1 border p-2 rounded" />
-            <button type="button" onClick={addImage} className="bg-gray-200 px-4 py-2 rounded">Add</button>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            {formData.images.map((img, i) => (
-              <img key={i} src={img.url} alt="" className="w-24 h-24 object-cover border rounded" />
-            ))}
-          </div>
+          <ImageUpload
+            folder="products"
+            maxFiles={8}
+            existingImages={formData.images.map(img => ({
+              publicId: img.publicId,
+              secureUrl: img.url,
+              thumbnailUrl: img.url // fallback for older records without thumbnail
+            }))}
+            primaryImageId={formData.images[0]?.publicId}
+            onUploadSuccess={(urls) => {
+              setFormData(prev => ({
+                ...prev,
+                images: [
+                  ...prev.images,
+                  ...urls.map(u => ({ url: u.secureUrl, publicId: u.publicId }))
+                ]
+              }));
+            }}
+            onImageDelete={(publicId) => {
+              setFormData(prev => ({
+                ...prev,
+                images: prev.images.filter(img => img.publicId !== publicId)
+              }));
+              // Optionally trigger backend delete here
+            }}
+            onSetPrimary={(publicId) => {
+              setFormData(prev => {
+                const newImages = [...prev.images];
+                const primaryIndex = newImages.findIndex(img => img.publicId === publicId);
+                if (primaryIndex > -1) {
+                  const [primaryImg] = newImages.splice(primaryIndex, 1);
+                  newImages.unshift(primaryImg);
+                }
+                return { ...prev, images: newImages };
+              });
+            }}
+          />
         </div>
 
         <div className="flex justify-end gap-4">

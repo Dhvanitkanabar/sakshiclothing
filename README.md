@@ -73,3 +73,29 @@ npm run dev
 - Phase 3: Authentication & Project Restructure
 - Phase 4: Product Management System
 - Phase 5: Category, Brand, CMS and Restructure
+- Phase 6: Digital Asset Management with Cloudinary
+
+## Cloudinary Digital Asset Management (DAM)
+The backend features a robust DAM system integrated with Cloudinary for global image optimization. 
+
+### Configuration
+Update the `.env` file with your Cloudinary credentials:
+```env
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+```
+
+### Folder Structure
+Images are automatically routed to their corresponding folders under `sakshi-clothing/`:
+- `/products`
+- `/categories`
+- `/brands`
+- `/banners`
+- `/misc`
+
+### Upload Flow
+1. **Admin Panel**: Drag & Drop images into the `ImageUpload` component.
+2. **Backend**: Routes through `POST /api/v1/uploads/image`. Validates mime types (`jpg`, `png`, `webp`) and sizes (Max 10MB).
+3. **Cloudinary**: Automatically converts images to `webp` (or optimal formats) and generates thumbnails.
+4. **Database**: Saves the `secureUrl`, `publicId`, dimensions, and the associated admin's `uploadedBy` reference in the `Upload` collection.

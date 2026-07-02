@@ -96,7 +96,7 @@ app.use('/api/v1/reviews', reviewRouter);
 app.use('/api/v1/cart', cartRouter);
 app.use('/api/v1/wishlist', wishlistRouter);
 app.use('/api/v1/dashboard', dashboardRouter);
-app.use('/api/v1/upload', uploadRouter);
+app.use('/api/v1/uploads', uploadRouter);
 
 // =========================================================================
 // Fallback Error & Not Found Middlewares

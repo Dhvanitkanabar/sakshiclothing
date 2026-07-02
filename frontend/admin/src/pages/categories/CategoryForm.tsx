@@ -53,7 +53,7 @@ export default function CategoryForm() {
     const url = isEdit ? `${API_URL}/categories/${id}` : `${API_URL}/categories`;
     const method = isEdit ? 'PUT' : 'POST';
     
-    const payload = { ...formData };
+    const payload: any = { ...formData };
     if (!payload.parentCategory) payload.parentCategory = null;
 
     try {
