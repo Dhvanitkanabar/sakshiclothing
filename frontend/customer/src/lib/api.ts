@@ -74,3 +74,139 @@ export const fetchNewArrivals = async () => {
     return [];
   }
 };
+
+export const fetchAddresses = async (): Promise<any[]> => {
+  try {
+    const res = await fetch(`${API_URL}/addresses`, { credentials: 'include' });
+    const data = await res.json();
+    return data.success ? data.data : [];
+  } catch (e) {
+    console.error(e);
+    return [];
+  }
+};
+
+export const addAddress = async (addressData: any) => {
+  try {
+    const res = await fetch(`${API_URL}/addresses`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(addressData)
+    });
+    return await res.json();
+  } catch (e) {
+    console.error(e);
+    return { success: false };
+  }
+};
+
+export const updateAddress = async (id: string, addressData: any) => {
+  try {
+    const res = await fetch(`${API_URL}/addresses/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(addressData)
+    });
+    return await res.json();
+  } catch (e) {
+    console.error(e);
+    return { success: false };
+  }
+};
+
+export const deleteAddress = async (id: string) => {
+  try {
+    const res = await fetch(`${API_URL}/addresses/${id}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    return await res.json();
+  } catch (e) {
+    console.error(e);
+    return { success: false };
+  }
+};
+
+export const setDefaultAddress = async (id: string) => {
+  try {
+    const res = await fetch(`${API_URL}/addresses/${id}/default`, {
+      method: 'PATCH',
+      credentials: 'include',
+    });
+    return await res.json();
+  } catch (e) {
+    console.error(e);
+    return { success: false };
+  }
+};
+
+export const placeOrder = async (shippingAddressId: string, isFromCart = true) => {
+  try {
+    const res = await fetch(`${API_URL}/orders/checkout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ shippingAddressId, isFromCart })
+    });
+    return await res.json();
+  } catch (e) {
+    console.error(e);
+    return { success: false };
+  }
+};
+
+export const buyNowOrder = async (productId: string, variantId: string, quantity: number, shippingAddressId: string) => {
+  try {
+    const res = await fetch(`${API_URL}/orders/buy-now`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ productId, variantId, quantity, shippingAddressId })
+    });
+    return await res.json();
+  } catch (e) {
+    console.error(e);
+    return { success: false };
+  }
+};
+
+export const fetchOrders = async (): Promise<any[]> => {
+  try {
+    const res = await fetch(`${API_URL}/orders`, { credentials: 'include' });
+    const data = await res.json();
+    return data.success ? data.data : [];
+  } catch (e) {
+    console.error(e);
+    return [];
+  }
+};
+
+export const fetchOrderById = async (id: string) => {
+  try {
+    const res = await fetch(`${API_URL}/orders/${id}`, { credentials: 'include' });
+    const data = await res.json();
+    return data.success ? data.data : null;
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+};
+
+export const cancelOrder = async (id: string) => {
+  try {
+    const res = await fetch(`${API_URL}/orders/${id}/cancel`, {
+      method: 'PATCH',
+      credentials: 'include',
+    });
+    return await res.json();
+  } catch (e) {
+    console.error(e);
+    return { success: false };
+  }
+};
+
+export const getInvoiceUrl = (orderId: string) =>
+  `${API_URL}/orders/${orderId}/invoice`;
+

@@ -1,38 +1,137 @@
-import React, { useEffect, useState } from 'react';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-import { db } from '../firebase';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Order } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { Package, User as UserIcon, LogOut, ChevronRight, ShoppingBag, MapPin, CreditCard, Settings } from 'lucide-react';
+import {
+  Package, User as UserIcon, LogOut, ChevronRight, ShoppingBag,
+  MapPin, CreditCard, Settings, FileText, XCircle, RefreshCcw,
+  Clock, CheckCircle, Truck
+} from 'lucide-react';
 import { Link, Navigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import {
+  fetchOrders, cancelOrder, getInvoiceUrl,
+  fetchAddresses, addAddress, deleteAddress, setDefaultAddress
+} from '../lib/api';
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+type OrderStatus =
+  | 'pending' | 'processing' | 'packed' | 'shipped'
+  | 'outForDelivery' | 'delivered' | 'cancelled' | 'returned' | 'refunded';
+
+interface OrderItem {
+  id: string; name: string; selectedSize: string;
+  quantity: number; price: number; image: string;
+}
+
+interface Order {
+  _id: string; id: string; orderNumber: string;
+  items: OrderItem[]; total: number; address: string;
+  status: OrderStatus; createdAt: string; timeline: any[];
+}
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+const STATUS_BADGE: Record<string, string> = {
+  pending: 'bg-amber-50 text-amber-600',
+  processing: 'bg-blue-50 text-blue-600',
+  packed: 'bg-purple-50 text-purple-600',
+  shipped: 'bg-indigo-50 text-indigo-600',
+  outForDelivery: 'bg-orange-50 text-orange-700',
+  delivered: 'bg-green-50 text-green-600',
+  cancelled: 'bg-red-50 text-red-600',
+  returned: 'bg-gray-100 text-gray-600',
+  refunded: 'bg-gray-100 text-gray-500',
+};
+
+const STATUS_ICON: Record<string, React.ReactNode> = {
+  pending: <Clock size={12} />,
+  delivered: <CheckCircle size={12} />,
+  shipped: <Truck size={12} />,
+};
+
+// ─── Profile Component ────────────────────────────────────────────────────────
 const Profile = () => {
   const { user, logout, loading: authLoading } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
+  const [addresses, setAddresses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('orders');
+  const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      if (!user) return;
-      try {
-        // Fetch from localStorage
-        const allOrders = JSON.parse(localStorage.getItem('sakshi_orders') || '[]');
-        const userOrders = allOrders.filter((o: any) => o.userId === user.uid);
-        
-        // Sort by date desc
-        userOrders.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        
-        setOrders(userOrders);
-      } catch (error) {
-        console.error('Error fetching orders:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchOrders();
+  // Load orders
+  const loadOrders = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const data = await fetchOrders();
+      const mapped = data.map((o: any): Order => ({
+        _id: o._id,
+        id: o.orderNumber,
+        orderNumber: o.orderNumber,
+        items: (o.products || []).map((p: any) => ({
+          id: p.product?._id || p.product || '',
+          name: p.name,
+          selectedSize: p.size,
+          quantity: p.quantity,
+          price: p.price,
+          image: p.product?.thumbnail?.url || 'https://via.placeholder.com/500'
+        })),
+        total: o.totals?.grandTotal || 0,
+        address: o.shippingAddress
+          ? `${o.shippingAddress.houseNumber}, ${o.shippingAddress.street}, ${o.shippingAddress.city}`
+          : '',
+        status: o.orderStatus,
+        createdAt: o.createdAt,
+        timeline: o.timeline || []
+      }));
+      setOrders(mapped);
+    } catch (err) {
+      console.error('Error fetching orders:', err);
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
+
+  // Load addresses
+  const loadAddresses = useCallback(async () => {
+    if (!user) return;
+    const data = await fetchAddresses();
+    setAddresses(data);
+  }, [user]);
+
+  useEffect(() => { loadOrders(); }, [loadOrders]);
+  useEffect(() => { if (activeTab === 'addresses') loadAddresses(); }, [activeTab, loadAddresses]);
+
+  const handleCancelOrder = async (orderId: string) => {
+    if (!confirm('Are you sure you want to cancel this order?')) return;
+    const res = await cancelOrder(orderId);
+    if (res.success) {
+      toast.success('Order cancelled successfully');
+      loadOrders();
+    } else {
+      toast.error(res.message || 'Failed to cancel order');
+    }
+  };
+
+  const handleDeleteAddress = async (id: string) => {
+    if (!confirm('Delete this address?')) return;
+    const res = await deleteAddress(id);
+    if (res.success) {
+      toast.success('Address removed');
+      loadAddresses();
+    } else {
+      toast.error(res.message || 'Failed to delete address');
+    }
+  };
+
+  const handleSetDefault = async (id: string) => {
+    const res = await setDefaultAddress(id);
+    if (res.success) {
+      toast.success('Default address updated');
+      loadAddresses();
+    } else {
+      toast.error(res.message || 'Failed to update default');
+    }
+  };
 
   if (authLoading) return null;
   if (!user) return <Navigate to="/login" />;
@@ -81,7 +180,7 @@ const Profile = () => {
                 <ChevronRight size={14} className={activeTab === item.id ? 'opacity-100' : 'opacity-0'} />
               </button>
             ))}
-            
+
             {user.role === 'admin' && (
               <Link
                 to="/admin"
@@ -112,13 +211,14 @@ const Profile = () => {
           </header>
 
           <AnimatePresence mode="wait">
+            {/* ── Orders Tab ── */}
             {activeTab === 'orders' && (
               <motion.div
                 key="orders"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="space-y-12"
+                className="space-y-8"
               >
                 {loading ? (
                   <div className="space-y-8">
@@ -127,61 +227,121 @@ const Profile = () => {
                     ))}
                   </div>
                 ) : orders.length > 0 ? (
-                  <div className="space-y-8">
-                    {orders.map((order) => (
-                      <motion.div
-                        key={order.id}
-                        className="group bg-white border border-gray-100 rounded-[2rem] overflow-hidden hover:shadow-2xl hover:shadow-black/5 transition-all duration-700"
-                      >
-                        <div className="bg-gray-50/50 p-8 flex flex-wrap justify-between items-center gap-8 border-b border-gray-100">
-                          <div className="space-y-2">
-                            <p className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">Reference</p>
-                            <p className="text-xs font-mono font-bold text-luxury-black">#{order.id.slice(-8).toUpperCase()}</p>
-                          </div>
-                          <div className="space-y-2">
-                            <p className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">Date</p>
-                            <p className="text-xs font-bold text-luxury-black">
-                              {new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-                            </p>
-                          </div>
-                          <div className="space-y-2">
-                            <p className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">Amount</p>
-                            <p className="text-xs font-bold text-rose-600">₹{order.total.toLocaleString()}</p>
-                          </div>
-                          <div className="space-y-2">
-                            <p className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">Status</p>
-                            <span className={`px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest ${
-                              order.status === 'completed' ? 'bg-green-50 text-green-600' :
-                              order.status === 'pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'
-                            }`}>
-                              {order.status}
-                            </span>
-                          </div>
+                  orders.map((order) => (
+                    <motion.div
+                      key={order._id}
+                      className="group bg-white border border-gray-100 rounded-[2rem] overflow-hidden hover:shadow-2xl hover:shadow-black/5 transition-all duration-700"
+                    >
+                      {/* Order Header */}
+                      <div className="bg-gray-50/50 p-8 flex flex-wrap justify-between items-center gap-8 border-b border-gray-100">
+                        <div className="space-y-2">
+                          <p className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">Reference</p>
+                          <p className="text-xs font-mono font-bold text-luxury-black">#{order.orderNumber}</p>
                         </div>
-                        <div className="p-8">
-                          <div className="flex flex-wrap gap-6">
-                            {order.items.map((item, idx) => (
-                              <div key={idx} className="w-20 h-28 bg-gray-50 rounded-xl overflow-hidden group/item relative">
-                                <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-700 group-hover/item:scale-110" referrerPolicy="no-referrer" />
-                                <div className="absolute inset-0 bg-luxury-black/60 opacity-0 group-hover/item:opacity-100 flex items-center justify-center transition-all duration-500 backdrop-blur-[2px]">
-                                  <span className="text-[10px] text-white font-bold tracking-widest">{item.selectedSize}</span>
-                                </div>
+                        <div className="space-y-2">
+                          <p className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">Date</p>
+                          <p className="text-xs font-bold text-luxury-black">
+                            {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">Amount</p>
+                          <p className="text-xs font-bold text-rose-600">₹{order.total.toLocaleString('en-IN')}</p>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">Status</p>
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest ${STATUS_BADGE[order.status] || 'bg-gray-50 text-gray-600'}`}>
+                            {STATUS_ICON[order.status]}
+                            {order.status}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Order Items */}
+                      <div className="p-8">
+                        <div className="flex flex-wrap gap-4">
+                          {order.items.map((item, idx) => (
+                            <div key={idx} className="w-16 h-24 bg-gray-50 rounded-xl overflow-hidden group/item relative flex-shrink-0">
+                              <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-700 group-hover/item:scale-110" referrerPolicy="no-referrer" />
+                              <div className="absolute inset-0 bg-luxury-black/60 opacity-0 group-hover/item:opacity-100 flex items-center justify-center transition-all duration-500 backdrop-blur-[2px]">
+                                <span className="text-[9px] text-white font-bold">{item.selectedSize}</span>
                               </div>
-                            ))}
-                          </div>
-                          <div className="mt-8 pt-8 border-t border-gray-100 flex justify-between items-end">
-                            <div className="space-y-2">
-                              <p className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">Delivery Address</p>
-                              <p className="text-xs text-gray-500 font-light max-w-md leading-relaxed">{order.address}</p>
                             </div>
-                            <button className="text-[10px] font-bold uppercase tracking-[0.2em] text-luxury-black hover:text-rose-600 transition-colors flex items-center gap-2">
-                              Track Package <ChevronRight size={12} />
+                          ))}
+                        </div>
+
+                        {/* Tracking Timeline (collapsible) */}
+                        {order.timeline?.length > 0 && (
+                          <div className="mt-6">
+                            <button
+                              onClick={() => setExpandedOrder(expandedOrder === order._id ? null : order._id)}
+                              className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 hover:text-luxury-black transition-colors flex items-center gap-2"
+                            >
+                              <ChevronRight
+                                size={12}
+                                className={`transition-transform ${expandedOrder === order._id ? 'rotate-90' : ''}`}
+                              />
+                              Tracking Timeline
                             </button>
+                            <AnimatePresence>
+                              {expandedOrder === order._id && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: 'auto', opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  className="overflow-hidden mt-4"
+                                >
+                                  <div className="pl-4 border-l-2 border-gray-100 space-y-3">
+                                    {[...order.timeline].reverse().map((event, i) => (
+                                      <div key={i} className="text-xs">
+                                        <p className="font-bold text-luxury-black capitalize">{event.status}</p>
+                                        {event.note && <p className="text-gray-400">{event.note}</p>}
+                                        <p className="text-gray-300 text-[10px] mt-0.5">
+                                          {new Date(event.date).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                        </p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        )}
+
+                        {/* Actions */}
+                        <div className="mt-8 pt-6 border-t border-gray-100 flex flex-wrap justify-between items-center gap-4">
+                          <p className="text-xs text-gray-400 max-w-sm leading-relaxed">{order.address}</p>
+                          <div className="flex flex-wrap gap-3">
+                            {/* Invoice Download */}
+                            <a
+                              href={getInvoiceUrl(order._id)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-luxury-black hover:text-rose-600 transition-colors border border-gray-200 px-4 py-2 rounded-full"
+                            >
+                              <FileText size={12} /> Invoice
+                            </a>
+                            {/* Reorder */}
+                            <Link
+                              to="/shop"
+                              className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-luxury-black hover:text-rose-600 transition-colors border border-gray-200 px-4 py-2 rounded-full"
+                            >
+                              <RefreshCcw size={12} /> Reorder
+                            </Link>
+                            {/* Cancel (only for pending/processing) */}
+                            {(order.status === 'pending' || order.status === 'processing') && (
+                              <button
+                                onClick={() => handleCancelOrder(order._id)}
+                                className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-red-500 hover:text-red-700 transition-colors border border-red-100 px-4 py-2 rounded-full"
+                              >
+                                <XCircle size={12} /> Cancel
+                              </button>
+                            )}
                           </div>
                         </div>
-                      </motion.div>
-                    ))}
-                  </div>
+                      </div>
+                    </motion.div>
+                  ))
                 ) : (
                   <div className="text-center py-32 bg-gray-50 rounded-[3rem] border border-dashed border-gray-200 space-y-8">
                     <div className="inline-flex items-center justify-center w-24 h-24 bg-white rounded-full text-gray-100 shadow-sm">
@@ -199,7 +359,65 @@ const Profile = () => {
               </motion.div>
             )}
 
-            {activeTab !== 'orders' && (
+            {/* ── Addresses Tab ── */}
+            {activeTab === 'addresses' && (
+              <motion.div
+                key="addresses"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-8"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {addresses.map(addr => (
+                    <div key={addr._id} className={`bg-white rounded-[2rem] p-8 border-2 transition-all ${addr.isDefault ? 'border-luxury-black' : 'border-gray-100 hover:border-gray-200'}`}>
+                      <div className="flex justify-between items-start mb-4">
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400 bg-gray-50 px-3 py-1 rounded-full">{addr.addressType || 'Home'}</span>
+                        {addr.isDefault && (
+                          <span className="text-[9px] font-bold uppercase tracking-widest text-green-600 bg-green-50 px-3 py-1 rounded-full">Default</span>
+                        )}
+                      </div>
+                      <p className="font-bold text-luxury-black">{addr.fullName}</p>
+                      <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+                        {addr.houseNumber}, {addr.street}<br />
+                        {addr.area && `${addr.area}, `}{addr.city}, {addr.state} — {addr.pincode}<br />
+                        {addr.country}
+                      </p>
+                      <p className="text-sm text-gray-400 mt-2">📞 {addr.phone}</p>
+                      <div className="flex gap-3 mt-6 pt-4 border-t border-gray-100">
+                        {!addr.isDefault && (
+                          <button
+                            onClick={() => handleSetDefault(addr._id)}
+                            className="text-[10px] font-bold uppercase tracking-widest text-luxury-black hover:text-rose-600 transition-colors"
+                          >
+                            Set Default
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDeleteAddress(addr._id)}
+                          className="text-[10px] font-bold uppercase tracking-widest text-red-400 hover:text-red-600 transition-colors ml-auto"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {addresses.length === 0 && (
+                    <p className="text-gray-400 font-serif italic col-span-2 text-center py-16">No saved addresses.</p>
+                  )}
+                </div>
+                <Link
+                  to="/checkout"
+                  className="inline-block px-8 py-4 border border-luxury-black text-luxury-black text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-luxury-black hover:text-white transition-all duration-500 rounded-full"
+                >
+                  + Add Address via Checkout
+                </Link>
+              </motion.div>
+            )}
+
+            {/* ── Other Tabs (placeholders) ── */}
+            {activeTab !== 'orders' && activeTab !== 'addresses' && (
               <motion.div
                 key="other"
                 initial={{ opacity: 0, y: 20 }}

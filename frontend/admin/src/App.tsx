@@ -14,6 +14,9 @@ import CartViewer from './pages/customers/CartViewer';
 import WishlistViewer from './pages/customers/WishlistViewer';
 import ProtectedRoute from './components/ProtectedRoute';
 
+import OrderList from './pages/orders/OrderList';
+import OrderDetails from './pages/orders/OrderDetails';
+
 function App() {
   return (
     <BrowserRouter>
@@ -26,6 +29,8 @@ function App() {
           <Route element={<DashboardLayout />}>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/orders" element={<OrderList />} />
+            <Route path="/orders/:id" element={<OrderDetails />} />
             <Route path="/products" element={<ProductList />} />
             <Route path="/products/add" element={<ProductForm />} />
             <Route path="/products/edit/:id" element={<ProductForm />} />

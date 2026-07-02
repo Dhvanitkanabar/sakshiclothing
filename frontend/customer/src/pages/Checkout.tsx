@@ -8,6 +8,8 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShieldCheck, CreditCard, ArrowLeft, ChevronRight, Lock } from 'lucide-react';
 
+import { fetchAddresses, addAddress, placeOrder } from '../lib/api';
+
 const Checkout = () => {
   const { cart, totalPrice, clearCart } = useCart();
   const { user } = useAuth();
@@ -15,11 +17,18 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
 
+  const [addresses, setAddresses] = useState<any[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('');
+  const [isAddingNew, setIsAddingNew] = useState(false);
+
   const [formData, setFormData] = useState({
+    fullName: user?.name || '',
     address: '',
     city: '',
+    state: '',
     zip: '',
     phone: '',
+    country: 'India'
   });
 
   const finalTotal = totalPrice > 2000 ? totalPrice : totalPrice + 100;
@@ -29,6 +38,21 @@ const Checkout = () => {
       navigate('/cart');
     }
   }, [cart.length, navigate]);
+
+  React.useEffect(() => {
+    if (user) {
+      fetchAddresses().then(data => {
+         setAddresses(data);
+         if (data.length > 0) {
+           const def = data.find((a: any) => a.isDefault) || data[0];
+           setSelectedAddressId(def._id || def.id);
+           setIsAddingNew(false);
+         } else {
+           setIsAddingNew(true);
+         }
+      });
+    }
+  }, [user]);
 
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,39 +64,49 @@ const Checkout = () => {
 
     setLoading(true);
 
-    // Mock Razorpay Integration
-    toast.loading('Securing your transaction...');
-
-    setTimeout(async () => {
-      try {
-        const orderId = Math.random().toString(36).substr(2, 9).toUpperCase();
-        const orderData = {
-          id: orderId,
-          userId: user.uid,
-          items: cart,
-          total: finalTotal,
-          address: `${formData.address}, ${formData.city} - ${formData.zip}`,
+    try {
+      let finalAddressId = selectedAddressId;
+      if (isAddingNew || addresses.length === 0) {
+        // Create new address
+        const res = await addAddress({
+          fullName: formData.fullName || user.name || 'User',
           phone: formData.phone,
-          status: 'pending',
-          createdAt: new Date().toISOString(),
-        };
-
-        // Save to localStorage for orders
-        const orders = JSON.parse(localStorage.getItem('sakshi_orders') || '[]');
-        orders.push(orderData);
-        localStorage.setItem('sakshi_orders', JSON.stringify(orders));
-
-        toast.dismiss();
-        toast.success('Order confirmed. Welcome to the Maison.');
-        clearCart();
-        navigate('/order-success', { state: { orderId: orderId, total: finalTotal } });
-      } catch (error) {
-        console.error('Error placing order:', error);
-        toast.error('Transaction could not be completed.');
-      } finally {
-        setLoading(false);
+          houseNumber: formData.address.split(',')[0] || '1',
+          street: formData.address,
+          area: formData.city,
+          city: formData.city,
+          state: formData.state || formData.city,
+          country: formData.country,
+          pincode: formData.zip,
+          isDefault: true
+        });
+        if (res.success) {
+          finalAddressId = res.data._id || res.data.id;
+        } else {
+          toast.error('Failed to save address');
+          setLoading(false);
+          return;
+        }
       }
-    }, 2500);
+
+      toast.loading('Securing your transaction...');
+      const orderRes = await placeOrder(finalAddressId, true);
+      
+      toast.dismiss();
+      if (orderRes.success) {
+        toast.success('Order confirmed. Welcome to the Maison.');
+        clearCart(); // Local clear
+        navigate('/order-success', { state: { orderId: orderRes.data.orderNumber, total: finalTotal } });
+      } else {
+        toast.error(orderRes.message || 'Transaction could not be completed.');
+      }
+    } catch (error) {
+      toast.dismiss();
+      console.error('Error placing order:', error);
+      toast.error('Transaction could not be completed.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (cart.length === 0) {
@@ -110,53 +144,84 @@ const Checkout = () => {
                   <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-xs font-bold">1</div>
                   <h2 className="text-xl font-serif font-medium">Shipping Address</h2>
                 </div>
+
+                {addresses.length > 0 && (
+                  <div className="mb-8 space-y-4">
+                    <p className="text-xs font-bold uppercase tracking-wider text-muted">Select Address</p>
+                    {addresses.map((addr) => (
+                      <label key={addr._id || addr.id} className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all ${selectedAddressId === (addr._id || addr.id) && !isAddingNew ? 'border-black bg-gray-50' : 'border-gray-200 hover:border-black'}`}>
+                        <input
+                          type="radio"
+                          name="addressSelection"
+                          checked={selectedAddressId === (addr._id || addr.id) && !isAddingNew}
+                          onChange={() => { setSelectedAddressId(addr._id || addr.id); setIsAddingNew(false); }}
+                          className="mt-1 accent-black"
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm font-bold">{addr.fullName}</p>
+                          <p className="text-xs text-muted mt-1">{addr.fullAddress || `${addr.houseNumber}, ${addr.street}, ${addr.city}, ${addr.state} - ${addr.pincode}`}</p>
+                          <p className="text-xs text-muted mt-1">Phone: {addr.phone}</p>
+                        </div>
+                      </label>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingNew(true)}
+                      className="text-xs font-bold uppercase tracking-wider text-black border-b border-black pb-1 hover:text-muted hover:border-muted transition-colors"
+                    >
+                      + Add New Address
+                    </button>
+                  </div>
+                )}
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="md:col-span-2 space-y-2">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-muted ml-1">Street Address</label>
-                    <input
-                      required
-                      type="text"
-                      value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-black focus:ring-1 focus:ring-black outline-none transition-all bg-gray-50/30 font-sans"
-                      placeholder="e.g. 123, Luxury Lane, Apartment 4B"
-                    />
+                {(isAddingNew || addresses.length === 0) && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="md:col-span-2 space-y-2">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-muted ml-1">Street Address</label>
+                      <input
+                        required={isAddingNew}
+                        type="text"
+                        value={formData.address}
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                        className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-black focus:ring-1 focus:ring-black outline-none transition-all bg-gray-50/30 font-sans"
+                        placeholder="e.g. 123, Luxury Lane, Apartment 4B"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-muted ml-1">City</label>
+                      <input
+                        required={isAddingNew}
+                        type="text"
+                        value={formData.city}
+                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-black focus:ring-1 focus:ring-black outline-none transition-all bg-gray-50/30 font-sans"
+                        placeholder="Mumbai"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-muted ml-1">Postal Code</label>
+                      <input
+                        required={isAddingNew}
+                        type="text"
+                        value={formData.zip}
+                        onChange={(e) => setFormData({ ...formData, zip: e.target.value })}
+                        className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-black focus:ring-1 focus:ring-black outline-none transition-all bg-gray-50/30 font-sans"
+                        placeholder="400001"
+                      />
+                    </div>
+                    <div className="md:col-span-2 space-y-2">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-muted ml-1">Phone Number</label>
+                      <input
+                        required={isAddingNew}
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-black focus:ring-1 focus:ring-black outline-none transition-all bg-gray-50/30 font-sans"
+                        placeholder="+91 98765 43210"
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-muted ml-1">City</label>
-                    <input
-                      required
-                      type="text"
-                      value={formData.city}
-                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-black focus:ring-1 focus:ring-black outline-none transition-all bg-gray-50/30 font-sans"
-                      placeholder="Mumbai"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-muted ml-1">Postal Code</label>
-                    <input
-                      required
-                      type="text"
-                      value={formData.zip}
-                      onChange={(e) => setFormData({ ...formData, zip: e.target.value })}
-                      className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-black focus:ring-1 focus:ring-black outline-none transition-all bg-gray-50/30 font-sans"
-                      placeholder="400001"
-                    />
-                  </div>
-                  <div className="md:col-span-2 space-y-2">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-muted ml-1">Phone Number</label>
-                    <input
-                      required
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-5 py-4 rounded-xl border border-gray-200 focus:border-black focus:ring-1 focus:ring-black outline-none transition-all bg-gray-50/30 font-sans"
-                      placeholder="+91 98765 43210"
-                    />
-                  </div>
-                </div>
+                )}
               </section>
 
               {/* Payment Section */}
