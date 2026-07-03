@@ -27,6 +27,7 @@ interface Order {
   _id: string; id: string; orderNumber: string;
   items: OrderItem[]; total: number; address: string;
   status: OrderStatus; createdAt: string; timeline: any[];
+  paymentStatus: string; paymentMethod: string;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -93,7 +94,9 @@ const Profile = () => {
           : '',
         status: o.orderStatus,
         createdAt: o.createdAt,
-        timeline: o.timeline || []
+        timeline: o.timeline || [],
+        paymentStatus: o.paymentStatus || 'pending',
+        paymentMethod: o.payment?.method || 'razorpay' // Default to razorpay for retry if undefined
       }));
       setOrders(mapped);
     } catch (err) {
@@ -341,6 +344,15 @@ const Profile = () => {
                             >
                               <RefreshCcw size={12} /> Reorder
                             </Link>
+                            {/* Retry Payment (only for failed payments) */}
+                            {order.paymentStatus === 'failed' && (
+                              <button
+                                onClick={() => navigate('/payment-retry', { state: { orderId: order._id, amount: order.total, gateway: order.paymentMethod }})}
+                                className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white bg-black hover:bg-gray-800 transition-colors px-4 py-2 rounded-full"
+                              >
+                                <CreditCard size={12} /> Retry Payment
+                              </button>
+                            )}
                             {/* Cancel (only for pending/processing) */}
                             {(order.status === 'pending' || order.status === 'processing') && (
                               <button

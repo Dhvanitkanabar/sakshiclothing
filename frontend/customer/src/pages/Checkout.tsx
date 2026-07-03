@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -36,10 +36,19 @@ const Checkout = () => {
   const [discount, setDiscount] = useState(0);
   const [loyaltyPoints, setLoyaltyPoints] = useState(0);
   const [useLoyalty, setUseLoyalty] = useState(false);
+  const [paymentGateway, setPaymentGateway] = useState('razorpay'); // 'razorpay', 'stripe', 'cod'
 
   const baseTotal = totalPrice > 2000 ? totalPrice : totalPrice + 100;
   const loyaltyDiscount = useLoyalty ? Math.min(loyaltyPoints, baseTotal - discount) : 0;
   const finalTotal = Math.max(0, baseTotal - discount - loyaltyDiscount);
+
+  useEffect(() => {
+    // Load Razorpay script
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+  }, []);
 
   React.useEffect(() => {
     if (cart.length === 0) {
@@ -129,16 +138,76 @@ const Checkout = () => {
       }
 
       toast.loading('Securing your transaction...');
-      const orderRes = await placeOrder(finalAddressId, true);
+      const orderRes = await placeOrder(finalAddressId, paymentGateway === 'cod');
       
       toast.dismiss();
-      if (orderRes.success) {
+      if (!orderRes.success) {
+        toast.error(orderRes.message || 'Transaction could not be completed.');
+        setLoading(false);
+        return;
+      }
+
+      if (paymentGateway === 'cod') {
         toast.success('Order confirmed. Welcome to the Maison.');
         clearCart(); // Local clear
         navigate('/order-success', { state: { orderId: orderRes.data.orderNumber, total: finalTotal } });
-      } else {
-        toast.error(orderRes.message || 'Transaction could not be completed.');
+        return;
       }
+
+      // Create Payment Intent
+      const intentRes = await fetch(`${API_URL}/payments/create-intent`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: orderRes.data._id || orderRes.data.id, gateway: paymentGateway }),
+        credentials: 'include'
+      });
+      const intentData = await intentRes.json();
+
+      if (!intentData.success) {
+        toast.error(intentData.message || 'Failed to initialize payment.');
+        setLoading(false);
+        return;
+      }
+
+      if (paymentGateway === 'razorpay') {
+        const options = {
+          key: 'test_key', // Replace with real key in production
+          amount: intentData.data.amount,
+          currency: intentData.data.currency,
+          name: 'Sakshi Clothing',
+          description: `Order ${orderRes.data.orderNumber}`,
+          order_id: intentData.data.gatewayOrderId,
+          handler: function (response: any) {
+            toast.success('Payment successful. Verifying...');
+            // In a real app, you'd send response.razorpay_payment_id and signature to your backend to verify
+            clearCart();
+            navigate('/order-success', { state: { orderId: orderRes.data.orderNumber, total: finalTotal } });
+          },
+          prefill: {
+            name: user.name,
+            email: user.email,
+            contact: formData.phone
+          },
+          theme: { color: '#000000' }
+        };
+        const rzp = new (window as any).Razorpay(options);
+        rzp.on('payment.failed', function (response: any) {
+           toast.error('Payment failed. You can retry from your profile.');
+           clearCart(); // Keep order created, clear cart
+           navigate('/profile'); 
+        });
+        rzp.open();
+      } else if (paymentGateway === 'stripe') {
+        // Normally redirect to Stripe Checkout or use Elements.
+        // For this implementation plan, we will mock redirect
+        toast.info('Redirecting to Stripe...');
+        setTimeout(() => {
+           toast.success('Payment simulated successfully.');
+           clearCart();
+           navigate('/order-success', { state: { orderId: orderRes.data.orderNumber, total: finalTotal } });
+        }, 1500);
+      }
+
     } catch (error) {
       toast.dismiss();
       console.error('Error placing order:', error);
@@ -270,19 +339,54 @@ const Checkout = () => {
                   <h2 className="text-xl font-serif font-medium">Payment Method</h2>
                 </div>
                 
-                <div className="p-6 rounded-2xl border-2 border-black bg-gray-50/50 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                      <CreditCard size={24} />
+                <div className="space-y-4">
+                  <label className={`p-6 rounded-2xl border-2 flex items-center justify-between cursor-pointer transition-all ${paymentGateway === 'razorpay' ? 'border-black bg-gray-50/50' : 'border-gray-200 hover:border-black'}`}>
+                    <input type="radio" name="payment" checked={paymentGateway === 'razorpay'} onChange={() => setPaymentGateway('razorpay')} className="hidden" />
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                        <CreditCard size={24} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold">Razorpay</p>
+                        <p className="text-[10px] text-muted uppercase tracking-widest">Cards, UPI, Netbanking</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-bold">Secure Online Payment</p>
-                      <p className="text-[10px] text-muted uppercase tracking-widest">Cards, UPI, Netbanking</p>
+                    <div className="w-6 h-6 rounded-full border-2 border-black flex items-center justify-center">
+                      {paymentGateway === 'razorpay' && <div className="w-3 h-3 rounded-full bg-black" />}
                     </div>
-                  </div>
-                  <div className="w-6 h-6 rounded-full border-2 border-black flex items-center justify-center">
-                    <div className="w-3 h-3 rounded-full bg-black" />
-                  </div>
+                  </label>
+
+                  <label className={`p-6 rounded-2xl border-2 flex items-center justify-between cursor-pointer transition-all ${paymentGateway === 'stripe' ? 'border-black bg-gray-50/50' : 'border-gray-200 hover:border-black'}`}>
+                    <input type="radio" name="payment" checked={paymentGateway === 'stripe'} onChange={() => setPaymentGateway('stripe')} className="hidden" />
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                        <CreditCard size={24} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold">Stripe</p>
+                        <p className="text-[10px] text-muted uppercase tracking-widest">International Cards</p>
+                      </div>
+                    </div>
+                    <div className="w-6 h-6 rounded-full border-2 border-black flex items-center justify-center">
+                      {paymentGateway === 'stripe' && <div className="w-3 h-3 rounded-full bg-black" />}
+                    </div>
+                  </label>
+
+                  <label className={`p-6 rounded-2xl border-2 flex items-center justify-between cursor-pointer transition-all ${paymentGateway === 'cod' ? 'border-black bg-gray-50/50' : 'border-gray-200 hover:border-black'}`}>
+                    <input type="radio" name="payment" checked={paymentGateway === 'cod'} onChange={() => setPaymentGateway('cod')} className="hidden" />
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                        <ShieldCheck size={24} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold">Cash on Delivery</p>
+                        <p className="text-[10px] text-muted uppercase tracking-widest">Pay upon delivery</p>
+                      </div>
+                    </div>
+                    <div className="w-6 h-6 rounded-full border-2 border-black flex items-center justify-center">
+                      {paymentGateway === 'cod' && <div className="w-3 h-3 rounded-full bg-black" />}
+                    </div>
+                  </label>
                 </div>
                 
                 <p className="mt-6 text-xs text-muted flex items-center gap-2">

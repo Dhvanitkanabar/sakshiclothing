@@ -22,6 +22,7 @@ import ReviewsModeration from './pages/marketing/ReviewsModeration';
 import NewsletterManager from './pages/marketing/NewsletterManager';
 import NotificationManager from './pages/marketing/NotificationManager';
 import LoyaltyDashboard from './pages/marketing/LoyaltyDashboard';
+import PaymentsManager from './pages/payments/PaymentsManager';
 
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -62,6 +63,7 @@ function App() {
             <Route path="/marketing/newsletter" element={<NewsletterManager />} />
             <Route path="/marketing/notifications" element={<NotificationManager />} />
             <Route path="/marketing/loyalty" element={<LoyaltyDashboard />} />
+            <Route path="/payments" element={<PaymentsManager />} />
           </Route>
         </Route>
       </Routes>

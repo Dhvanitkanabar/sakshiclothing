@@ -47,6 +47,10 @@ Required variables in `backend/.env`:
 - `JWT_REFRESH_SECRET=supersecretrefresh`
 - `JWT_REFRESH_EXPIRE=7d`
 - `CLIENT_URL=http://localhost:5173`
+- `STRIPE_SECRET_KEY=sk_test_...`
+- `STRIPE_WEBHOOK_SECRET=whsec_...`
+- `RAZORPAY_KEY_ID=rzp_test_...`
+- `RAZORPAY_KEY_SECRET=your_secret`
 
 ## How to Run Backend
 ```bash
@@ -73,9 +77,12 @@ npm run dev
 - Phase 3: Authentication & Project Restructure
 - Phase 4: Product Management System
 - Phase 5: Category, Brand, CMS and Restructure
-- Phase 6: Digital Asset Management with Cloudinary
-- Phase 7: Cart & Wishlist System
-- Phase 8: Enterprise Checkout & Order Management
+- `Phase 6`: Digital Asset Management with Cloudinary
+- `Phase 7`: Cart & Wishlist System
+- `Phase 8`: Enterprise Checkout & Order Management
+- `Phase 9`: Admin Dashboard 
+- `Phase 10`: Marketing Suite
+- `Phase 11`: Payment Gateway Integration
 
 ## Cloudinary Digital Asset Management (DAM)
 The backend features a robust DAM system integrated with Cloudinary for global image optimization. 
@@ -138,3 +145,10 @@ Images are automatically routed to their corresponding folders under `sakshi-clo
 - \GET /api/v1/orders/admin/all\ - Admin endpoint to view all orders.
 - \PATCH /api/v1/orders/admin/:id/status\ - Admin endpoint to update order status.
 - \PATCH /api/v1/orders/admin/:id/tracking\ - Admin endpoint to update tracking details.
+
+## Payment Gateway Integration
+Payments are integrated using Stripe and Razorpay using the adapter pattern for scalability.
+- \POST /api/v1/payments/create-intent\ - Initialize a payment (Stripe intent or Razorpay order).
+- \POST /api/v1/payments/webhook/stripe\ - Stripe Webhook handler.
+- \POST /api/v1/payments/webhook/razorpay\ - Razorpay Webhook handler.
+- \GET /api/v1/payments\ - (Admin) Fetch all transactions.

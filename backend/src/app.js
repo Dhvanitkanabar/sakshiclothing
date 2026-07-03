@@ -29,11 +29,11 @@ import uploadRouter from './routes/upload.routes.js';
 import addressRouter from './routes/address.routes.js';
 import userRouter from './routes/user.routes.js';
 import searchRouter from './routes/search.routes.js';
-import notificationRouter from './routes/notification.routes.js';
 import couponRouter from './routes/coupon.routes.js';
-import reviewRouter from './routes/review.routes.js';
 import newsletterRouter from './routes/newsletter.routes.js';
 import loyaltyRouter from './routes/loyalty.routes.js';
+import notificationRouter from './routes/notification.routes.js';
+import paymentRouter from './routes/payment.routes.js';
 
 // Initialize dotenv in application scope
 dotenv.config();
@@ -48,18 +48,22 @@ const app = express();
 app.use(helmet());
 
 // Configure CORS
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-  })
-);
+const corsOptions = {
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+app.use(cors(corsOptions));
 
-// Body Parser Middleware
-app.use(express.json({ limit: '16kb' }));
-app.use(express.urlencoded({ extended: true, limit: '16kb' }));
+// Stripe and Razorpay require the raw body for signature verification.
+// We'll capture it in `req.rawBody` before express.json() parses it.
+app.use(express.json({
+  verify: (req, res, buf) => {
+    req.rawBody = buf;
+  }
+}));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Data sanitization against NoSQL query injection
@@ -108,11 +112,11 @@ app.use('/api/v1/uploads', uploadRouter);
 app.use('/api/v1/addresses', addressRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/search', searchRouter);
-app.use('/api/v1/notifications', notificationRouter);
 app.use('/api/v1/coupons', couponRouter);
-app.use('/api/v1/reviews', reviewRouter);
 app.use('/api/v1/newsletter', newsletterRouter);
 app.use('/api/v1/loyalty', loyaltyRouter);
+app.use('/api/v1/notifications', notificationRouter);
+app.use('/api/v1/payments', paymentRouter);
 
 // =========================================================================
 // Fallback Error & Not Found Middlewares

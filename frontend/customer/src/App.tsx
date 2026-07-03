@@ -21,6 +21,7 @@ import AuthPage from './pages/AuthPage';
 import Profile from './pages/Profile';
 import Wishlist from './pages/Wishlist';
 import OrderSuccess from './pages/OrderSuccess';
+import PaymentRetry from './pages/PaymentRetry';
 import Admin from './pages/Admin';
 import CartDrawer from './components/CartDrawer';
 import { motion, AnimatePresence } from 'motion/react';
@@ -64,6 +65,7 @@ const AnimatedRoutes = () => {
             } 
           />
           <Route path="/order-success" element={<OrderSuccess />} />
+          <Route path="/payment-retry" element={<PaymentRetry />} />
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/admin" element={<Admin />} />
         </Routes>

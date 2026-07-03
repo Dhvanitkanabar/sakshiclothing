@@ -13,6 +13,7 @@ const Sidebar = () => {
           <li><Link to="/brands" className="block p-2 hover:bg-gray-800 rounded">Brands</Link></li>
           <li><Link to="/cms" className="block p-2 hover:bg-gray-800 rounded">Homepage CMS</Link></li>
           <li><Link to="/orders" className="block p-2 hover:bg-gray-800 rounded">Orders</Link></li>
+          <li><Link to="/payments" className="block p-2 hover:bg-gray-800 rounded">Payments</Link></li>
           <li><Link to="/reports" className="block p-2 hover:bg-gray-800 rounded">Reports</Link></li>
           <li><Link to="/customers" className="block p-2 hover:bg-gray-800 rounded">Customers</Link></li>
           <li className="pt-4 text-xs uppercase text-gray-500 font-bold px-2">Marketing</li>
