@@ -24,6 +24,12 @@ router.get('/', ProductController.getProducts);
 router.use(authenticate);
 router.use(authorize(ROLES.ADMIN));
 
+router.get('/admin/low-stock', ProductController.getLowStockInventory);
+router.post('/admin/bulk-delete', ProductController.bulkDelete);
+router.post('/admin/bulk-publish', ProductController.bulkPublish);
+router.post('/admin/bulk-unpublish', ProductController.bulkUnpublish);
+router.post('/admin/bulk-category', ProductController.bulkUpdateCategory);
+
 router.post('/', validateRequest(createProductSchema), ProductController.createProduct);
 router.put('/:id', validateRequest(updateProductSchema), ProductController.updateProduct);
 router.patch('/:id/status', ProductController.updateStatus);

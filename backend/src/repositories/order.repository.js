@@ -18,11 +18,15 @@ class OrderRepository {
       .populate('products.product', 'name thumbnail images');
   }
 
-  async findAll(filter = {}, sort = { createdAt: -1 }) {
-    return await Order.find(filter)
+  async findAll(filter = {}, sort = { createdAt: -1 }, skip = 0, limit = 10) {
+    const total = await Order.countDocuments(filter);
+    const orders = await Order.find(filter)
       .sort(sort)
+      .skip(skip)
+      .limit(limit)
       .populate('customer', 'fullName email')
       .populate('products.product', 'name thumbnail images');
+    return { orders, total };
   }
 
   async updateStatus(id, orderStatus, timelineEvent) {

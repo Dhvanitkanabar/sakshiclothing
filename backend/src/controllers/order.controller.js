@@ -79,16 +79,23 @@ export const getInvoice = asyncHandler(async (req, res) => {
 
 // Admin Controllers
 export const getAllOrders = asyncHandler(async (req, res) => {
-  const { status, search, sort } = req.query;
+  const { status, search, sort, page = 1, limit = 10 } = req.query;
   const filter = {};
   if (status) filter.orderStatus = status;
   if (search) {
-    filter.$or = [
-      { orderNumber: { $regex: search, $options: 'i' } }
-    ];
+    filter.orderNumber = { $regex: search, $options: 'i' };
+    // To search by customer name, it requires a lookup or to fetch matching users first.
+    // For simplicity, we just filter by orderNumber here, and search by customer name in user search.
   }
-  const orders = await orderService.getAllOrders(filter, sort ? { [sort]: -1 } : undefined);
+  const skip = (page - 1) * limit;
+  const orders = await orderService.getAllOrders(filter, sort ? { [sort]: -1 } : undefined, skip, Number(limit));
   return res.status(200).json(new ApiResponse(200, orders, 'All orders fetched successfully'));
+});
+
+export const approveReturn = asyncHandler(async (req, res) => {
+  // Placeholder for return approval logic
+  const order = await orderService.updateOrderStatus(req.params.id, 'returned', 'Return approved by admin');
+  return res.status(200).json(new ApiResponse(200, order, 'Return approved successfully'));
 });
 
 export const updateOrderStatus = asyncHandler(async (req, res) => {

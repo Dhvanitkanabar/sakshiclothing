@@ -1,5 +1,6 @@
 import ProductService from '../services/product.service.js';
 import ProductRepository from '../repositories/product.repository.js';
+import Product from '../models/Product.model.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import { HTTP_STATUS } from '../constants/index.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
@@ -81,6 +82,40 @@ class ProductController {
   duplicateProduct = asyncHandler(async (req, res) => {
     const product = await ProductService.duplicateProduct(req.params.id, req.user._id);
     return res.status(HTTP_STATUS.CREATED).json(new ApiResponse(HTTP_STATUS.CREATED, 'Product duplicated successfully', product));
+  });
+
+  getLowStockInventory = asyncHandler(async (req, res) => {
+    // Assuming you have Product model imported or available via Repository
+    const products = await Product.aggregate([
+      { $unwind: '$variants' },
+      { $match: { 'variants.stock': { $lte: 10 } } },
+      { $sort: { 'variants.stock': 1 } }
+    ]);
+    return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, 'Low stock inventory retrieved', products));
+  });
+
+  bulkDelete = asyncHandler(async (req, res) => {
+    const { ids } = req.body;
+    await Product.updateMany({ _id: { $in: ids } }, { status: 'deleted' });
+    return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, 'Products deleted successfully'));
+  });
+
+  bulkPublish = asyncHandler(async (req, res) => {
+    const { ids } = req.body;
+    await Product.updateMany({ _id: { $in: ids } }, { status: 'published' });
+    return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, 'Products published successfully'));
+  });
+
+  bulkUnpublish = asyncHandler(async (req, res) => {
+    const { ids } = req.body;
+    await Product.updateMany({ _id: { $in: ids } }, { status: 'draft' });
+    return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, 'Products unpublished successfully'));
+  });
+
+  bulkUpdateCategory = asyncHandler(async (req, res) => {
+    const { ids, categoryId } = req.body;
+    await Product.updateMany({ _id: { $in: ids } }, { category: categoryId });
+    return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, 'Products category updated successfully'));
   });
 }
 

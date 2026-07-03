@@ -27,6 +27,9 @@ import wishlistRouter from './routes/wishlist.routes.js';
 import dashboardRouter from './routes/dashboard.routes.js';
 import uploadRouter from './routes/upload.routes.js';
 import addressRouter from './routes/address.routes.js';
+import userRouter from './routes/user.routes.js';
+import searchRouter from './routes/search.routes.js';
+import notificationRouter from './routes/notification.routes.js';
 
 // Initialize dotenv in application scope
 dotenv.config();
@@ -99,6 +102,9 @@ app.use('/api/v1/wishlist', wishlistRouter);
 app.use('/api/v1/dashboard', dashboardRouter);
 app.use('/api/v1/uploads', uploadRouter);
 app.use('/api/v1/addresses', addressRouter);
+app.use('/api/v1/users', userRouter);
+app.use('/api/v1/search', searchRouter);
+app.use('/api/v1/notifications', notificationRouter);
 
 // =========================================================================
 // Fallback Error & Not Found Middlewares

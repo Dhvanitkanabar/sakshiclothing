@@ -134,8 +134,8 @@ class OrderService {
   }
 
   // Admin Methods
-  async getAllOrders(filter, sort) {
-    return await orderRepository.findAll(filter, sort);
+  async getAllOrders(filter, sort, skip, limit) {
+    return await orderRepository.findAll(filter, sort, skip, limit);
   }
 
   async updateOrderStatus(id, status, note = '') {

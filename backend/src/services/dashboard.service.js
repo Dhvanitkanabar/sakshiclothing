@@ -1,6 +1,8 @@
 import Order from '../models/Order.model.js';
 import User from '../models/User.model.js';
 import Product from '../models/Product.model.js';
+import Category from '../models/Category.model.js';
+import Brand from '../models/Brand.model.js';
 
 class DashboardService {
   async getStats() {
@@ -18,7 +20,11 @@ class DashboardService {
       totalCustomers,
       totalProducts,
       recentOrders,
-      revenueWeekly
+      revenueWeekly,
+      lowStockProducts,
+      outOfStockProducts,
+      totalCategories,
+      totalBrands
     ] = await Promise.all([
       Order.countDocuments(),
       Order.countDocuments({ orderStatus: 'pending' }),
@@ -33,7 +39,7 @@ class DashboardService {
         { $group: { _id: null, total: { $sum: '$totals.grandTotal' } } }
       ]).then(r => r[0]?.total || 0),
       User.countDocuments({ role: 'user' }),
-      Product.countDocuments({ status: 'published' }),
+      Product.countDocuments(),
       Order.find()
         .sort({ createdAt: -1 })
         .limit(10)
@@ -49,7 +55,21 @@ class DashboardService {
           }
         },
         { $sort: { _id: 1 } }
-      ])
+      ]),
+      Product.aggregate([
+        { $unwind: '$variants' },
+        { $match: { 'variants.stock': { $gt: 0, $lte: 10 } } },
+        { $group: { _id: '$_id' } },
+        { $count: 'count' }
+      ]).then(r => r[0]?.count || 0),
+      Product.aggregate([
+        { $unwind: '$variants' },
+        { $match: { 'variants.stock': 0 } },
+        { $group: { _id: '$_id' } },
+        { $count: 'count' }
+      ]).then(r => r[0]?.count || 0),
+      Category.countDocuments(),
+      Brand.countDocuments()
     ]);
 
     return {
@@ -61,7 +81,11 @@ class DashboardService {
         revenueToday,
         revenueTotal,
         totalCustomers,
-        totalProducts
+        totalProducts,
+        lowStockProducts,
+        outOfStockProducts,
+        totalCategories,
+        totalBrands
       },
       recentOrders,
       revenueWeekly

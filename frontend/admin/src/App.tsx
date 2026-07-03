@@ -12,6 +12,9 @@ import BrandForm from './pages/brands/BrandForm';
 import HomepageManager from './pages/cms/HomepageManager';
 import CartViewer from './pages/customers/CartViewer';
 import WishlistViewer from './pages/customers/WishlistViewer';
+import CustomerList from './pages/customers/CustomerList';
+import InventoryDashboard from './pages/products/InventoryDashboard';
+import Reports from './pages/Reports';
 import ProtectedRoute from './components/ProtectedRoute';
 
 import OrderList from './pages/orders/OrderList';
@@ -41,8 +44,11 @@ function App() {
             <Route path="/brands/add" element={<BrandForm />} />
             <Route path="/brands/edit/:id" element={<BrandForm />} />
             <Route path="/cms" element={<HomepageManager />} />
+            <Route path="/customers" element={<CustomerList />} />
             <Route path="/carts" element={<CartViewer />} />
             <Route path="/wishlists" element={<WishlistViewer />} />
+            <Route path="/inventory" element={<InventoryDashboard />} />
+            <Route path="/reports" element={<Reports />} />
           </Route>
         </Route>
       </Routes>

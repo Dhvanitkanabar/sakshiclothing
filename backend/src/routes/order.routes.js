@@ -8,7 +8,8 @@ import {
   getInvoice,
   getAllOrders,
   updateOrderStatus,
-  updateTracking
+  updateTracking,
+  approveReturn
 } from '../controllers/order.controller.js';
 import { verifyJWT, authorizeRoles } from '../middlewares/auth.middleware.js';
 
@@ -26,5 +27,6 @@ router.get('/:id/invoice', verifyJWT, getInvoice);
 router.get('/admin/all', verifyJWT, authorizeRoles('admin'), getAllOrders);
 router.patch('/admin/:id/status', verifyJWT, authorizeRoles('admin'), updateOrderStatus);
 router.patch('/admin/:id/tracking', verifyJWT, authorizeRoles('admin'), updateTracking);
+router.patch('/admin/:id/return', verifyJWT, authorizeRoles('admin'), approveReturn);
 
 export default router;
