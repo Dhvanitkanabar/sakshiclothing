@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram, Twitter, Facebook, Youtube, ArrowUpRight } from 'lucide-react';
+import { Camera, Hash, MessageCircle, Video, ArrowUpRight } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -88,7 +88,7 @@ const Footer = () => {
           <div className="space-y-8">
             <h4 className="text-[9px] font-sans font-black uppercase tracking-[0.3em] text-black">Social</h4>
             <div className="flex gap-4">
-              {[Instagram, Twitter, Facebook, Youtube].map((Icon, i) => (
+              {[Camera, Hash, MessageCircle, Video].map((Icon, i) => (
                 <a key={i} href="#" className="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-black/5 hover:border-black transition-all group">
                   <Icon size={16} className="text-gray-300 group-hover:text-black transition-colors" />
                 </a>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, AnimatePresence } from 'motion/react';
-import { ArrowRight, ShoppingBag, Instagram, ArrowDown, Play } from 'lucide-react';
+import { ArrowRight, ShoppingBag, Camera, ArrowDown, Play } from 'lucide-react';
 import { Product } from '../types';
 import ProductCard from '../components/ProductCard';
 import { toast } from 'sonner';
@@ -263,7 +263,7 @@ const Home = () => {
 
       {/* FOOTER INSTAGRAM */}
       <section className="py-40 px-6 max-w-7xl mx-auto text-center">
-        <Instagram size={48} className="mx-auto mb-12 text-muted" />
+        <Camera size={48} className="mx-auto mb-12 text-muted" />
         <h2 className="text-4xl md:text-6xl font-serif mb-12">@SakshiClothing</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[

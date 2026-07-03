@@ -74,6 +74,8 @@ npm run dev
 - Phase 4: Product Management System
 - Phase 5: Category, Brand, CMS and Restructure
 - Phase 6: Digital Asset Management with Cloudinary
+- Phase 7: Cart & Wishlist System
+- Phase 8: Enterprise Checkout & Order Management
 
 ## Cloudinary Digital Asset Management (DAM)
 The backend features a robust DAM system integrated with Cloudinary for global image optimization. 
@@ -99,3 +101,40 @@ Images are automatically routed to their corresponding folders under `sakshi-clo
 2. **Backend**: Routes through `POST /api/v1/uploads/image`. Validates mime types (`jpg`, `png`, `webp`) and sizes (Max 10MB).
 3. **Cloudinary**: Automatically converts images to `webp` (or optimal formats) and generates thumbnails.
 4. **Database**: Saves the `secureUrl`, `publicId`, dimensions, and the associated admin's `uploadedBy` reference in the `Upload` collection.
+
+## Order & Checkout Flow
+### 1. Checkout
+- User proceeds from the cart to the checkout page.
+- Selects or adds a new Shipping Address.
+- Confirms the order via \POST /api/v1/orders/checkout\ or \POST /api/v1/orders/buy-now\.
+- Cart is automatically cleared upon successful order placement.
+
+### 2. Order Processing
+- Order gets created with 'pending' status.
+- Snapshots of product prices and details are stored.
+- Admin views orders in the Dashboard.
+- Status transitions through: \pending -> processing -> packed -> shipped -> outForDelivery -> delivered\.
+
+### 3. Customer Management
+- Users can view their order history and track order status in their Profile.
+- Users can cancel orders in 'pending' or 'processing' states.
+- Invoice generation is supported.
+
+## Address Management APIs
+- \GET /api/v1/addresses\ - Fetch user's saved addresses.
+- \POST /api/v1/addresses\ - Add a new address.
+- \PUT /api/v1/addresses/:id\ - Update an existing address.
+- \DELETE /api/v1/addresses/:id\ - Remove an address.
+- \PATCH /api/v1/addresses/:id/default\ - Set an address as the default.
+
+## Order Management APIs
+- \POST /api/v1/orders/checkout\ - Create an order from the user's cart.
+- \POST /api/v1/orders/buy-now\ - Create an order for a single item instantly.
+- \GET /api/v1/orders\ - Fetch all orders for the authenticated customer.
+- \GET /api/v1/orders/:id\ - Fetch specific order details.
+- \PATCH /api/v1/orders/:id/cancel\ - Cancel an order.
+- \GET /api/v1/orders/:id/invoice\ - Download HTML invoice.
+
+- \GET /api/v1/orders/admin/all\ - Admin endpoint to view all orders.
+- \PATCH /api/v1/orders/admin/:id/status\ - Admin endpoint to update order status.
+- \PATCH /api/v1/orders/admin/:id/tracking\ - Admin endpoint to update tracking details.
