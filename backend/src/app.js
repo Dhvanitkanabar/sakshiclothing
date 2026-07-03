@@ -30,6 +30,10 @@ import addressRouter from './routes/address.routes.js';
 import userRouter from './routes/user.routes.js';
 import searchRouter from './routes/search.routes.js';
 import notificationRouter from './routes/notification.routes.js';
+import couponRouter from './routes/coupon.routes.js';
+import reviewRouter from './routes/review.routes.js';
+import newsletterRouter from './routes/newsletter.routes.js';
+import loyaltyRouter from './routes/loyalty.routes.js';
 
 // Initialize dotenv in application scope
 dotenv.config();
@@ -105,6 +109,10 @@ app.use('/api/v1/addresses', addressRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/search', searchRouter);
 app.use('/api/v1/notifications', notificationRouter);
+app.use('/api/v1/coupons', couponRouter);
+app.use('/api/v1/reviews', reviewRouter);
+app.use('/api/v1/newsletter', newsletterRouter);
+app.use('/api/v1/loyalty', loyaltyRouter);
 
 // =========================================================================
 // Fallback Error & Not Found Middlewares

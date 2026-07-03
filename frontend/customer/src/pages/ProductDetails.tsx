@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
 import { ShoppingBag, ChevronRight, Star, ShieldCheck, Truck, RotateCcw, Heart, Share2, Ruler, Plus, Minus } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
+import ProductReviews from '../components/ProductReviews';
 import { useWishlist } from '../context/WishlistContext';
 import { fetchProductById, fetchProducts } from '../lib/api';
 
@@ -253,6 +254,9 @@ const ProductDetails = () => {
             </div>
           </section>
         )}
+
+        {/* Reviews Section */}
+        <ProductReviews productId={product.id} />
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   Package, User as UserIcon, LogOut, ChevronRight, ShoppingBag,
   MapPin, CreditCard, Settings, FileText, XCircle, RefreshCcw,
-  Clock, CheckCircle, Truck
+  Clock, CheckCircle, Truck, Award
 } from 'lucide-react';
 import { Link, Navigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -56,8 +56,20 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('orders');
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+  
+  const [loyaltyData, setLoyaltyData] = useState<{points: number, transactions: any[]}>({points: 0, transactions: []});
 
-  // Load orders
+  // Load loyalty
+  const loadLoyalty = useCallback(async () => {
+    if (!user) return;
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/loyalty`, { credentials: 'include' });
+      const data = await res.json();
+      if (data.success) {
+        setLoyaltyData(data.data);
+      }
+    } catch (err) {}
+  }, [user]);
   const loadOrders = useCallback(async () => {
     if (!user) return;
     setLoading(true);
@@ -100,6 +112,7 @@ const Profile = () => {
 
   useEffect(() => { loadOrders(); }, [loadOrders]);
   useEffect(() => { if (activeTab === 'addresses') loadAddresses(); }, [activeTab, loadAddresses]);
+  useEffect(() => { if (activeTab === 'loyalty') loadLoyalty(); }, [activeTab, loadLoyalty]);
 
   const handleCancelOrder = async (orderId: string) => {
     if (!confirm('Are you sure you want to cancel this order?')) return;
@@ -139,7 +152,7 @@ const Profile = () => {
   const menuItems = [
     { id: 'orders', label: 'Order History', icon: Package },
     { id: 'addresses', label: 'Addresses', icon: MapPin },
-    { id: 'payment', label: 'Payment Methods', icon: CreditCard },
+    { id: 'loyalty', label: 'Loyalty Points', icon: Award },
     { id: 'settings', label: 'Account Settings', icon: Settings },
   ];
 
@@ -416,8 +429,56 @@ const Profile = () => {
               </motion.div>
             )}
 
+            {/* ── Loyalty Tab ── */}
+            {activeTab === 'loyalty' && (
+              <motion.div
+                key="loyalty"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-8"
+              >
+                <div className="bg-luxury-black text-white p-8 rounded-[2rem] flex flex-col items-center justify-center text-center shadow-xl">
+                  <Award size={48} className="mb-4 text-amber-500" />
+                  <p className="text-sm uppercase tracking-[0.2em] font-bold text-gray-400 mb-2">Available Points</p>
+                  <h2 className="text-6xl font-serif">{loyaltyData.points}</h2>
+                </div>
+
+                <div className="bg-white border border-gray-100 rounded-[2rem] overflow-hidden">
+                  <div className="p-6 border-b border-gray-100 bg-gray-50/50">
+                    <h3 className="font-bold text-luxury-black">Transaction History</h3>
+                  </div>
+                  {loyaltyData.transactions.length === 0 ? (
+                    <div className="p-12 text-center text-gray-400 font-serif italic">
+                      No points history available yet.
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-gray-100">
+                      {loyaltyData.transactions.map((tx: any) => (
+                        <div key={tx._id} className="p-6 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                          <div>
+                            <span className={`inline-block px-2 py-1 text-[9px] font-bold uppercase tracking-widest rounded-full mb-2 ${
+                              tx.type === 'earned' ? 'bg-green-100 text-green-700' :
+                              tx.type === 'redeemed' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-700'
+                            }`}>
+                              {tx.type}
+                            </span>
+                            <p className="text-sm font-bold text-luxury-black">{tx.description || 'Points Adjustment'}</p>
+                            <p className="text-[10px] text-gray-400 mt-1">{new Date(tx.createdAt).toLocaleDateString()}</p>
+                          </div>
+                          <div className={`text-xl font-serif font-bold ${tx.points > 0 ? 'text-green-600' : 'text-gray-900'}`}>
+                            {tx.points > 0 ? `+${tx.points}` : tx.points}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
             {/* ── Other Tabs (placeholders) ── */}
-            {activeTab !== 'orders' && activeTab !== 'addresses' && (
+            {activeTab !== 'orders' && activeTab !== 'addresses' && activeTab !== 'loyalty' && (
               <motion.div
                 key="other"
                 initial={{ opacity: 0, y: 20 }}

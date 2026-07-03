@@ -1,8 +1,33 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Camera, Hash, MessageCircle, Video, ArrowUpRight } from 'lucide-react';
+import { toast } from 'sonner';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
 const Footer = () => {
+  const [email, setEmail] = useState('');
+  
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    try {
+      const res = await fetch(`${API_URL}/newsletter/subscribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Successfully subscribed to the Maison Journal');
+        setEmail('');
+      } else {
+        toast.error(data.message || 'Subscription failed');
+      }
+    } catch (err) {
+      toast.error('An error occurred');
+    }
+  };
   return (
     <footer className="bg-[#FDFCFB] border-t border-black/5 pt-20 pb-12 mt-20">
       <div className="max-w-6xl mx-auto px-6">
@@ -28,13 +53,16 @@ const Footer = () => {
               <h3 className="text-[10px] font-sans font-black uppercase tracking-[0.3em] text-black">Maison Journal</h3>
               <p className="text-md text-gray-400 font-serif italic">Join our circle for seasonal curations.</p>
             </div>
-            <form className="flex flex-col md:flex-row gap-3 max-w-md mx-auto">
+            <form onSubmit={handleSubscribe} className="flex flex-col md:flex-row gap-3 max-w-md mx-auto">
               <input
                 type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
                 placeholder="Email Address"
                 className="flex-grow bg-gray-50 px-6 py-4 rounded-xl text-sm font-sans focus:outline-none focus:ring-1 focus:ring-black/10 transition-all border border-transparent"
+                required
               />
-              <button className="bg-black text-white px-8 py-4 rounded-xl text-[9px] font-sans font-black uppercase tracking-[0.2em] hover:bg-black/80 transition-all whitespace-nowrap shadow-xl">
+              <button type="submit" className="bg-black text-white px-8 py-4 rounded-xl text-[9px] font-sans font-black uppercase tracking-[0.2em] hover:bg-black/80 transition-all whitespace-nowrap shadow-xl">
                 Subscribe
               </button>
             </form>

@@ -15,6 +15,14 @@ import WishlistViewer from './pages/customers/WishlistViewer';
 import CustomerList from './pages/customers/CustomerList';
 import InventoryDashboard from './pages/products/InventoryDashboard';
 import Reports from './pages/Reports';
+
+// Marketing & Engagement
+import Coupons from './pages/marketing/Coupons';
+import ReviewsModeration from './pages/marketing/ReviewsModeration';
+import NewsletterManager from './pages/marketing/NewsletterManager';
+import NotificationManager from './pages/marketing/NotificationManager';
+import LoyaltyDashboard from './pages/marketing/LoyaltyDashboard';
+
 import ProtectedRoute from './components/ProtectedRoute';
 
 import OrderList from './pages/orders/OrderList';
@@ -49,6 +57,11 @@ function App() {
             <Route path="/wishlists" element={<WishlistViewer />} />
             <Route path="/inventory" element={<InventoryDashboard />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/marketing/coupons" element={<Coupons />} />
+            <Route path="/marketing/reviews" element={<ReviewsModeration />} />
+            <Route path="/marketing/newsletter" element={<NewsletterManager />} />
+            <Route path="/marketing/notifications" element={<NotificationManager />} />
+            <Route path="/marketing/loyalty" element={<LoyaltyDashboard />} />
           </Route>
         </Route>
       </Routes>

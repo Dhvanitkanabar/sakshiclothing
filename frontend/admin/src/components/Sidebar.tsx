@@ -15,6 +15,13 @@ const Sidebar = () => {
           <li><Link to="/orders" className="block p-2 hover:bg-gray-800 rounded">Orders</Link></li>
           <li><Link to="/reports" className="block p-2 hover:bg-gray-800 rounded">Reports</Link></li>
           <li><Link to="/customers" className="block p-2 hover:bg-gray-800 rounded">Customers</Link></li>
+          <li className="pt-4 text-xs uppercase text-gray-500 font-bold px-2">Marketing</li>
+          <li><Link to="/marketing/coupons" className="block p-2 hover:bg-gray-800 rounded">Coupons</Link></li>
+          <li><Link to="/marketing/reviews" className="block p-2 hover:bg-gray-800 rounded">Reviews</Link></li>
+          <li><Link to="/marketing/newsletter" className="block p-2 hover:bg-gray-800 rounded">Newsletter</Link></li>
+          <li><Link to="/marketing/notifications" className="block p-2 hover:bg-gray-800 rounded">Notifications</Link></li>
+          <li><Link to="/marketing/loyalty" className="block p-2 hover:bg-gray-800 rounded">Loyalty</Link></li>
+          <li className="pt-4 text-xs uppercase text-gray-500 font-bold px-2">Data</li>
           <li><Link to="/carts" className="block p-2 hover:bg-gray-800 rounded">Carts</Link></li>
           <li><Link to="/wishlists" className="block p-2 hover:bg-gray-800 rounded">Wishlists</Link></li>
         </ul>

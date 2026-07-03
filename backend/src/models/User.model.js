@@ -62,6 +62,10 @@ const userSchema = new Schema(
       type: Boolean,
       default: true
     },
+    loyaltyPoints: {
+      type: Number,
+      default: 0
+    },
     isBlocked: {
       type: Boolean,
       default: false

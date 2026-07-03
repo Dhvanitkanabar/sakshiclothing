@@ -6,9 +6,10 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShieldCheck, CreditCard, ArrowLeft, ChevronRight, Lock } from 'lucide-react';
+import { ShieldCheck, CreditCard, ArrowLeft, ChevronRight, Lock, Tag, Award } from 'lucide-react';
 
 import { fetchAddresses, addAddress, placeOrder } from '../lib/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
 const Checkout = () => {
   const { cart, totalPrice, clearCart } = useCart();
@@ -31,7 +32,14 @@ const Checkout = () => {
     country: 'India'
   });
 
-  const finalTotal = totalPrice > 2000 ? totalPrice : totalPrice + 100;
+  const [couponCode, setCouponCode] = useState('');
+  const [discount, setDiscount] = useState(0);
+  const [loyaltyPoints, setLoyaltyPoints] = useState(0);
+  const [useLoyalty, setUseLoyalty] = useState(false);
+
+  const baseTotal = totalPrice > 2000 ? totalPrice : totalPrice + 100;
+  const loyaltyDiscount = useLoyalty ? Math.min(loyaltyPoints, baseTotal - discount) : 0;
+  const finalTotal = Math.max(0, baseTotal - discount - loyaltyDiscount);
 
   React.useEffect(() => {
     if (cart.length === 0) {
@@ -51,8 +59,39 @@ const Checkout = () => {
            setIsAddingNew(true);
          }
       });
+
+      // Fetch loyalty points
+      fetch(`${API_URL}/loyalty`, { credentials: 'include' })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setLoyaltyPoints(data.data.points);
+          }
+        });
     }
   }, [user]);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode) return;
+    try {
+      const res = await fetch(`${API_URL}/coupons/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: couponCode, orderAmount: totalPrice }),
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDiscount(data.data.discount);
+        toast.success(`Coupon applied! Saved ₹${data.data.discount}`);
+      } else {
+        setDiscount(0);
+        toast.error(data.message || 'Invalid coupon');
+      }
+    } catch (e) {
+      toast.error('Error applying coupon');
+    }
+  };
 
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -308,6 +347,49 @@ const Checkout = () => {
                   </div>
                   <span className="text-3xl font-serif font-medium">₹{finalTotal.toLocaleString()}</span>
                 </div>
+              </div>
+
+              {/* Coupons & Loyalty */}
+              <div className="mt-8 pt-8 border-t border-gray-100 space-y-6">
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-bold mb-2">
+                    <Tag size={16} /> Apply Coupon
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={e => setCouponCode(e.target.value)}
+                      placeholder="ENTER CODE"
+                      className="flex-grow px-4 py-3 rounded-xl border border-gray-200 focus:border-black outline-none font-bold uppercase tracking-widest text-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      className="px-6 py-3 bg-black text-white rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-gray-900"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                  {discount > 0 && <p className="text-green-600 text-xs mt-2 font-bold">Discount applied: -₹{discount.toLocaleString()}</p>}
+                </div>
+
+                {loyaltyPoints > 0 && (
+                  <div className="p-4 rounded-xl border border-amber-200 bg-amber-50">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={useLoyalty}
+                        onChange={e => setUseLoyalty(e.target.checked)}
+                        className="w-4 h-4 accent-black"
+                      />
+                      <div>
+                        <p className="text-sm font-bold flex items-center gap-1"><Award size={14} className="text-amber-600" /> Use Loyalty Points</p>
+                        <p className="text-xs text-muted mt-1">You have {loyaltyPoints} points available</p>
+                      </div>
+                    </label>
+                  </div>
+                )}
               </div>
 
               {/* Desktop Action Button */}
