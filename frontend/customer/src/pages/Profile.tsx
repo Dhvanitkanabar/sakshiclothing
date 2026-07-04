@@ -6,7 +6,7 @@ import {
   MapPin, CreditCard, Settings, FileText, XCircle, RefreshCcw,
   Clock, CheckCircle, Truck, Award
 } from 'lucide-react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   fetchOrders, cancelOrder, getInvoiceUrl,
@@ -51,6 +51,7 @@ const STATUS_ICON: Record<string, React.ReactNode> = {
 
 // ─── Profile Component ────────────────────────────────────────────────────────
 const Profile = () => {
+  const navigate = useNavigate();
   const { user, logout, loading: authLoading } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [addresses, setAddresses] = useState<any[]>([]);

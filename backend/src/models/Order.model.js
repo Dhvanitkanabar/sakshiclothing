@@ -116,7 +116,7 @@ const orderSchema = new Schema(
 );
 
 // Indexes
-orderSchema.index({ orderNumber: 1 });
+
 orderSchema.index({ customer: 1, createdAt: -1 });
 orderSchema.index({ orderStatus: 1 });
 orderSchema.index({ paymentStatus: 1 });

@@ -24,7 +24,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true);
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/cart`, {
-        credentials: 'true'
+        credentials: 'include'
       });
       const data = await res.json();
       if (data.success && data.data && data.data.items) {
@@ -73,7 +73,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/cart/add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'true',
+        credentials: 'include',
         body: JSON.stringify({ productId: product.id, variantId, quantity })
       });
       const data = await res.json();
@@ -99,7 +99,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/cart/remove`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'true',
+        credentials: 'include',
         body: JSON.stringify({ productId, variantId: (item as any).variantId })
       });
       const data = await res.json();
@@ -125,7 +125,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/cart/update`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'true',
+        credentials: 'include',
         body: JSON.stringify({ productId, variantId: (item as any).variantId, quantity })
       });
       const data = await res.json();

@@ -131,7 +131,7 @@ const productSchema = new Schema(
 );
 
 // Indexes
-productSchema.index({ slug: 1 });
+
 productSchema.index({ 'variants.sku': 1 }, { sparse: true, unique: true });
 productSchema.index({ category: 1, status: 1 });
 productSchema.index({ brand: 1 });

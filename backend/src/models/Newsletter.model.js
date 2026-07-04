@@ -24,7 +24,7 @@ const newsletterSchema = new Schema(
   }
 );
 
-newsletterSchema.index({ email: 1 });
+
 
 const Newsletter = mongoose.model('Newsletter', newsletterSchema);
 export default Newsletter;

@@ -42,7 +42,7 @@ const brandSchema = new Schema(
 );
 
 // Indexes
-brandSchema.index({ slug: 1 });
+
 brandSchema.index({ isActive: 1, isFeatured: -1 });
 
 const Brand = mongoose.model('Brand', brandSchema);

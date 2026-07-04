@@ -50,7 +50,7 @@ const couponSchema = new Schema(
 );
 
 // Indexes
-couponSchema.index({ code: 1 });
+
 couponSchema.index({ expiryDate: 1, isActive: 1 });
 
 const Coupon = mongoose.model('Coupon', couponSchema);

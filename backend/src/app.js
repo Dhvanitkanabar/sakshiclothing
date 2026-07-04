@@ -7,6 +7,8 @@ import hpp from 'hpp';
 import cookieParser from 'cookie-parser';
 import xss from 'xss';
 import dotenv from 'dotenv';
+import swaggerJsDoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
 
 // Import Custom Middlewares
 import notFound from './middlewares/notFound.js';
@@ -39,6 +41,40 @@ import paymentRouter from './routes/payment.routes.js';
 dotenv.config();
 
 const app = express();
+
+// =========================================================================
+// Swagger Configuration
+// =========================================================================
+const swaggerOptions = {
+  swaggerDefinition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Sakshi Clothing API',
+      version: '1.0.0',
+      description: 'API documentation for Sakshi Clothing E-commerce Platform',
+    },
+    servers: [
+      {
+        url: process.env.API_URL || 'http://localhost:5000',
+        description: 'Development server',
+      },
+    ],
+    components: {
+      securitySchemes: {
+        cookieAuth: {
+          type: 'apiKey',
+          in: 'cookie',
+          name: 'token',
+        },
+      },
+    },
+    security: [{ cookieAuth: [] }],
+  },
+  apis: ['./src/routes/*.js'],
+};
+
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // =========================================================================
 // Global Middlewares Setup

@@ -18,7 +18,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       setLoading(true);
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/wishlist`, {
-        credentials: 'true'
+        credentials: 'include'
       });
       const data = await res.json();
       if (data.success && data.data && data.data.products) {
@@ -56,7 +56,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/wishlist/remove`, {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'true',
+          credentials: 'include',
           body: JSON.stringify({ productId: product.id })
         });
         const data = await res.json();
@@ -68,7 +68,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/wishlist/add`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'true',
+          credentials: 'include',
           body: JSON.stringify({ productId: product.id })
         });
         const data = await res.json();

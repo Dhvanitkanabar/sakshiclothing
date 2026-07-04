@@ -7,12 +7,12 @@ import { ShoppingBag, Trash2, Heart, ArrowRight, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Wishlist = () => {
-  const { wishlist, removeFromWishlist } = useWishlist();
+  const { wishlist, toggleWishlist } = useWishlist();
   const { addToCart } = useCart();
 
   const handleMoveToBag = (product: any) => {
-    addToCart(product, 'M'); // Default size M for quick move
-    removeFromWishlist(product.id);
+    addToCart(product, 'M', 1); // Default size M for quick move
+    toggleWishlist(product);
     toast.success(`${product.name} moved to bag.`);
   };
 
@@ -86,7 +86,7 @@ const Wishlist = () => {
                 
                 <div className="absolute top-6 right-6">
                   <button
-                    onClick={() => removeFromWishlist(product.id)}
+                    onClick={() => toggleWishlist(product)}
                     className="w-10 h-10 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-luxury-black hover:bg-rose-600 hover:text-white transition-all duration-500 shadow-xl"
                   >
                     <Trash2 size={16} />

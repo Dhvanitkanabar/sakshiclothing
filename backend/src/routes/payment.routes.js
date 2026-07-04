@@ -1,5 +1,5 @@
 import express from 'express';
-import { protect, authorize } from '../middlewares/auth.middleware.js';
+import { verifyJWT, authorizeRoles } from '../middlewares/auth.middleware.js';
 import {
   createPaymentIntent,
   getPaymentHistory,
@@ -19,14 +19,14 @@ router.post('/webhook/razorpay', handleRazorpayWebhook);
 router.post('/webhook/stripe', handleStripeWebhook);
 
 // Protected Customer routes
-router.use(protect);
+router.use(verifyJWT);
 
 router.post('/create-intent', createPaymentIntent);
 router.get('/history', getPaymentHistory);
 router.get('/:id', getPaymentDetails);
 
 // Admin routes
-router.use(authorize('admin'));
+router.use(authorizeRoles('admin'));
 router.get('/', getAllPayments);
 
 export default router;

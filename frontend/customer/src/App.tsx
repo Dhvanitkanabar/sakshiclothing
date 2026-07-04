@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { AuthProvider } from './context/AuthContext';
@@ -11,22 +12,23 @@ import { WishlistProvider } from './context/WishlistContext';
 import Navbar from './components/Navbar';
 import BottomNav from './components/BottomNav';
 import Footer from './components/Footer';
-import Home from './pages/Home';
-import Shop from './pages/Shop';
-import Category from './pages/Category';
-import ProductDetails from './pages/ProductDetails';
-import Cart from './pages/Cart';
-import Checkout from './pages/Checkout';
-import AuthPage from './pages/AuthPage';
-import Profile from './pages/Profile';
-import Wishlist from './pages/Wishlist';
-import OrderSuccess from './pages/OrderSuccess';
-import PaymentRetry from './pages/PaymentRetry';
-import Admin from './pages/Admin';
 import CartDrawer from './components/CartDrawer';
+import ProtectedRoute from './components/ProtectedRoute';
 import { motion, AnimatePresence } from 'motion/react';
 
-import ProtectedRoute from './components/ProtectedRoute';
+// Lazy loading pages for performance
+const Home = lazy(() => import('./pages/Home'));
+const Shop = lazy(() => import('./pages/Shop'));
+const Category = lazy(() => import('./pages/Category'));
+const ProductDetails = lazy(() => import('./pages/ProductDetails'));
+const Cart = lazy(() => import('./pages/Cart'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const AuthPage = lazy(() => import('./pages/AuthPage'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Wishlist = lazy(() => import('./pages/Wishlist'));
+const OrderSuccess = lazy(() => import('./pages/OrderSuccess'));
+const PaymentRetry = lazy(() => import('./pages/PaymentRetry'));
+const Admin = lazy(() => import('./pages/Admin'));
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -39,36 +41,38 @@ const AnimatedRoutes = () => {
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.4, ease: "easeInOut" }}
       >
-        <Routes location={location}>
-          <Route path="/" element={<Home />} />
-          <Route path="/shop" element={<Shop />} />
-          <Route path="/category/:main" element={<Category />} />
-          <Route path="/category/:main/:sub" element={<Category />} />
-          <Route path="/product/:id" element={<ProductDetails />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route 
-            path="/checkout" 
-            element={
-              <ProtectedRoute>
-                <Checkout />
-              </ProtectedRoute>
-            } 
-          />
-          <Route path="/login" element={<AuthPage />} />
-          <Route path="/signup" element={<AuthPage />} />
-          <Route 
-            path="/profile" 
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            } 
-          />
-          <Route path="/order-success" element={<OrderSuccess />} />
-          <Route path="/payment-retry" element={<PaymentRetry />} />
-          <Route path="/wishlist" element={<Wishlist />} />
-          <Route path="/admin" element={<Admin />} />
-        </Routes>
+        <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading...</div>}>
+          <Routes location={location}>
+            <Route path="/" element={<Home />} />
+            <Route path="/shop" element={<Shop />} />
+            <Route path="/category/:main" element={<Category />} />
+            <Route path="/category/:main/:sub" element={<Category />} />
+            <Route path="/product/:id" element={<ProductDetails />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route 
+              path="/checkout" 
+              element={
+                <ProtectedRoute>
+                  <Checkout />
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="/login" element={<AuthPage />} />
+            <Route path="/signup" element={<AuthPage />} />
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="/order-success" element={<OrderSuccess />} />
+            <Route path="/payment-retry" element={<PaymentRetry />} />
+            <Route path="/wishlist" element={<Wishlist />} />
+            <Route path="/admin" element={<Admin />} />
+          </Routes>
+        </Suspense>
       </motion.div>
     </AnimatePresence>
   );
