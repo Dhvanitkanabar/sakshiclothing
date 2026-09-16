@@ -1,22 +1,24 @@
 import uploadRepository from '../repositories/upload.repository.js';
-import cloudinary from '../config/cloudinary.js';
+import fs from 'fs/promises';
+import path from 'path';
 
 class UploadService {
   async processUpload(file, userId, folderName) {
-    // Determine responsive thumbnail url via cloudinary transformations
-    // Replace /upload/ with /upload/w_300,h_300,c_fill,q_auto,f_auto/ for a thumbnail
-    const thumbnailUrl = file.path.replace('/upload/', '/upload/w_300,h_300,c_fill,q_auto,f_auto/');
+    // For local storage, the file is saved in 'uploads/'
+    // We construct a public URL to serve it via express.static
     
-    // Replace base url to ensure general optimizations
-    const optimizedUrl = file.path.replace('/upload/', '/upload/q_auto,f_auto/');
+    // Normalize path to use forward slashes for URLs
+    const normalizedPath = file.path.replace(/\\/g, '/');
+    const baseUrl = process.env.API_URL || 'http://localhost:5000';
+    const secureUrl = `${baseUrl}/${normalizedPath}`;
 
     const uploadData = {
-      publicId: file.filename, // Multer-storage-cloudinary uses filename for public_id
-      secureUrl: optimizedUrl,
-      thumbnailUrl: thumbnailUrl,
-      width: file.width || 0,
-      height: file.height || 0,
-      format: file.format || file.mimetype.split('/')[1],
+      publicId: file.filename, 
+      secureUrl: secureUrl,
+      thumbnailUrl: secureUrl, // Local storage doesn't auto-generate thumbnails, use original
+      width: 0,
+      height: 0,
+      format: file.mimetype.split('/')[1],
       bytes: file.size,
       folder: folderName || 'sakshi-clothing/misc',
       uploadedBy: userId,
@@ -31,8 +33,14 @@ class UploadService {
       throw new Error('Image not found in database');
     }
 
-    // Delete from Cloudinary
-    await cloudinary.uploader.destroy(publicId);
+    // Delete local file
+    try {
+      const filePath = path.join(process.cwd(), 'uploads', publicId);
+      await fs.unlink(filePath);
+    } catch (err) {
+      console.error(`Failed to delete local file: ${err.message}`);
+      // Continue to delete from DB even if file is missing
+    }
 
     // Delete from DB
     await uploadRepository.deleteUploadByPublicId(publicId);

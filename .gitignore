@@ -1,11 +1,41 @@
+# Dependency directories
 node_modules/
+
+# Production build output
 dist/
 build/
+
+# Environment files
 .env
 .env.local
 .env.development
 .env.production
-.DS_Store
-uploads/
-coverage/
+.env.staging
+.env*.local
+
+# Database & local data
+.mongo_data/
+*.db
+*.sqlite
+
+# Logs & temp files
+logs/
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+uploads/*
+!uploads/.gitkeep
+coverage/
+tree.txt
+
+# Local utility scripts
+backend/check_admin.js
+backend/create_admin.js
+backend/fix_admin_role.js
+backend/reset_pw.js
+frontend/customer/patch_checkout.cjs
+
+# OS generated files
+.DS_Store
+Thumbs.db

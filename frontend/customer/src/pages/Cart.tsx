@@ -125,8 +125,8 @@ const Cart = () => {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-gray-400">Shipping</span>
-                <span className={`text-[9px] md:text-[10px] font-bold uppercase tracking-widest ${totalPrice > 2000 ? 'text-green-600' : 'text-luxury-black'}`}>
-                  {totalPrice > 2000 ? 'Complimentary' : '₹100'}
+                <span className={`text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-green-600`}>
+                  Free
                 </span>
               </div>
               <div className="pt-4 md:pt-6 border-t border-gray-100 flex justify-between items-end">
@@ -134,7 +134,7 @@ const Cart = () => {
                   <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-gray-400">Total Amount</span>
                   <p className="text-[8px] md:text-[9px] text-gray-300 uppercase tracking-widest font-bold">Including all taxes</p>
                 </div>
-                <span className="text-2xl md:text-3xl font-serif font-medium text-luxury-black">₹{(totalPrice > 2000 ? totalPrice : totalPrice + 100).toLocaleString()}</span>
+                <span className="text-2xl md:text-3xl font-serif font-medium text-luxury-black">₹{totalPrice.toLocaleString()}</span>
               </div>
             </div>
 
@@ -148,7 +148,7 @@ const Cart = () => {
             <div className="bg-gray-50 rounded-2xl p-4 md:p-6">
               <p className="text-[8px] md:text-[9px] text-gray-400 font-bold uppercase tracking-widest leading-loose text-center">
                 Complimentary returns within 30 days. <br />
-                Free shipping on orders above ₹2,000.
+                Free shipping on all orders.
               </p>
             </div>
           </div>
@@ -160,7 +160,7 @@ const Cart = () => {
         <div className="flex items-center justify-between mb-4 px-2">
           <div className="space-y-0.5">
             <span className="text-[8px] font-bold uppercase tracking-widest text-gray-400">Total Amount</span>
-            <p className="text-lg font-serif font-bold text-luxury-black tracking-tight">₹{(totalPrice > 2000 ? totalPrice : totalPrice + 100).toLocaleString()}</p>
+            <p className="text-lg font-serif font-bold text-luxury-black tracking-tight">₹{totalPrice.toLocaleString()}</p>
           </div>
           <button
             onClick={() => navigate('/checkout')}

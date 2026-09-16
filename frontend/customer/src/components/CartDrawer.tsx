@@ -145,7 +145,7 @@ const CartDrawer = () => {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-bold">Shipping</span>
-                    <span className="text-[10px] text-luxury-black font-bold uppercase tracking-widest">Calculated at checkout</span>
+                    <span className="text-[10px] text-green-600 font-bold uppercase tracking-widest">Free</span>
                   </div>
                 </div>
                 
@@ -160,7 +160,7 @@ const CartDrawer = () => {
                 </button>
                 
                 <p className="text-[9px] text-center text-gray-400 uppercase tracking-[0.2em] font-medium">
-                  Complimentary shipping on orders over ₹2000
+                  Free shipping on all orders
                 </p>
               </div>
             )}

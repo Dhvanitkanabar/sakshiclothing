@@ -95,6 +95,14 @@ router.post('/login', authLimiter, validateRequest(loginSchema), AuthController.
 
 /**
  * @swagger
+ * /api/v1/auth/admin-login:
+ *   post:
+ *     summary: Login admin using hardcoded credentials
+ *     tags: [Authentication]
+ */
+router.post('/admin-login', authLimiter, AuthController.adminLogin);
+/**
+ * @swagger
  * /api/v1/auth/forgot-password:
  *   post:
  *     summary: Request password reset link
@@ -115,6 +123,9 @@ router.post('/login', authLimiter, validateRequest(loginSchema), AuthController.
 router.post('/forgot-password', authLimiter, validateRequest(resetPasswordSchema), AuthController.forgotPassword);
 router.post('/reset-password', AuthController.resetPassword);
 
+// Check if email exists
+router.post('/check-email', authLimiter, AuthController.checkEmailExists);
+
 // Token Refresh
 router.post('/refresh-token', authenticateRefresh, AuthController.refreshToken);
 
@@ -123,5 +134,6 @@ router.post('/logout', authenticate, AuthController.logout);
 router.post('/change-password', authenticate, validateRequest(changePasswordSchema), AuthController.changePassword);
 router.get('/me', authenticate, AuthController.getProfile);
 router.get('/profile', authenticate, AuthController.getProfile);
+router.patch('/profile', authenticate, AuthController.updateProfile);
 
 export default router;

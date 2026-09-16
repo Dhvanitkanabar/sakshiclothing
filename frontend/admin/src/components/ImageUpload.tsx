@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { UploadCloud, X, AlertCircle, RefreshCw, Star } from 'lucide-react';
+import { UploadCloud, X, AlertCircle, RefreshCw, Star, CheckCircle, Image as ImageIcon } from 'lucide-react';
 import axios from 'axios';
 
 interface ImageUploadProps {
@@ -72,7 +72,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     formData.append('folder', folder);
 
     try {
-      const response = await axios.post('/api/v1/uploads/image', formData, {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+      const response = await axios.post(`${API_URL}/uploads/image`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -126,78 +127,87 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   });
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-6">
       {/* Dropzone Area */}
       <div
         {...getRootProps()}
-        className={`border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center cursor-pointer transition-colors ${
-          isDragActive ? 'border-blue-500 bg-blue-50/10' : 'border-gray-300 hover:border-gray-400'
+        className={`relative group border-2 border-dashed rounded-xl p-10 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 ${
+          isDragActive 
+            ? 'border-black bg-gray-50 scale-[0.99]' 
+            : 'border-gray-200 hover:border-gray-400 bg-white hover:bg-gray-50'
         }`}
       >
         <input {...getInputProps()} />
-        <UploadCloud className="w-12 h-12 text-gray-400 mb-4" />
-        <p className="text-sm text-gray-600 text-center">
-          <span className="font-semibold text-blue-600">Click to upload</span> or drag and drop
+        <div className={`p-4 rounded-full mb-4 transition-colors duration-300 ${isDragActive ? 'bg-black text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200 group-hover:text-black'}`}>
+          <UploadCloud className="w-8 h-8" strokeWidth={1.5} />
+        </div>
+        <p className="text-sm text-gray-900 font-medium text-center">
+          <span className="font-bold underline underline-offset-4 cursor-pointer">Click to upload</span> or drag and drop
         </p>
-        <p className="text-xs text-gray-500 mt-2">
-          JPG, PNG or WEBP (max. 10MB) - Up to {maxFiles} images
+        <p className="text-xs text-gray-400 mt-2 font-medium">
+          JPG, PNG or WEBP (Max 10MB)
         </p>
       </div>
 
       {/* Existing Images Gallery */}
       {existingImages.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-6">
-          {existingImages.map((img) => (
-            <div key={img.publicId} className="relative group rounded-lg overflow-hidden border border-gray-200">
-              <img src={img.thumbnailUrl || img.secureUrl} alt="Upload" className="w-full h-32 object-cover" />
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
-                <div className="flex justify-between">
-                  <button
-                    type="button"
-                    onClick={() => onSetPrimary && onSetPrimary(img.publicId)}
-                    className="p-1 rounded-full bg-white/20 hover:bg-white/40 text-white transition-colors"
-                    title="Set as primary"
-                  >
-                    <Star size={16} fill={primaryImageId === img.publicId ? "currentColor" : "none"} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onImageDelete && onImageDelete(img.publicId)}
-                    className="p-1 rounded-full bg-red-500/80 hover:bg-red-500 text-white transition-colors"
-                    title="Delete image"
-                  >
-                    <X size={16} />
-                  </button>
+        <div className="space-y-3">
+          <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+            <ImageIcon size={14} /> Uploaded Images
+          </h4>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {existingImages.map((img) => (
+              <div key={img.publicId} className="relative group aspect-square rounded-xl overflow-hidden border border-gray-100 bg-gray-50 shadow-sm hover:shadow-md transition-all">
+                <img src={img.thumbnailUrl || img.secureUrl} alt="Upload" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3">
+                  <div className="flex justify-between items-start">
+                    <button
+                      type="button"
+                      onClick={() => onSetPrimary && onSetPrimary(img.publicId)}
+                      className={`p-1.5 rounded-full backdrop-blur-sm transition-colors ${primaryImageId === img.publicId ? 'bg-black text-white' : 'bg-white/20 hover:bg-white text-white hover:text-black'}`}
+                      title="Set as primary"
+                    >
+                      <Star size={14} strokeWidth={2} fill={primaryImageId === img.publicId ? "currentColor" : "none"} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onImageDelete && onImageDelete(img.publicId)}
+                      className="p-1.5 rounded-full bg-white/20 backdrop-blur-sm hover:bg-red-500 text-white transition-colors"
+                      title="Delete image"
+                    >
+                      <X size={14} strokeWidth={2} />
+                    </button>
+                  </div>
+                  {primaryImageId === img.publicId && (
+                    <span className="text-[10px] font-black tracking-wider uppercase text-white bg-black/80 backdrop-blur-md px-2 py-1 rounded-full w-fit">Primary</span>
+                  )}
                 </div>
-                {primaryImageId === img.publicId && (
-                  <span className="text-xs font-semibold text-white bg-blue-500 px-2 py-1 rounded w-fit">Primary</span>
-                )}
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
       {/* Uploading Status List */}
       {uploads.length > 0 && (
-        <div className="space-y-3 mt-4">
+        <div className="space-y-2 mt-4">
           {uploads.map((upload) => (
-            <div key={upload.id} className="flex items-center gap-4 bg-gray-50/5 p-3 rounded-lg border border-gray-200">
+            <div key={upload.id} className="flex items-center gap-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
               <div className="flex-1">
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium truncate max-w-[200px]">{upload.file.name}</span>
-                  {upload.status === 'uploading' && <span className="text-blue-500">{upload.progress}%</span>}
-                  {upload.status === 'success' && <span className="text-green-500">Success</span>}
-                  {upload.status === 'error' && <span className="text-red-500">Failed</span>}
+                <div className="flex justify-between text-xs font-bold uppercase tracking-wider mb-2">
+                  <span className="text-gray-700 truncate max-w-[200px]">{upload.file.name}</span>
+                  {upload.status === 'uploading' && <span className="text-black">{upload.progress}%</span>}
+                  {upload.status === 'success' && <span className="text-green-600 flex items-center gap-1"><CheckCircle size={12} /> Success</span>}
+                  {upload.status === 'error' && <span className="text-red-500 flex items-center gap-1"><AlertCircle size={12} /> Failed</span>}
                 </div>
                 {upload.status === 'uploading' && (
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-500 h-2 rounded-full transition-all duration-300" style={{ width: `${upload.progress}%` }} />
+                  <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                    <div className="bg-black h-full transition-all duration-300" style={{ width: `${upload.progress}%` }} />
                   </div>
                 )}
                 {upload.status === 'error' && (
-                  <p className="text-xs text-red-500 flex items-center gap-1 mt-1">
-                    <AlertCircle size={12} /> {upload.errorMessage}
+                  <p className="text-[10px] text-red-500 mt-1 font-medium bg-red-50 p-1.5 rounded-md inline-block">
+                    {upload.errorMessage}
                   </p>
                 )}
               </div>
@@ -206,19 +216,19 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                   <button
                     type="button"
                     onClick={() => uploadFile(upload)}
-                    className="p-2 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded"
+                    className="p-1.5 text-gray-400 hover:text-black bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
                     title="Retry"
                   >
-                    <RefreshCw size={16} />
+                    <RefreshCw size={14} />
                   </button>
                 )}
                 <button
                   type="button"
                   onClick={() => removeUpload(upload.id)}
-                  className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded"
+                  className="p-1.5 text-gray-400 hover:text-red-500 bg-gray-50 hover:bg-red-50 rounded-lg transition-colors"
                   title="Remove"
                 >
-                  <X size={16} />
+                  <X size={14} />
                 </button>
               </div>
             </div>

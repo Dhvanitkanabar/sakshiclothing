@@ -7,7 +7,7 @@ import { generateInvoiceHTML } from '../utils/invoiceGenerator.js';
 
 export const checkout = asyncHandler(async (req, res) => {
   const { shippingAddressId, items, isFromCart } = req.body;
-  
+
   if (!shippingAddressId) {
     throw new ApiError(400, 'Shipping address is required');
   }
@@ -16,18 +16,18 @@ export const checkout = asyncHandler(async (req, res) => {
 
   // If checking out from Cart, fetch cart items directly
   if (isFromCart) {
-    // For authenticated checkout, guestId can be null if relying on userId.
-    // The requirement is that users must be authenticated, so we use req.user._id
-    const cart = await cartService.getCart(req.user._id, null);
-    if (!cart || cart.items.length === 0) {
-      throw new ApiError(400, 'Cart is empty');
+    const guestId = req.cookies?.guestId;
+    let cart = await cartService.getCart(req.user._id, guestId);
+
+    if (cart && cart.items && cart.items.length > 0) {
+      orderItems = cart.items.map(item => ({
+        productId: item.product?._id || item.product,
+        variantId: item.variantId,
+        quantity: item.quantity
+      }));
+    } else if (!items || items.length === 0) {
+      throw new ApiError(400, 'Order items cannot be empty');
     }
-    
-    orderItems = cart.items.map(item => ({
-      productId: item.product._id || item.product,
-      variantId: item.variantId,
-      quantity: item.quantity
-    }));
   }
 
   const order = await orderService.createCheckoutOrder(req.user._id, orderItems, shippingAddressId);
@@ -61,9 +61,15 @@ export const buyNow = asyncHandler(async (req, res) => {
   if (!productId || !variantId || !shippingAddressId) {
     throw new ApiError(400, 'productId, variantId and shippingAddressId are required');
   }
+
+  const parsedQty = parseInt(quantity, 10);
+  if (isNaN(parsedQty) || parsedQty <= 0) {
+    throw new ApiError(400, 'Quantity must be a positive integer');
+  }
+
   const order = await orderService.createCheckoutOrder(
     req.user._id,
-    [{ productId, variantId, quantity }],
+    [{ productId, variantId, quantity: parsedQty }],
     shippingAddressId
   );
   return res.status(201).json(new ApiResponse(201, order, 'Order placed successfully'));

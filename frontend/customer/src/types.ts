@@ -5,24 +5,32 @@ export interface Product {
   category: 'Women' | 'Men' | 'Kids';
   subCategory: string;
   sizes: string[];
-  variants?: { _id: string; size: string; color: string; stock: number }[];
+  variants?: { _id: string; size: string; color: string; stock: number; status?: string }[];
   image: string;
+  images?: string[];
   description: string;
   featured?: boolean;
   rating?: number;
 }
 
 export interface User {
-  uid: string;
-  name: string;
+  _id: string;
+  clerkUserId: string;
+  fullName: string;
+  name?: string;      // alias used in some places
   email: string;
-  photoURL?: string;
-  role: 'client' | 'admin';
+  phone?: string;
+  avatar?: { url?: string };
+  role: 'user' | 'admin' | 'superadmin';
+  isActive?: boolean;
+  isBlocked?: boolean;
+  loyaltyPoints?: number;
 }
 
 export interface CartItem extends Product {
   quantity: number;
   selectedSize: string;
+  variantId?: string;
 }
 
 export interface Order {

@@ -1,5 +1,7 @@
 import User from '../models/User.model.js';
 import Order from '../models/Order.model.js';
+import Cart from '../models/Cart.model.js';
+import Address from '../models/Address.model.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
@@ -45,16 +47,53 @@ export const deactivateCustomer = asyncHandler(async (req, res) => {
 });
 
 export const getCustomerDetails = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id)
-    .populate('wishlist')
-    .populate({
-      path: 'cart',
-      populate: { path: 'items.product' }
-    })
-    .select('-password');
+  const userId = req.params.id;
+  
+  const user = await User.findById(userId).select('-password -refreshToken');
   if (!user) throw new ApiError(404, 'User not found');
 
-  const orderHistory = await Order.find({ customer: req.params.id }).sort({ createdAt: -1 });
+  let cart = null;
+  try {
+    cart = await Cart.findOne({ user: userId }).populate({
+      path: 'items.product',
+      select: 'name thumbnail pricing variants'
+    });
+  } catch (err) {
+    console.warn('Cart lookup notice:', err.message);
+  }
 
-  return res.status(200).json(new ApiResponse(200, { user, orderHistory }, 'Customer details fetched'));
+  let addresses = [];
+  try {
+    const addressQuery = user.clerkUserId 
+      ? { $or: [{ user: userId }, { user: user.clerkUserId }] }
+      : { user: userId };
+    addresses = await Address.find(addressQuery).sort({ isDefault: -1 });
+  } catch (err) {
+    console.warn('Address lookup notice:', err.message);
+  }
+
+  let orderHistory = [];
+  try {
+    orderHistory = await Order.find({ customer: userId }).sort({ createdAt: -1 });
+  } catch (err) {
+    console.warn('Order history lookup notice:', err.message);
+  }
+
+  let wishlist = [];
+  try {
+    const userWithWishlist = await User.findById(userId).populate('wishlist', 'name thumbnail pricing');
+    wishlist = userWithWishlist?.wishlist || [];
+  } catch (err) {
+    console.warn('Wishlist lookup notice:', err.message);
+  }
+
+  return res.status(200).json(new ApiResponse(200, {
+    user: {
+      ...user.toObject(),
+      addresses,
+      cart: cart || { items: [] },
+      wishlist
+    },
+    orderHistory
+  }, 'Customer details fetched'));
 });

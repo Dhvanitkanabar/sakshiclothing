@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useUser } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Package, User as UserIcon, LogOut, ChevronRight, ShoppingBag,
@@ -49,17 +50,26 @@ const STATUS_ICON: Record<string, React.ReactNode> = {
   shipped: <Truck size={12} />,
 };
 
-// ─── Profile Component ────────────────────────────────────────────────────────
+
+// ─── Profile Component ─────────────────────────────────────────────────────
 const Profile = () => {
   const navigate = useNavigate();
-  const { user, logout, loading: authLoading } = useAuth();
+  const { user, isSignedIn, logout, loading: authLoading } = useAuth();
+  const { user: clerkUser } = useUser();
+
+  // Use MongoDB user data if available, fall back to Clerk
+  const displayName = user?.fullName || clerkUser?.fullName || clerkUser?.firstName || 'User';
+  const displayEmail = user?.email || clerkUser?.primaryEmailAddress?.emailAddress || '';
+  const displayAvatar = user?.avatar?.url || clerkUser?.imageUrl;
+  const displayRole = user?.role || 'user';
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [addresses, setAddresses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('orders');
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
-  
-  const [loyaltyData, setLoyaltyData] = useState<{points: number, transactions: any[]}>({points: 0, transactions: []});
+
+  const [loyaltyData, setLoyaltyData] = useState<{ points: number, transactions: any[] }>({ points: 0, transactions: [] });
 
   // Load loyalty
   const loadLoyalty = useCallback(async () => {
@@ -70,7 +80,7 @@ const Profile = () => {
       if (data.success) {
         setLoyaltyData(data.data);
       }
-    } catch (err) {}
+    } catch (err) { }
   }, [user]);
   const loadOrders = useCallback(async () => {
     if (!user) return;
@@ -151,13 +161,12 @@ const Profile = () => {
   };
 
   if (authLoading) return null;
-  if (!user) return <Navigate to="/login" />;
+  if (!isSignedIn) return <Navigate to="/login" />;
 
   const menuItems = [
     { id: 'orders', label: 'Order History', icon: Package },
     { id: 'addresses', label: 'Addresses', icon: MapPin },
     { id: 'loyalty', label: 'Loyalty Points', icon: Award },
-    { id: 'settings', label: 'Account Settings', icon: Settings },
   ];
 
   return (
@@ -167,15 +176,16 @@ const Profile = () => {
         <aside className="lg:w-80 space-y-12">
           <div className="space-y-6">
             <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center border border-gray-100 overflow-hidden">
-              {user.photoURL ? (
-                <img src={user.photoURL} alt={user.name} className="w-full h-full object-cover" />
+              {displayAvatar ? (
+                <img src={displayAvatar} alt={displayName} className="w-full h-full object-cover" />
               ) : (
-                <UserIcon size={32} className="text-gray-300" />
+                <span className="text-3xl font-bold text-gray-400">{displayName.charAt(0).toUpperCase()}</span>
               )}
             </div>
             <div className="space-y-1">
-              <h2 className="text-2xl font-serif font-medium tracking-tight text-luxury-black">{user.name}</h2>
-              <p className="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-bold">{user.role}</p>
+              <h2 className="text-2xl font-sans font-bold tracking-tight text-luxury-black">{displayName}</h2>
+              <p className="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-bold">{displayEmail}</p>
+              <span className="inline-block px-3 py-1 bg-gray-100 text-gray-500 text-[9px] font-bold uppercase tracking-widest rounded-full mt-1">{displayRole}</span>
             </div>
           </div>
 
@@ -184,11 +194,10 @@ const Profile = () => {
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center justify-between p-4 rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-500 ${
-                  activeTab === item.id
+                className={`w-full flex items-center justify-between p-4 rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-500 ${activeTab === item.id
                     ? 'bg-luxury-black text-white shadow-2xl shadow-black/10'
                     : 'text-gray-400 hover:text-luxury-black hover:bg-gray-50'
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-4">
                   <item.icon size={16} />
@@ -198,7 +207,7 @@ const Profile = () => {
               </button>
             ))}
 
-            {user.role === 'admin' && (
+            {(displayRole === 'admin' || displayRole === 'superadmin') && (
               <Link
                 to="/admin"
                 className="w-full flex items-center gap-4 p-4 text-rose-600 hover:bg-rose-50 rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-500"
@@ -222,7 +231,7 @@ const Profile = () => {
         <main className="flex-grow space-y-16">
           <header className="space-y-4">
             <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-rose-600">Account</span>
-            <h1 className="text-6xl md:text-8xl font-serif font-medium tracking-tighter text-luxury-black">
+            <h1 className="text-5xl md:text-7xl font-sans font-black tracking-tighter text-luxury-black">
               {menuItems.find(i => i.id === activeTab)?.label}
             </h1>
           </header>
@@ -348,7 +357,7 @@ const Profile = () => {
                             {/* Retry Payment (only for failed payments) */}
                             {order.paymentStatus === 'failed' && (
                               <button
-                                onClick={() => navigate('/payment-retry', { state: { orderId: order._id, amount: order.total, gateway: order.paymentMethod }})}
+                                onClick={() => navigate('/payment-retry', { state: { orderId: order._id, amount: order.total, gateway: order.paymentMethod } })}
                                 className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white bg-black hover:bg-gray-800 transition-colors px-4 py-2 rounded-full"
                               >
                                 <CreditCard size={12} /> Retry Payment
@@ -374,7 +383,7 @@ const Profile = () => {
                       <ShoppingBag size={40} />
                     </div>
                     <div className="space-y-2">
-                      <p className="text-2xl text-gray-400 font-serif italic">Your wardrobe is waiting.</p>
+                      <p className="text-2xl text-gray-400 font-sans font-semibold">Your wardrobe is waiting.</p>
                       <p className="text-sm text-gray-400 font-light">You haven't placed any orders yet.</p>
                     </div>
                     <Link to="/shop" className="inline-block px-12 py-4 bg-luxury-black text-white text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-rose-600 transition-all duration-500 rounded-full">
@@ -462,18 +471,15 @@ const Profile = () => {
                     <h3 className="font-bold text-luxury-black">Transaction History</h3>
                   </div>
                   {loyaltyData.transactions.length === 0 ? (
-                    <div className="p-12 text-center text-gray-400 font-serif italic">
-                      No points history available yet.
-                    </div>
+                    <p className="text-2xl text-gray-400 font-sans font-medium">No points history available yet.</p>
                   ) : (
                     <div className="divide-y divide-gray-100">
                       {loyaltyData.transactions.map((tx: any) => (
                         <div key={tx._id} className="p-6 flex items-center justify-between hover:bg-gray-50 transition-colors">
                           <div>
-                            <span className={`inline-block px-2 py-1 text-[9px] font-bold uppercase tracking-widest rounded-full mb-2 ${
-                              tx.type === 'earned' ? 'bg-green-100 text-green-700' :
-                              tx.type === 'redeemed' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-700'
-                            }`}>
+                            <span className={`inline-block px-2 py-1 text-[9px] font-bold uppercase tracking-widest rounded-full mb-2 ${tx.type === 'earned' ? 'bg-green-100 text-green-700' :
+                                tx.type === 'redeemed' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-700'
+                              }`}>
                               {tx.type}
                             </span>
                             <p className="text-sm font-bold text-luxury-black">{tx.description || 'Points Adjustment'}</p>
@@ -490,19 +496,6 @@ const Profile = () => {
               </motion.div>
             )}
 
-            {/* ── Other Tabs (placeholders) ── */}
-            {activeTab !== 'orders' && activeTab !== 'addresses' && activeTab !== 'loyalty' && (
-              <motion.div
-                key="other"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="py-32 text-center bg-gray-50 rounded-[3rem] border border-dashed border-gray-200"
-              >
-                <p className="text-2xl text-gray-400 font-serif italic">Coming Soon</p>
-                <p className="text-sm text-gray-400 font-light mt-2">This section is currently under curation.</p>
-              </motion.div>
-            )}
           </AnimatePresence>
         </main>
       </div>

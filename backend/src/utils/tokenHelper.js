@@ -23,6 +23,7 @@ export const verifyToken = (token, isRefresh = false) => {
       : process.env.JWT_SECRET || 'secret-access';
     return jwt.verify(token, secret);
   } catch (error) {
+    console.error('verifyToken Error:', error.message);
     return null;
   }
 };

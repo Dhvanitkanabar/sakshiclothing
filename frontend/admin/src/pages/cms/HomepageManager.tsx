@@ -16,11 +16,11 @@ export default function HomepageManager() {
 
   const fetchCMS = async () => {
     try {
-      const bRes = await fetch(`${API_URL}/cms/banners`);
+      const bRes = await fetch(`${API_URL}/cms/banners`, { credentials: 'include' });
       const bData = await bRes.json();
       if (bData.success) setBanners(bData.data || []);
 
-      const aRes = await fetch(`${API_URL}/cms/announcements`);
+      const aRes = await fetch(`${API_URL}/cms/announcements`, { credentials: 'include' });
       const aData = await aRes.json();
       if (aData.success) setAnnouncements(aData.data || []);
     } catch (err) {
@@ -38,6 +38,7 @@ export default function HomepageManager() {
       await fetch(`${API_URL}/cms/banners`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(bannerForm)
       });
       setBannerForm({ title: '', subtitle: '', buttonText: '', buttonLink: '', image: { url: '' }, homepageSection: 'hero' });
@@ -49,7 +50,7 @@ export default function HomepageManager() {
 
   const handleBannerDelete = async (id: string) => {
     if (confirm('Delete banner?')) {
-      await fetch(`${API_URL}/cms/banners/${id}`, { method: 'DELETE' });
+      await fetch(`${API_URL}/cms/banners/${id}`, { method: 'DELETE', credentials: 'include' });
       fetchCMS();
     }
   };
@@ -61,6 +62,7 @@ export default function HomepageManager() {
       await fetch(`${API_URL}/cms/announcements`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ announcementBar: newArr })
       });
       setAnnouncementText('');
@@ -76,6 +78,7 @@ export default function HomepageManager() {
       await fetch(`${API_URL}/cms/announcements`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ announcementBar: newArr })
       });
       fetchCMS();

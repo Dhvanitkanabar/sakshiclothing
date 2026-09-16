@@ -2,16 +2,35 @@ import { Product } from '../types';
 
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
+/**
+ * Authenticated fetch: sends the Clerk Bearer token in the Authorization header.
+ * This is needed because Clerk users don't get a local accessToken cookie.
+ */
+export const authedFetch = async (url: string, options: RequestInit = {}, clerkToken?: string | null): Promise<Response> => {
+  const headers: Record<string, string> = {
+    ...(options.headers as Record<string, string> || {}),
+  };
+  if (clerkToken) {
+    headers['Authorization'] = `Bearer ${clerkToken}`;
+  }
+  return fetch(url, {
+    ...options,
+    credentials: 'include',
+    headers,
+  });
+};
+
 export const mapBackendProductToFrontend = (backendProduct: any): Product => {
   return {
     id: backendProduct._id || backendProduct.id,
     name: backendProduct.name,
     price: backendProduct.pricing?.basePrice || 0,
-    category: backendProduct.category?.name || 'Women', // Assuming populated
+    category: backendProduct.category?.name || backendProduct.category || '',
     subCategory: backendProduct.tags?.[0] || '', // Mapping tags to subcategory for UI compatibility
-    sizes: backendProduct.variants?.map((v: any) => v.size).filter(Boolean) || ['S', 'M', 'L'], // Fallback sizes
+    sizes: backendProduct.variants?.map((v: any) => v.size).filter(Boolean) || [],
     variants: backendProduct.variants || [],
     image: backendProduct.thumbnail?.url || backendProduct.images?.[0]?.url || 'https://via.placeholder.com/500',
+    images: backendProduct.images?.map((img: any) => img.url) || [],
     description: backendProduct.description || backendProduct.shortDescription || '',
     featured: backendProduct.isFeatured || false,
     rating: backendProduct.averageRating || 5
@@ -75,9 +94,9 @@ export const fetchNewArrivals = async () => {
   }
 };
 
-export const fetchAddresses = async (): Promise<any[]> => {
+export const fetchAddresses = async (clerkToken?: string | null): Promise<any[]> => {
   try {
-    const res = await fetch(`${API_URL}/addresses`, { credentials: 'include' });
+    const res = await authedFetch(`${API_URL}/addresses`, {}, clerkToken);
     const data = await res.json();
     return data.success ? data.data : [];
   } catch (e) {
@@ -86,14 +105,13 @@ export const fetchAddresses = async (): Promise<any[]> => {
   }
 };
 
-export const addAddress = async (addressData: any) => {
+export const addAddress = async (addressData: any, clerkToken?: string | null) => {
   try {
-    const res = await fetch(`${API_URL}/addresses`, {
+    const res = await authedFetch(`${API_URL}/addresses`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
       body: JSON.stringify(addressData)
-    });
+    }, clerkToken);
     return await res.json();
   } catch (e) {
     console.error(e);
@@ -116,12 +134,9 @@ export const updateAddress = async (id: string, addressData: any) => {
   }
 };
 
-export const deleteAddress = async (id: string) => {
+export const deleteAddress = async (id: string, clerkToken?: string | null) => {
   try {
-    const res = await fetch(`${API_URL}/addresses/${id}`, {
-      method: 'DELETE',
-      credentials: 'include',
-    });
+    const res = await authedFetch(`${API_URL}/addresses/${id}`, { method: 'DELETE' }, clerkToken);
     return await res.json();
   } catch (e) {
     console.error(e);
@@ -129,12 +144,9 @@ export const deleteAddress = async (id: string) => {
   }
 };
 
-export const setDefaultAddress = async (id: string) => {
+export const setDefaultAddress = async (id: string, clerkToken?: string | null) => {
   try {
-    const res = await fetch(`${API_URL}/addresses/${id}/default`, {
-      method: 'PATCH',
-      credentials: 'include',
-    });
+    const res = await authedFetch(`${API_URL}/addresses/${id}/default`, { method: 'PATCH' }, clerkToken);
     return await res.json();
   } catch (e) {
     console.error(e);
@@ -142,14 +154,13 @@ export const setDefaultAddress = async (id: string) => {
   }
 };
 
-export const placeOrder = async (shippingAddressId: string, isFromCart = true) => {
+export const placeOrder = async (shippingAddressId: string, isFromCart = true, clerkToken?: string | null, items?: any[]) => {
   try {
-    const res = await fetch(`${API_URL}/orders/checkout`, {
+    const res = await authedFetch(`${API_URL}/orders/checkout`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ shippingAddressId, isFromCart })
-    });
+      body: JSON.stringify({ shippingAddressId, isFromCart, items })
+    }, clerkToken);
     return await res.json();
   } catch (e) {
     console.error(e);
@@ -172,9 +183,9 @@ export const buyNowOrder = async (productId: string, variantId: string, quantity
   }
 };
 
-export const fetchOrders = async (): Promise<any[]> => {
+export const fetchOrders = async (clerkToken?: string | null): Promise<any[]> => {
   try {
-    const res = await fetch(`${API_URL}/orders`, { credentials: 'include' });
+    const res = await authedFetch(`${API_URL}/orders`, {}, clerkToken);
     const data = await res.json();
     return data.success ? data.data : [];
   } catch (e) {
@@ -194,12 +205,9 @@ export const fetchOrderById = async (id: string) => {
   }
 };
 
-export const cancelOrder = async (id: string) => {
+export const cancelOrder = async (id: string, clerkToken?: string | null) => {
   try {
-    const res = await fetch(`${API_URL}/orders/${id}/cancel`, {
-      method: 'PATCH',
-      credentials: 'include',
-    });
+    const res = await authedFetch(`${API_URL}/orders/${id}/cancel`, { method: 'PATCH' }, clerkToken);
     return await res.json();
   } catch (e) {
     console.error(e);

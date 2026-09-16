@@ -27,7 +27,7 @@ class CmsController {
     // 6. Fetch Categories (Top level)
     const topCategories = await Category.find({ parentCategory: null, isActive: true }).sort('displayOrder');
 
-    return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, 'Homepage data retrieved', {
+    return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, {
       heroBanners,
       announcements: storeSettings.announcementBar || [],
       footer: storeSettings.socialLinks || {},
@@ -35,28 +35,28 @@ class CmsController {
       trendingProducts,
       newArrivals,
       categories: topCategories
-    }));
+    }, 'Homepage data retrieved'));
   });
 
   // --- Banner Management ---
   createBanner = asyncHandler(async (req, res) => {
     const banner = await Banner.create(req.body);
-    return res.status(HTTP_STATUS.CREATED).json(new ApiResponse(HTTP_STATUS.CREATED, 'Banner created', banner));
+    return res.status(HTTP_STATUS.CREATED).json(new ApiResponse(HTTP_STATUS.CREATED, banner, 'Banner created'));
   });
 
   updateBanner = asyncHandler(async (req, res) => {
     const banner = await Banner.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, 'Banner updated', banner));
+    return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, banner, 'Banner updated'));
   });
 
   deleteBanner = asyncHandler(async (req, res) => {
     await Banner.findByIdAndDelete(req.params.id);
-    return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, 'Banner deleted'));
+    return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, null, 'Banner deleted'));
   });
 
   getBanners = asyncHandler(async (req, res) => {
     const banners = await Banner.find().sort('displayOrder');
-    return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, 'Banners retrieved', banners));
+    return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, banners, 'Banners retrieved'));
   });
 
   // --- Announcement Bar Management ---
@@ -68,12 +68,12 @@ class CmsController {
     }
     settings.announcementBar = announcementBar;
     await settings.save();
-    return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, 'Announcements updated', settings.announcementBar));
+    return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, settings.announcementBar, 'Announcements updated'));
   });
 
   getAnnouncements = asyncHandler(async (req, res) => {
     const settings = await StoreSettings.findOne();
-    return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, 'Announcements retrieved', settings?.announcementBar || []));
+    return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, settings?.announcementBar || [], 'Announcements retrieved'));
   });
 }
 

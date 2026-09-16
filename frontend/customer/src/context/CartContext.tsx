@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { CartItem, Product } from '../types';
 import { toast } from 'sonner';
+import { useAuth as useClerkAuth } from '@clerk/clerk-react';
 
 interface CartContextType {
   cart: CartItem[];
@@ -15,20 +16,39 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+
+/**
+ * Build fetch options with Clerk Bearer token if available,
+ * so authenticated cart operations work for Clerk users.
+ */
+const buildOptions = (clerkToken: string | null, extra: RequestInit = {}): RequestInit => {
+  const headers: Record<string, string> = {
+    ...(extra.headers as Record<string, string> || {}),
+  };
+  if (clerkToken) {
+    headers['Authorization'] = `Bearer ${clerkToken}`;
+  }
+  return { ...extra, credentials: 'include', headers };
+};
+
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { getToken, isSignedIn } = useClerkAuth();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  
-  const fetchCart = async () => {
+
+  const getClerkToken = useCallback(async (): Promise<string | null> => {
+    try { return await getToken(); } catch { return null; }
+  }, [getToken]);
+
+  const fetchCart = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/cart`, {
-        credentials: 'include'
-      });
+      const token = await getClerkToken();
+      const res = await fetch(`${API_URL}/cart`, buildOptions(token));
       const data = await res.json();
       if (data.success && data.data && data.data.items) {
-        // map backend cart items to frontend CartItem format
         const frontendCartItems = data.data.items.map((item: any) => ({
           id: item.product?._id || item.product,
           name: item.product?.name || 'Product',
@@ -39,7 +59,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           image: item.product?.thumbnail?.url || item.product?.images?.[0]?.url || 'https://via.placeholder.com/500',
           description: '',
           quantity: item.quantity,
-          selectedSize: item.product?.variants?.find((v:any) => v._id === item.variantId)?.size || 'S',
+          selectedSize: item.product?.variants?.find((v: any) => v._id?.toString() === item.variantId?.toString())?.size || 'S',
           variantId: item.variantId
         }));
         setCart(frontendCartItems);
@@ -51,31 +71,30 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setLoading(false);
     }
-  };
+  }, [getClerkToken]);
 
+  // Fetch cart when auth state changes
   useEffect(() => {
     fetchCart();
-  }, []);
+  }, [isSignedIn, fetchCart]);
 
   const addToCart = async (product: Product, size: string, quantity: number) => {
-    // find variant id for this size
     let variantId = product.variants?.find(v => v.size === size)?._id;
     if (!variantId && product.variants && product.variants.length > 0) {
-      variantId = product.variants[0]._id; // fallback
+      variantId = product.variants[0]._id;
     }
-
+    // Fallback to product ID if no explicit sub-variants exist
     if (!variantId) {
-      toast.error('Cannot add product without valid variant');
-      return;
+      variantId = product.id;
     }
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/cart/add`, {
+      const token = await getClerkToken();
+      const res = await fetch(`${API_URL}/cart/add`, buildOptions(token, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ productId: product.id, variantId, quantity })
-      });
+      }));
       const data = await res.json();
       if (data.success) {
         toast.success(`Added ${product.name} to cart`);
@@ -91,17 +110,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const removeFromCart = async (productId: string, size: string) => {
-    // Frontend item has variantId mapped. We need to find it in the current cart state.
     const item = cart.find(i => i.id === productId && i.selectedSize === size);
     if (!item) return;
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/cart/remove`, {
+      const token = await getClerkToken();
+      const res = await fetch(`${API_URL}/cart/remove`, buildOptions(token, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ productId, variantId: (item as any).variantId })
-      });
+      }));
       const data = await res.json();
       if (data.success) {
         toast.info('Item removed from cart');
@@ -113,21 +131,18 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateQuantity = async (productId: string, size: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromCart(productId, size);
-      return;
-    }
+    if (quantity <= 0) { removeFromCart(productId, size); return; }
 
     const item = cart.find(i => i.id === productId && i.selectedSize === size);
     if (!item) return;
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/cart/update`, {
+      const token = await getClerkToken();
+      const res = await fetch(`${API_URL}/cart/update`, buildOptions(token, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ productId, variantId: (item as any).variantId, quantity })
-      });
+      }));
       const data = await res.json();
       if (data.success) {
         fetchCart();
@@ -140,9 +155,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const clearCart = async () => {
-    // The backend doesn't expose a clear route explicitly unless we use buyNow or add a clear route.
-    // Since buyNow clears it, for now we will just reset frontend state if needed.
-    // Optionally create a clear endpoint. For now:
+    try {
+      const token = await getClerkToken();
+      await fetch(`${API_URL}/cart/clear`, buildOptions(token, { method: 'DELETE' }));
+    } catch { /* silent */ }
     setCart([]);
   };
 
@@ -154,7 +170,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </CartContext.Provider>
   );
 };
-
 
 export const useCart = () => {
   const context = useContext(CartContext);

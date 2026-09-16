@@ -10,8 +10,7 @@ const ProductList = lazy(() => import('./pages/products/ProductList'));
 const ProductForm = lazy(() => import('./pages/products/ProductForm'));
 const CategoryList = lazy(() => import('./pages/categories/CategoryList'));
 const CategoryForm = lazy(() => import('./pages/categories/CategoryForm'));
-const BrandList = lazy(() => import('./pages/brands/BrandList'));
-const BrandForm = lazy(() => import('./pages/brands/BrandForm'));
+
 const HomepageManager = lazy(() => import('./pages/cms/HomepageManager'));
 const CartViewer = lazy(() => import('./pages/customers/CartViewer'));
 const WishlistViewer = lazy(() => import('./pages/customers/WishlistViewer'));
@@ -20,16 +19,19 @@ const InventoryDashboard = lazy(() => import('./pages/products/InventoryDashboar
 const Reports = lazy(() => import('./pages/Reports'));
 const Coupons = lazy(() => import('./pages/marketing/Coupons'));
 const ReviewsModeration = lazy(() => import('./pages/marketing/ReviewsModeration'));
-const NewsletterManager = lazy(() => import('./pages/marketing/NewsletterManager'));
-const NotificationManager = lazy(() => import('./pages/marketing/NotificationManager'));
-const LoyaltyDashboard = lazy(() => import('./pages/marketing/LoyaltyDashboard'));
+const CustomerDetails = lazy(() => import('./pages/customers/CustomerDetails'));
+
 const PaymentsManager = lazy(() => import('./pages/payments/PaymentsManager'));
 const OrderList = lazy(() => import('./pages/orders/OrderList'));
 const OrderDetails = lazy(() => import('./pages/orders/OrderDetails'));
 
+import { AuthProvider } from './context/AuthContext';
+// Removed Clerk imports
+
 function App() {
   return (
-    <BrowserRouter>
+      <AuthProvider>
+      <BrowserRouter>
       <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading Admin...</div>}>
         <Routes>
           <Route element={<AuthLayout />}>
@@ -48,26 +50,24 @@ function App() {
               <Route path="/categories" element={<CategoryList />} />
               <Route path="/categories/add" element={<CategoryForm />} />
               <Route path="/categories/edit/:id" element={<CategoryForm />} />
-              <Route path="/brands" element={<BrandList />} />
-              <Route path="/brands/add" element={<BrandForm />} />
-              <Route path="/brands/edit/:id" element={<BrandForm />} />
+
               <Route path="/cms" element={<HomepageManager />} />
               <Route path="/customers" element={<CustomerList />} />
+              <Route path="/customers/:id" element={<CustomerDetails />} />
               <Route path="/carts" element={<CartViewer />} />
               <Route path="/wishlists" element={<WishlistViewer />} />
               <Route path="/inventory" element={<InventoryDashboard />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/marketing/coupons" element={<Coupons />} />
               <Route path="/marketing/reviews" element={<ReviewsModeration />} />
-              <Route path="/marketing/newsletter" element={<NewsletterManager />} />
-              <Route path="/marketing/notifications" element={<NotificationManager />} />
-              <Route path="/marketing/loyalty" element={<LoyaltyDashboard />} />
+
               <Route path="/payments" element={<PaymentsManager />} />
             </Route>
           </Route>
         </Routes>
       </Suspense>
-    </BrowserRouter>
+      </BrowserRouter>
+      </AuthProvider>
   );
 }
 

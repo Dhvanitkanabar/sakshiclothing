@@ -33,7 +33,12 @@ class CartController {
       return res.status(400).json({ success: false, message: 'productId, variantId, and quantity are required' });
     }
 
-    const cart = await cartService.addToCart(userId, guestId, productId, variantId, quantity);
+    const parsedQty = parseInt(quantity, 10);
+    if (isNaN(parsedQty) || parsedQty <= 0) {
+      return res.status(400).json({ success: false, message: 'Quantity must be a positive integer' });
+    }
+
+    const cart = await cartService.addToCart(userId, guestId, productId, variantId, parsedQty);
     res.status(200).json({ success: true, data: cart, message: 'Item added to cart' });
   });
 
@@ -45,7 +50,12 @@ class CartController {
       return res.status(400).json({ success: false, message: 'productId, variantId, and quantity are required' });
     }
 
-    const cart = await cartService.updateItemQuantity(userId, guestId, productId, variantId, quantity);
+    const parsedQty = parseInt(quantity, 10);
+    if (isNaN(parsedQty) || parsedQty <= 0) {
+      return res.status(400).json({ success: false, message: 'Quantity must be a positive integer' });
+    }
+
+    const cart = await cartService.updateItemQuantity(userId, guestId, productId, variantId, parsedQty);
     res.status(200).json({ success: true, data: cart, message: 'Cart updated' });
   });
 
@@ -63,10 +73,21 @@ class CartController {
     const { userId, guestId } = getUserIdAndGuestId(req, res);
     const { productId, variantId, quantity } = req.body;
 
+    const parsedQty = parseInt(quantity || 1, 10);
+    if (isNaN(parsedQty) || parsedQty <= 0) {
+      return res.status(400).json({ success: false, message: 'Quantity must be a positive integer' });
+    }
+
     await cartService.clearCart(userId, guestId);
-    const cart = await cartService.addToCart(userId, guestId, productId, variantId, quantity);
+    const cart = await cartService.addToCart(userId, guestId, productId, variantId, parsedQty);
     
     res.status(200).json({ success: true, data: cart, message: 'Proceeding to checkout' });
+  });
+
+  clearCart = asyncHandler(async (req, res) => {
+    const { userId, guestId } = getUserIdAndGuestId(req, res);
+    await cartService.clearCart(userId, guestId);
+    res.status(200).json({ success: true, message: 'Cart cleared' });
   });
 
   getAllCarts = asyncHandler(async (req, res) => {

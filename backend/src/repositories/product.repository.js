@@ -7,13 +7,12 @@ class ProductRepository {
   }
 
   async findById(id) {
-    return await Product.findById(id).populate('category', 'name slug').populate('brand', 'name');
+    return await Product.findById(id).populate('category', 'name slug');
   }
 
   async findBySlug(slug) {
     return await Product.findOne({ slug, status: { $ne: PRODUCT_STATUS.DELETED } })
-      .populate('category', 'name slug')
-      .populate('brand', 'name');
+      .populate('category', 'name slug');
   }
 
   async updateById(id, data) {
@@ -37,8 +36,7 @@ class ProductRepository {
         .sort(sort)
         .skip(skip)
         .limit(limit)
-        .populate('category', 'name')
-        .populate('brand', 'name'),
+        .populate('category', 'name'),
       Product.countDocuments(query)
     ]);
 

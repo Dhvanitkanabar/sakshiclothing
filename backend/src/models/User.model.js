@@ -18,16 +18,15 @@ const userSchema = new Schema(
       trim: true,
       match: [/^\S+@\S+\.\S+$/, 'Please use a valid email address']
     },
-    password: {
+    clerkUserId: {
       type: String,
-      required: [true, 'Password is required'],
-      minlength: [8, 'Password must be at least 8 characters'],
-      select: false // Do not return password by default
+      required: [true, 'Clerk User ID is required'],
+      unique: true,
+      index: true
     },
     phone: {
       type: String,
-      trim: true,
-      match: [/^\+?[1-9]\d{1,14}$/, 'Please use a valid phone number']
+      trim: true
     },
     role: {
       type: String,
@@ -90,19 +89,7 @@ const userSchema = new Schema(
 userSchema.index({ role: 1 });
 userSchema.index({ isActive: 1 });
 
-// Pre-save hook to hash password
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
-});
-
-// Methods
-userSchema.methods.comparePassword = async function(candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
-   
-};
+// Removed local password methods as we use Clerk
 
 // Virtuals
 userSchema.virtual('totalAddresses').get(function() {

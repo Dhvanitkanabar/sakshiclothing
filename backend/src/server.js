@@ -27,10 +27,10 @@ const startServer = async () => {
     await connectDB();
 
     // 2. Start listening on the specified port
-    const server = app.listen(PORT, () => {
+    const server = app.listen(PORT, '0.0.0.0', () => {
       logger.info(`[Server] E-Commerce server running on port: ${PORT}`);
       logger.info(`[Server] Mode: ${process.env.NODE_ENV}`);
-      logger.info(`[Server] Health check target: http://localhost:${PORT}/api/health`);
+      logger.info(`[Server] Health check target: http://0.0.0.0:${PORT}/api/health`);
     });
 
     // Handle Unhandled Rejections

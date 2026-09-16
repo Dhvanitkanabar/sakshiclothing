@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import ProductController from '../controllers/product.controller.js';
-import { authenticate } from '../middlewares/authentication.js';
+import { authenticate, optionalAuth } from '../middlewares/authentication.js';
 import { authorize } from '../middlewares/authorize.js';
 import { validateRequest } from '../middlewares/validateRequest.js';
 import { createProductSchema, updateProductSchema } from '../validators/product.validator.js';
@@ -16,7 +16,7 @@ router.get('/trending', ProductController.getTrending);
 router.get('/new-arrivals', ProductController.getNewArrivals);
 router.get('/slug/:slug', ProductController.getProductBySlug);
 router.get('/:id', ProductController.getProductById);
-router.get('/', ProductController.getProducts);
+router.get('/', optionalAuth, ProductController.getProducts);
 
 // -----------------------------------------
 // PROTECTED ADMIN ROUTES

@@ -1,270 +1,291 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useLocation, useNavigate, Navigate, Link } from 'react-router-dom';
+import { useSignIn, useSignUp, useUser } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useAuth } from '../context/AuthContext';
-import { Eye, EyeOff, Mail, Lock, User, Loader2 } from 'lucide-react';
+import { Mail, ArrowRight, Loader2, ChevronLeft } from 'lucide-react';
+import { toast } from 'sonner';
 
+// ─── Auth Page (Unified Login + Signup) ───────────────────────────────────────
 const AuthPage = () => {
-  const location = useLocation();
   const navigate = useNavigate();
-  const { login, signup } = useAuth();
-  
-  const isLoginInitial = location.pathname === '/login';
-  const [isLogin, setIsLogin] = useState(isLoginInitial);
-  const [isLightOn, setIsLightOn] = useState(false);
-  const [isFlickering, setIsFlickering] = useState(false);
-  
-  // Form states
-  const [name, setName] = useState('');
+  const { isSignedIn: clerkSignedIn, isLoaded: clerkLoaded } = useUser();
+  const { signIn, setActive: signInSetActive, isLoaded: signInLoaded } = useSignIn();
+  const { signUp, setActive: signUpSetActive, isLoaded: signUpLoaded } = useSignUp();
+
+  const [step, setStep] = useState<'start' | 'otp'>('start');
+  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    setIsLogin(location.pathname === '/login');
-  }, [location.pathname]);
+  // ── Already signed in → go home immediately ──
+  if (!clerkLoaded) return (
+    <div className="min-h-screen bg-black flex items-center justify-center">
+      <Loader2 className="text-white animate-spin" size={32} />
+    </div>
+  );
+  if (clerkSignedIn) return <Navigate to="/" replace />;
 
-  const toggleLight = () => {
-    if (!isLightOn) {
-      setIsFlickering(true);
-      setTimeout(() => {
-        setIsFlickering(false);
-        setIsLightOn(true);
-      }, 300);
-    } else {
-      setIsLightOn(false);
+  // ── Google OAuth ──
+  const handleGoogle = async () => {
+    if (!signInLoaded || !signIn) return;
+    setError('');
+    try {
+      await signIn.authenticateWithRedirect({
+        strategy: 'oauth_google',
+        redirectUrl: `${window.location.origin}/sso-callback`,
+        redirectUrlComplete: '/',
+      });
+    } catch (err: any) {
+      setError(err.errors?.[0]?.longMessage || 'Google sign-in failed.');
     }
   };
 
-  const handleAuth = async (e: React.FormEvent) => {
+  // ── Apple OAuth ──
+  const handleApple = async () => {
+    if (!signInLoaded || !signIn) return;
+    setError('');
+    try {
+      await signIn.authenticateWithRedirect({
+        strategy: 'oauth_apple',
+        redirectUrl: `${window.location.origin}/sso-callback`,
+        redirectUrlComplete: '/',
+      });
+    } catch (err: any) {
+      setError(err.errors?.[0]?.longMessage || 'Apple sign-in failed.');
+    }
+  };
+
+  // ── Send OTP: try sign-in first; if user not found, auto sign-up ──
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    
-    if (isLogin) {
-      const success = await login(email, password);
-      if (success) navigate('/');
-    } else {
-      const success = await signup(name, email, password);
-      if (success) navigate('/login');
+    if (!signInLoaded || !signIn || !signUpLoaded || !signUp) return;
+    setIsLoading(true);
+    setError('');
+    try {
+      // Attempt sign-in
+      await signIn.create({ strategy: 'email_code', identifier: email });
+      setMode('signin');
+      setStep('otp');
+      toast.success(`Verification code sent to ${email}`);
+    } catch (err: any) {
+      const code = err.errors?.[0]?.code;
+      if (code === 'form_identifier_not_found') {
+        // User doesn't exist — create account automatically
+        try {
+          await signUp.create({ emailAddress: email });
+          await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+          setMode('signup');
+          setStep('otp');
+          toast.success(`Verification code sent to ${email}`);
+        } catch (signUpErr: any) {
+          setError(signUpErr.errors?.[0]?.longMessage || 'Failed to send code. Please try again.');
+        }
+      } else {
+        setError(err.errors?.[0]?.longMessage || 'Failed to send code. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsSubmitting(false);
   };
 
-  const switchMode = () => {
-    setIsLogin(!isLogin);
-    navigate(!isLogin ? '/login' : '/signup');
+  // ── Verify OTP ──
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+    try {
+      if (mode === 'signin') {
+        const result = await signIn!.attemptFirstFactor({ strategy: 'email_code', code: otp });
+        if (result.status === 'complete') {
+          await signInSetActive!({ session: result.createdSessionId });
+          toast.success('Welcome back!');
+          window.location.href = '/';
+        }
+      } else {
+        const result = await signUp!.attemptEmailAddressVerification({ code: otp });
+        if (result.status === 'complete') {
+          await signUpSetActive!({ session: result.createdSessionId });
+          toast.success('Account created! Welcome to Sakshi Clothing 🎉');
+          window.location.href = '/';
+        }
+      }
+    } catch (err: any) {
+      setError(err.errors?.[0]?.longMessage || 'Invalid code. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-[#050505] overflow-hidden flex flex-col items-center justify-center font-sans">
-      {/* Hanging Lamp Cord */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[2px] h-32 bg-gradient-to-b from-transparent to-slate-800 z-20" />
-      
-      {/* Lamp Head */}
-      <motion.div 
-        onClick={toggleLight}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="absolute top-32 left-1/2 -translate-x-1/2 z-30 cursor-pointer group"
+    <div className="min-h-screen bg-black flex items-center justify-center p-6 relative overflow-hidden">
+      {/* Background blobs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-gray-800/40 to-transparent blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-gray-800/30 to-transparent blur-3xl" />
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-md relative z-10"
       >
-        {/* Lamp Base */}
-        <div className="relative w-24 h-16 bg-slate-900 rounded-t-full border-b-4 border-slate-800 shadow-2xl flex items-center justify-center overflow-hidden border border-white/5">
-          {/* Internal Glow */}
+        {/* Logo */}
+        <Link to="/" className="flex flex-col items-center mb-10 group">
+          <span className="text-3xl font-serif font-black tracking-tighter text-white">SAKSHI</span>
+          <span className="text-[8px] font-bold tracking-[0.6em] text-gray-500 -mt-1 group-hover:text-gray-300 transition-colors">CLOTHING</span>
+        </Link>
+
+        <div className="bg-white rounded-[2rem] p-8 shadow-2xl">
+          {/* Header */}
+          <div className="mb-8">
+            {step === 'otp' && (
+              <button
+                onClick={() => { setStep('start'); setOtp(''); setError(''); }}
+                className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors mb-4"
+              >
+                <ChevronLeft size={14} /> Back
+              </button>
+            )}
+            <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-gray-400 mb-2">
+              {step === 'start' ? 'Welcome' : mode === 'signin' ? 'Sign In' : 'New Account'}
+            </p>
+            <h1 className="text-3xl font-sans font-black text-black">
+              {step === 'start' ? 'Continue to Sakshi' : 'Enter Your Code'}
+            </h1>
+            <p className="text-sm text-gray-400 mt-2">
+              {step === 'start'
+                ? 'Sign in or create your account in one step.'
+                : `We sent a 6-digit code to ${email}`}
+            </p>
+          </div>
+
+          {/* Error */}
           <AnimatePresence>
-            {(isLightOn || isFlickering) && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: isFlickering ? [0, 1, 0.5, 1] : 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-yellow-400/20 blur-xl"
-              />
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mb-5 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-sm font-medium"
+              >
+                {error}
+              </motion.div>
             )}
           </AnimatePresence>
-          
-          {/* Pull Chain (Visual only) */}
-          <div className="absolute bottom-0 right-4 w-[1px] h-4 bg-slate-700" />
-          <div className="absolute bottom-[-4px] right-[14px] w-1.5 h-1.5 bg-slate-600 rounded-full" />
-        </div>
-        
-        {/* Lamp Glow Effect */}
-        <AnimatePresence>
-          {(isLightOn || isFlickering) && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ 
-                opacity: isFlickering ? [0, 0.8, 0.4, 1] : 1,
-                scale: isFlickering ? [0.5, 1.1, 0.9, 1] : 1
-              }}
-              exit={{ opacity: 0, scale: 0.5 }}
-              className="absolute top-12 left-1/2 -translate-x-1/2 w-32 h-32 bg-yellow-400/40 rounded-full blur-[40px] -z-10"
-            />
-          )}
-        </AnimatePresence>
-      </motion.div>
 
-      {/* Spotlight Cone */}
-      <AnimatePresence>
-        {(isLightOn || isFlickering) && (
-          <motion.div 
-            initial={{ opacity: 0, scaleY: 0 }}
-            animate={{ 
-              opacity: isFlickering ? [0, 0.5, 0.2, 0.8] : 0.8,
-              scaleY: isFlickering ? [0, 1.1, 0.9, 1] : 1
-            }}
-            exit={{ opacity: 0, scaleY: 0 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            style={{ 
-              originY: 0,
-              clipPath: 'polygon(45% 0%, 55% 0%, 100% 100%, 0% 100%)'
-            }}
-            className="absolute top-[170px] left-1/2 -translate-x-1/2 w-[600px] h-screen bg-gradient-to-b from-yellow-400/20 via-yellow-400/5 to-transparent z-10 pointer-events-none"
-          />
-        )}
-      </AnimatePresence>
+          {/* ── Step 1: Start ── */}
+          {step === 'start' && (
+            <div className="space-y-4">
+              {/* Google */}
+              <button
+                onClick={handleGoogle}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-3 py-3.5 border-2 border-gray-100 rounded-2xl font-bold text-[12px] text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 disabled:opacity-50"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Continue with Google
+              </button>
 
-      {/* Auth Form Container */}
-      <div className="relative z-20 mt-48 w-full max-w-md px-6">
-        <AnimatePresence mode="wait">
-          {isLightOn && (
-            <motion.div
-              key={isLogin ? 'login' : 'signup'}
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-              className="bg-white/5 backdrop-blur-md border border-white/10 rounded-[2.5rem] p-8 md:p-12 shadow-2xl"
-            >
-              <div className="text-center mb-10">
-                <h2 className="text-3xl font-serif font-black text-white mb-2">
-                  {isLogin ? 'Welcome Back' : 'Join Us'}
-                </h2>
-                <p className="text-white/50 font-medium text-sm">
-                  {isLogin ? 'Login to your SakshiClothing account' : 'Create your premium account today'}
-                </p>
+              {/* Apple */}
+              <button
+                onClick={handleApple}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-3 py-3.5 bg-black text-white rounded-2xl font-bold text-[12px] hover:bg-gray-900 transition-all duration-200 disabled:opacity-50"
+              >
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="white">
+                  <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.4c1.32.07 2.23.73 2.98.75.98-.2 1.93-.78 2.96-.84 1.35.07 2.37.62 3.08 1.58-2.91 1.75-2.49 5.53.42 6.68-.51 1.38-1.15 2.72-1.44 4.71zM12.03 7.25c-.14-2.48 2.15-4.54 4.53-4.25.33 2.8-2.55 4.96-4.53 4.25z"/>
+                </svg>
+                Continue with Apple
+              </button>
+
+              {/* Divider */}
+              <div className="flex items-center gap-4 my-2">
+                <div className="flex-1 h-px bg-gray-100" />
+                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-300">or</span>
+                <div className="flex-1 h-px bg-gray-100" />
               </div>
 
-              <form onSubmit={handleAuth} className="space-y-5">
-                {!isLogin && (
-                  <motion.div 
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    className="space-y-2"
-                  >
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ml-1">Full Name</label>
-                    <div className="relative">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
-                      <input
-                        type="text"
-                        required
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-yellow-400/20 focus:border-yellow-400/50 transition-all outline-none text-white font-medium"
-                        placeholder="John Doe"
-                      />
-                    </div>
-                  </motion.div>
-                )}
-
+              {/* Email */}
+              <form onSubmit={handleSendOtp} className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ml-1">Email Address</label>
+                  <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">Email Address</label>
                   <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
                     <input
                       type="email"
-                      required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-yellow-400/20 focus:border-yellow-400/50 transition-all outline-none text-white font-medium"
-                      placeholder="john@example.com"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center ml-1">
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Password</label>
-                    {isLogin && (
-                      <button type="button" className="text-[10px] font-bold uppercase tracking-widest text-yellow-400/60 hover:text-yellow-400 transition-colors">Forgot?</button>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
-                    <input
-                      type={showPassword ? 'text' : 'password'}
+                      placeholder="your@email.com"
                       required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-12 pr-12 py-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-yellow-400/20 focus:border-yellow-400/50 transition-all outline-none text-white font-medium"
-                      placeholder="••••••••"
+                      className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl font-medium focus:outline-none focus:border-black focus:ring-2 focus:ring-black/5 transition-all"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-yellow-400 transition-colors"
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
                   </div>
                 </div>
-
                 <button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="w-full py-4 bg-yellow-400 text-slate-900 rounded-2xl font-black uppercase tracking-widest hover:bg-white transition-all shadow-xl shadow-yellow-400/10 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-4"
+                  disabled={isLoading || !email}
+                  className="w-full py-4 bg-black text-white rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] hover:bg-gray-800 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
                 >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="animate-spin" size={20} />
-                      {isLogin ? 'Authenticating...' : 'Creating...'}
-                    </>
-                  ) : (
-                    isLogin ? 'Login' : 'Create Account'
-                  )}
+                  {isLoading
+                    ? <Loader2 size={16} className="animate-spin" />
+                    : <><span>Continue with Email</span><ArrowRight size={14} /></>
+                  }
                 </button>
               </form>
 
-              <div className="mt-8 text-center">
-                <p className="text-white/40 text-sm font-medium">
-                  {isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
-                  <button 
-                    onClick={switchMode}
-                    className="text-yellow-400 font-black hover:underline ml-1"
-                  >
-                    {isLogin ? 'Signup' : 'Login'}
-                  </button>
-                </p>
-              </div>
-            </motion.div>
+              <p className="text-center text-[11px] text-gray-400 pt-2">
+                By continuing you agree to our{' '}
+                <span className="font-bold text-black">Terms of Service</span>{' '}
+                and{' '}
+                <span className="font-bold text-black">Privacy Policy</span>.
+              </p>
+            </div>
           )}
-        </AnimatePresence>
-      </div>
 
-      {/* Back to Shop Link */}
-      <Link 
-        to="/" 
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/20 hover:text-white/60 text-[10px] font-black uppercase tracking-[0.4em] transition-colors z-20"
-      >
-        Back to Shop
-      </Link>
-
-      {/* Hint for user */}
-      <AnimatePresence>
-        {!isLightOn && !isFlickering && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute top-[220px] left-1/2 -translate-x-1/2 text-white/20 text-[10px] font-black uppercase tracking-[0.4em] animate-pulse"
-          >
-            Click the lamp to begin
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Background Texture */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+          {/* ── Step 2: OTP ── */}
+          {step === 'otp' && (
+            <form onSubmit={handleVerifyOtp} className="space-y-5">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">Verification Code</label>
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  placeholder="000000"
+                  autoFocus
+                  className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-center text-2xl font-mono font-bold tracking-[0.5em] focus:outline-none focus:border-black focus:ring-2 focus:ring-black/5 transition-all"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isLoading || otp.length !== 6}
+                className="w-full py-4 bg-black text-white rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] hover:bg-gray-800 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+              >
+                {isLoading
+                  ? <Loader2 size={16} className="animate-spin" />
+                  : <><span>{mode === 'signin' ? 'Sign In' : 'Create Account'}</span><ArrowRight size={14} /></>
+                }
+              </button>
+              <button
+                type="button"
+                onClick={() => { setStep('start'); setOtp(''); setError(''); }}
+                className="w-full text-center text-[11px] text-gray-400 hover:text-black font-bold uppercase tracking-widest transition-colors"
+              >
+                Try a different email
+              </button>
+            </form>
+          )}
+        </div>
+      </motion.div>
     </div>
   );
 };

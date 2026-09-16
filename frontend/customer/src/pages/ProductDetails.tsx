@@ -20,6 +20,7 @@ const ProductDetails = () => {
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
+  const [mainImage, setMainImage] = useState('');
 
   useEffect(() => {
     if (!id) return;
@@ -28,7 +29,15 @@ const ProductDetails = () => {
       const data = await fetchProductById(id); // ID can also be slug if backend routes logic allows, or just id for now
       if (data) {
         setProduct(data);
-        setSelectedSize(data.sizes[0] || '');
+        if (data.variants && data.variants.length > 0) {
+          const inStock = data.variants.find((v: any) => (v.stock > 0 || v.status !== 'out_of_stock') && v.size);
+          setSelectedSize(inStock ? inStock.size : (data.variants[0]?.size || 'Standard'));
+        } else if (data.sizes && data.sizes.length > 0) {
+          setSelectedSize(data.sizes[0]);
+        } else {
+          setSelectedSize('Standard');
+        }
+        setMainImage(data.image);
         
         // Fetch related products by category
         const related = await fetchProducts({ category: data.category, limit: 4 });
@@ -65,7 +74,7 @@ const ProductDetails = () => {
   return (
     <div className="bg-luxury-white min-h-screen">
       {/* Breadcrumbs */}
-      <div className="max-w-[1800px] mx-auto px-6 py-12">
+      <div className="max-w-7xl mx-auto px-6 pt-24 md:pt-32 pb-8">
         <nav className="flex items-center gap-4 caption text-muted">
           <Link to="/" className="hover:text-black">Home</Link>
           <ChevronRight size={10} />
@@ -75,64 +84,65 @@ const ProductDetails = () => {
         </nav>
       </div>
 
-      <div className="max-w-[1800px] mx-auto px-6 pb-32">
-        <div className="flex flex-col lg:flex-row gap-24">
-          {/* Image Section (Editorial Layout) */}
-          <div className="lg:w-[65%] space-y-12">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1 }}
-              className="aspect-[3/4] overflow-hidden rounded-[3rem] bg-beige/30"
-            >
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
+      <div className="max-w-7xl mx-auto px-6 pb-24">
+        <div className="flex flex-col lg:flex-row items-start gap-12 lg:gap-16">
+          {/* Image Section */}
+          <div className="w-full lg:w-1/2 space-y-4">
+            <div className="w-full max-w-md mx-auto aspect-[4/5] max-h-[480px] rounded-3xl overflow-hidden bg-gray-50/80 border border-gray-100 shadow-md relative flex items-center justify-center">
+              <img 
+                src={mainImage || product.image} 
+                alt={product.name} 
+                className="w-full h-full object-cover rounded-3xl" 
+                referrerPolicy="no-referrer" 
               />
-            </motion.div>
-            
-            <div className="grid grid-cols-2 gap-12">
-              <motion.div 
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="aspect-[3/4] rounded-[2rem] overflow-hidden bg-beige/20"
-              >
-                <img src={`https://picsum.photos/seed/${product.id}1/1200/1600`} alt="Detail 1" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-              </motion.div>
-              <motion.div 
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="aspect-[3/4] rounded-[2rem] overflow-hidden bg-beige/20"
-              >
-                <img src={`https://picsum.photos/seed/${product.id}2/1200/1600`} alt="Detail 2" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-              </motion.div>
             </div>
+            
+            {product.images && product.images.length > 0 && (
+              <div className="flex justify-center gap-3 overflow-x-auto no-scrollbar pb-2">
+                <button 
+                  onClick={() => setMainImage(product.image)}
+                  className={`w-16 h-20 shrink-0 rounded-2xl overflow-hidden border-2 transition-all ${
+                    mainImage === product.image ? 'border-black shadow-sm' : 'border-transparent opacity-70 hover:opacity-100'
+                  }`}
+                >
+                  <img src={product.image} alt="Thumbnail 1" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                </button>
+                {product.images.map((img, idx) => (
+                  <button 
+                    key={idx}
+                    onClick={() => setMainImage(img)}
+                    className={`w-16 h-20 shrink-0 rounded-2xl overflow-hidden border-2 transition-all ${
+                      mainImage === img ? 'border-black shadow-sm' : 'border-transparent opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <img src={img} alt={`Thumbnail ${idx + 2}`} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Info Section */}
-          <div className="lg:w-[35%] space-y-16 lg:sticky lg:top-40 h-fit">
-            <div className="space-y-8">
-              <div className="flex items-center justify-between">
-                <span className="caption text-rose-600">New Arrival</span>
-                <div className="flex items-center gap-1">
-                  {[1, 2, 3, 4, 5].map(i => <Star key={i} size={10} fill="black" />)}
-                  <span className="caption !text-[8px] ml-2">(48)</span>
+          <div className="w-full lg:w-1/2">
+            <div className="sticky top-40 space-y-12">
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <span className="caption text-luxury-black/60 bg-gray-100 px-3 py-1 rounded-full">New Arrival</span>
+                  <div className="flex items-center gap-1 text-black">
+                    {[1, 2, 3, 4, 5].map(i => <Star key={i} size={14} fill="currentColor" />)}
+                    <span className="text-xs font-bold ml-2">(48)</span>
+                  </div>
+                </div>
+
+                <h1 className="text-5xl lg:text-7xl font-serif font-bold tracking-tight leading-[0.95] break-words uppercase">{product.name}</h1>
+
+                <div className="flex items-baseline gap-4">
+                  <span className="text-3xl font-sans font-medium tracking-tight">₹{product.price}</span>
+                  <span className="text-lg text-gray-400 line-through">₹{Math.round(product.price * 1.4)}</span>
                 </div>
               </div>
 
-              <h1 className="heading-xl leading-tight">{product.name}</h1>
-
-              <div className="flex items-baseline gap-6">
-                <span className="text-4xl font-sans font-bold tracking-tighter">₹{product.price}</span>
-                <span className="text-xl text-muted line-through">₹{Math.round(product.price * 1.4)}</span>
-              </div>
-            </div>
-
-            <p className="text-muted text-lg leading-relaxed font-light">
+              <p className="text-gray-600 text-lg leading-relaxed font-light">
               {product.description || "A masterpiece of contemporary design, this piece embodies the essence of modern luxury. Meticulously crafted from the finest materials, it offers an unparalleled blend of comfort and avant-garde style."}
             </p>
 
@@ -145,34 +155,75 @@ const ProductDetails = () => {
                 </button>
               </div>
               <div className="flex flex-wrap gap-4">
-                {product.sizes.map(size => (
+                {product.variants && product.variants.length > 0 ? (
+                  product.variants.map(variant => {
+                    const isOutOfStock = variant.stock === 0 || variant.status === 'out_of_stock';
+                    const isSelected = selectedSize === variant.size;
+                    return (
+                      <button
+                        key={variant._id || variant.size}
+                        onClick={() => !isOutOfStock && setSelectedSize(variant.size)}
+                        disabled={isOutOfStock}
+                        title={isOutOfStock ? 'Out of stock' : ''}
+                        className={`w-16 h-16 flex flex-col items-center justify-center rounded-2xl border transition-all duration-500 relative overflow-hidden ${
+                          isSelected
+                            ? 'bg-black border-black text-white shadow-xl'
+                            : isOutOfStock
+                            ? 'bg-gray-50 border-gray-200 text-gray-300 cursor-not-allowed'
+                            : 'border-black/5 text-muted hover:border-black/20'
+                        }`}
+                      >
+                        <span className="z-10">{variant.size}</span>
+                        {isOutOfStock && (
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div className="w-[120%] h-px bg-gray-300 rotate-45 transform origin-center absolute"></div>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })
+                ) : product.sizes && product.sizes.length > 0 ? (
+                  product.sizes.map(size => (
+                    <button
+                      key={size}
+                      onClick={() => setSelectedSize(size)}
+                      className={`w-16 h-16 flex items-center justify-center rounded-2xl border transition-all duration-500 ${
+                        selectedSize === size
+                          ? 'bg-black border-black text-white shadow-xl'
+                          : 'border-black/5 text-muted hover:border-black/20'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))
+                ) : (
                   <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={`w-16 h-16 flex items-center justify-center rounded-2xl border transition-all duration-500 ${
-                      selectedSize === size
-                        ? 'bg-black border-black text-white shadow-xl'
-                        : 'border-black/5 text-muted hover:border-black/20'
-                    }`}
+                    onClick={() => setSelectedSize('Standard')}
+                    className="px-6 h-16 flex items-center justify-center rounded-2xl border bg-black border-black text-white shadow-xl text-xs font-bold uppercase tracking-wider"
                   >
-                    {size}
+                    Standard / Free Size
                   </button>
-                ))}
+                )}
               </div>
             </div>
 
             {/* Actions */}
-            <div className="space-y-6">
+            <div className="space-y-4 pt-6 border-t border-black/5">
               <div className="flex items-center gap-4">
-                <div className="flex items-center bg-beige/30 rounded-full px-6 py-4">
-                  <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-2 hover:text-black transition-colors"><Minus size={14} /></button>
+                <div className="flex items-center bg-gray-50 border border-gray-200 rounded-2xl px-6 py-4">
+                  <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-2 hover:text-black text-gray-400 transition-colors"><Minus size={16} /></button>
                   <span className="mx-6 font-bold w-6 text-center">{quantity}</span>
-                  <button onClick={() => setQuantity(quantity + 1)} className="p-2 hover:text-black transition-colors"><Plus size={14} /></button>
+                  <button onClick={() => setQuantity(quantity + 1)} className="p-2 hover:text-black text-gray-400 transition-colors"><Plus size={16} /></button>
                 </div>
                 
                 <button
                   onClick={() => addToCart(product, selectedSize, quantity)}
-                  className="flex-grow bg-black text-white py-6 rounded-full caption hover:bg-rose-600 transition-all shadow-xl"
+                  disabled={!selectedSize || (product.variants?.find(v => v.size === selectedSize)?.stock === 0)}
+                  className={`flex-grow py-5 rounded-2xl font-bold uppercase tracking-widest text-xs transition-all shadow-md ${
+                    (!selectedSize || (product.variants?.find(v => v.size === selectedSize)?.stock === 0))
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
+                      : 'bg-black text-white hover:bg-gray-800 hover:shadow-xl'
+                  }`}
                 >
                   Add to Bag
                 </button>
@@ -180,14 +231,14 @@ const ProductDetails = () => {
 
               <button 
                 onClick={() => toggleWishlist(product)}
-                className={`w-full py-6 rounded-full border transition-all duration-500 flex items-center justify-center gap-3 ${
+                className={`w-full py-4 rounded-2xl border transition-all duration-300 flex items-center justify-center gap-2 font-medium text-sm ${
                   isWishlisted 
-                    ? 'bg-rose-50 border-rose-100 text-rose-600' 
-                    : 'border-black/5 text-muted hover:border-black/20'
+                    ? 'bg-red-50 border-red-100 text-red-600' 
+                    : 'border-gray-200 text-gray-600 hover:border-black hover:text-black'
                 }`}
               >
-                <Heart size={16} fill={isWishlisted ? "currentColor" : "none"} />
-                <span className="caption">{isWishlisted ? 'Saved to Wishlist' : 'Save to Wishlist'}</span>
+                <Heart size={18} fill={isWishlisted ? "currentColor" : "none"} />
+                <span>{isWishlisted ? 'Saved to Wishlist' : 'Save to Wishlist'}</span>
               </button>
             </div>
 
@@ -229,17 +280,18 @@ const ProductDetails = () => {
                     </ul>
                   )}
                   {activeTab === 'shipping' && (
-                    <p>Complimentary express shipping on all orders over ₹2000. Returns accepted within 30 days of delivery.</p>
+                    <p>Complimentary express shipping on all orders. Returns accepted within 30 days of delivery.</p>
                   )}
                 </motion.div>
               </AnimatePresence>
             </div>
           </div>
         </div>
+        </div>
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (
-          <section className="mt-64 pt-32 border-t border-black/5">
+          <section className="mt-40 pt-24 border-t border-black/5">
             <div className="flex justify-between items-end mb-24">
               <div className="space-y-6">
                 <span className="caption">Curated for you</span>
@@ -247,9 +299,11 @@ const ProductDetails = () => {
               </div>
               <Link to="/shop" className="caption border-b border-black pb-2">View All</Link>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-12">
               {relatedProducts.map(p => (
-                <ProductCard key={p.id} product={p} />
+                <div key={p.id} className="col-span-1">
+                  <ProductCard product={p} />
+                </div>
               ))}
             </div>
           </section>

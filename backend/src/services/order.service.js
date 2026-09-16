@@ -3,6 +3,7 @@ import addressRepository from '../repositories/address.repository.js';
 import Product from '../models/Product.model.js';
 import { ApiError } from '../utils/ApiError.js';
 import { ORDER_STATUS } from '../constants/index.js';
+import mongoose from 'mongoose';
 
 class OrderService {
   async createCheckoutOrder(userId, items, shippingAddressId) {
@@ -19,19 +20,28 @@ class OrderService {
     const orderItems = [];
     const bulkProductUpdates = [];
 
-    // Snapshot products and validate inventory
+    // Calculate and snapshot products without starting transaction yet to fail early
     for (const item of items) {
       const product = await Product.findById(item.productId);
       if (!product) throw new ApiError(404, `Product not found: ${item.productId}`);
-      
-      const variant = product.variants.id(item.variantId);
+      if (product.status !== 'published') {
+        throw new ApiError(400, `Product ${product.name} is currently unavailable`);
+      }
+
+      let variant = item.variantId ? product.variants.id(item.variantId) : null;
+      if (!variant && product.variants && product.variants.length > 0) {
+        variant = product.variants[0];
+      }
       if (!variant) throw new ApiError(404, `Variant not found in product ${product.name}`);
+      if (variant.status && ['out_of_stock', 'archived', 'deleted'].includes(variant.status)) {
+        throw new ApiError(400, `Selected variant for ${product.name} is unavailable`);
+      }
 
       if (variant.stock < item.quantity) {
         throw new ApiError(400, `Insufficient stock for ${product.name} (Size: ${variant.size}). Available: ${variant.stock}`);
       }
 
-      const price = product.pricing.basePrice;
+      const price = product.calculateDiscount(variant._id);
       const subtotal = price * item.quantity;
       itemsTotal += subtotal;
 
@@ -47,10 +57,10 @@ class OrderService {
         subtotal
       });
 
-      // Prepare bulk update to decrement stock
+      // Prepare bulk update to decrement stock. Add a query condition to ensure stock hasn't dropped below requirement
       bulkProductUpdates.push({
         updateOne: {
-          filter: { _id: product._id, 'variants._id': variant._id },
+          filter: { _id: product._id, 'variants._id': variant._id, 'variants.stock': { $gte: item.quantity } },
           update: { $inc: { 'variants.$.stock': -item.quantity } }
         }
       });
@@ -76,7 +86,6 @@ class OrderService {
         landmark: shippingAddress.landmark
       },
       billingAddress: {
-        // Can be same as shipping for now
         fullName: shippingAddress.fullName,
         phone: shippingAddress.phone,
         houseNumber: shippingAddress.houseNumber,
@@ -93,11 +102,14 @@ class OrderService {
       }
     };
 
-    // Execute product stock updates
-    await Product.bulkWrite(bulkProductUpdates);
+    const bulkResult = await Product.bulkWrite(bulkProductUpdates);
 
-    // Create Order
-    return await orderRepository.create(orderData);
+    if (bulkResult.modifiedCount !== items.length) {
+      throw new ApiError(409, 'Checkout failed due to stock availability. Please review your cart.');
+    }
+
+    const newOrder = await orderRepository.create(orderData);
+    return newOrder;
   }
 
   async getUserOrders(userId) {

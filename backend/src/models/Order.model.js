@@ -122,12 +122,12 @@ orderSchema.index({ orderStatus: 1 });
 orderSchema.index({ paymentStatus: 1 });
 
 // Virtuals
-orderSchema.virtual('isPaid').get(function() {
+orderSchema.virtual('isPaid').get(function () {
   return this.paymentStatus === PAYMENT_STATUS.COMPLETED;
 });
 
 // Pre-save hook to add initial timeline event
-orderSchema.pre('save', function(next) {
+orderSchema.pre('save', function (next) {
   if (this.isNew) {
     this.timeline.push({ status: this.orderStatus, note: 'Order placed successfully' });
   }
@@ -135,7 +135,7 @@ orderSchema.pre('save', function(next) {
 });
 
 // Schema Methods
-orderSchema.statics.generateOrderNumber = async function() {
+orderSchema.statics.generateOrderNumber = async function () {
   const count = await this.countDocuments();
   const prefix = 'SAKSHI';
   const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');

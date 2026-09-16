@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import cartRepository from '../repositories/cart.repository.js';
 import ProductRepository from '../repositories/product.repository.js';
 import ApiError from '../utils/ApiError.js';
@@ -16,10 +17,27 @@ class CartService {
     const product = await ProductRepository.findById(productId);
     if (!product) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Product not found');
 
-    const variant = product.variants.id(variantId);
+    let variant = (product.variants && mongoose.Types.ObjectId.isValid(variantId)) ? product.variants.id(variantId) : null;
+    
+    // Auto-create or resolve default variant if product has no variants or variantId is default/missing
+    if (!variant && product.variants.length === 0) {
+      product.variants.push({
+        size: 'Standard',
+        price: product.pricing?.basePrice || 0,
+        stock: product.inventory?.totalStock || 10,
+        status: 'published'
+      });
+      await product.save();
+      variant = product.variants[0];
+      variantId = variant._id.toString();
+    } else if (!variant && product.variants.length > 0) {
+      variant = product.variants[0];
+      variantId = variant._id.toString();
+    }
+
     if (!variant) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid variant');
 
-    if (variant.stock < quantity) {
+    if (variant.stock > 0 && variant.stock < quantity) {
       throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Insufficient stock');
     }
 

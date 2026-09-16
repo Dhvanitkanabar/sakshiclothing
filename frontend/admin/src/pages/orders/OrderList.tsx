@@ -28,16 +28,30 @@ const OrderList = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`${API_URL}/orders/admin/all`, { credentials: 'include' });
+      const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch(`${API_URL}/orders/admin/all`, {
+        headers,
+        credentials: 'include'
+      });
       const data = await res.json();
       if (data.success) {
-        setOrders(data.data);
-        setFiltered(data.data);
+        const orderList = Array.isArray(data.data)
+          ? data.data
+          : (data.data?.orders || data.data?.data || []);
+        setOrders(orderList);
+        setFiltered(orderList);
       } else {
         setError(data.message || 'Failed to load orders');
+        setOrders([]);
+        setFiltered([]);
       }
     } catch {
       setError('Network error fetching orders');
+      setOrders([]);
+      setFiltered([]);
     } finally {
       setLoading(false);
     }
@@ -63,9 +77,13 @@ const OrderList = () => {
 
   const handleUpdateStatus = async (id: string, status: string) => {
     try {
+      const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const res = await fetch(`${API_URL}/orders/admin/${id}/status`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         credentials: 'include',
         body: JSON.stringify({ status })
       });

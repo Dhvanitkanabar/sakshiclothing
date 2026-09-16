@@ -59,9 +59,9 @@ const productSchema = new Schema(
       ref: 'Category',
       required: true
     },
-    brand: {
+    subCategory: {
       type: Schema.Types.ObjectId,
-      ref: 'Brand'
+      ref: 'Category'
     },
     tags: [
       {
@@ -134,7 +134,7 @@ const productSchema = new Schema(
 
 productSchema.index({ 'variants.sku': 1 }, { sparse: true, unique: true });
 productSchema.index({ category: 1, status: 1 });
-productSchema.index({ brand: 1 });
+
 productSchema.index({ name: 'text', shortDescription: 'text', tags: 'text' });
 
 // Virtuals

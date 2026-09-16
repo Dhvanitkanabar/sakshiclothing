@@ -22,8 +22,8 @@ const Shop = () => {
   const [sortBy, setSortBy] = useState('featured');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  const categories = ['All', 'Women', 'Men', 'Kids'];
-  const subCategories = ['All', 'Ethnic', 'Western', 'Shirts', 'T-Shirts', 'Jeans', 'Footwear', 'Boys', 'Girls'];
+  const [categories, setCategories] = useState<string[]>(['All']);
+  const [subCategories, setSubCategories] = useState<string[]>(['All']);
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -31,6 +31,16 @@ const Shop = () => {
       const data = await fetchProducts();
       setProducts(data);
       setFilteredProducts(data);
+
+      const cats = new Set<string>();
+      const subs = new Set<string>();
+      data.forEach(p => {
+        if (p.category) cats.add(p.category);
+        if (p.subCategory) subs.add(p.subCategory);
+      });
+      setCategories(['All', ...Array.from(cats)]);
+      setSubCategories(['All', ...Array.from(subs).filter(Boolean)]);
+
       setLoading(false);
     };
     loadProducts();
@@ -221,9 +231,9 @@ const Shop = () => {
       {/* Product Grid (Asymmetric) */}
       <main className="py-24 px-6 max-w-[1800px] mx-auto">
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-12 gap-8">
-            {[1, 2, 3, 4, 5, 6].map((i, idx) => (
-              <div key={i} className={`${idx % 3 === 0 ? 'md:col-span-8' : 'md:col-span-4'} space-y-6`}>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8 lg:gap-12">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <div key={i} className="col-span-1 space-y-4 md:space-y-6">
                 <Skeleton className="aspect-[3/4] rounded-[2rem]" />
                 <Skeleton className="h-8 w-3/4" />
               </div>
@@ -234,9 +244,9 @@ const Shop = () => {
             {filteredProducts.length > 0 ? (
               <motion.div 
                 layout
-                className="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-24"
+                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8 lg:gap-12"
               >
-                {filteredProducts.map((product, index) => (
+                {filteredProducts.map((product) => (
                   <motion.div
                     key={product.id}
                     layout
@@ -244,9 +254,7 @@ const Shop = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                    className={`${
-                      index % 5 === 0 ? 'md:col-span-8' : 'md:col-span-4'
-                    } ${index % 3 === 0 ? 'md:mt-24' : ''}`}
+                    className="col-span-1"
                   >
                     <ProductCard product={product} />
                   </motion.div>

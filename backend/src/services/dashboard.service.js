@@ -2,7 +2,7 @@ import Order from '../models/Order.model.js';
 import User from '../models/User.model.js';
 import Product from '../models/Product.model.js';
 import Category from '../models/Category.model.js';
-import Brand from '../models/Brand.model.js';
+
 
 class DashboardService {
   async getStats() {
@@ -23,8 +23,7 @@ class DashboardService {
       revenueWeekly,
       lowStockProducts,
       outOfStockProducts,
-      totalCategories,
-      totalBrands
+      totalCategories
     ] = await Promise.all([
       Order.countDocuments(),
       Order.countDocuments({ orderStatus: 'pending' }),
@@ -68,8 +67,7 @@ class DashboardService {
         { $group: { _id: '$_id' } },
         { $count: 'count' }
       ]).then(r => r[0]?.count || 0),
-      Category.countDocuments(),
-      Brand.countDocuments()
+      Category.countDocuments()
     ]);
 
     return {
@@ -84,8 +82,8 @@ class DashboardService {
         totalProducts,
         lowStockProducts,
         outOfStockProducts,
-        totalCategories,
-        totalBrands
+        totalCategories
+
       },
       recentOrders,
       revenueWeekly

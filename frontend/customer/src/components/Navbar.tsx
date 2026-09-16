@@ -5,12 +5,57 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { motion, AnimatePresence } from 'motion/react';
+import { useUser } from '@clerk/clerk-react';
+
+const SUBCATEGORY_IMAGES: Record<string, string> = {
+  // Clothing
+  'dresses': 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&q=80',
+  'tops & shirts': 'https://images.unsplash.com/photo-1618244972963-dbee1a7edc95?w=800&q=80',
+  'tops': 'https://images.unsplash.com/photo-1618244972963-dbee1a7edc95?w=800&q=80',
+  'sarees': 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80',
+  'kurtas': 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=800&q=80',
+  'lehengas': 'https://images.unsplash.com/photo-1583391733975-0e7195821c9a?w=800&q=80',
+  'jackets': 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800&q=80',
+  'bottoms': 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=800&q=80',
+
+  // Jewellery
+  'necklaces': 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&q=80',
+  'earrings': 'https://images.unsplash.com/photo-1630019852942-f89202989a59?w=800&q=80',
+  'bangles': 'https://images.unsplash.com/photo-1611591475285-a36ad5e14391?w=800&q=80',
+  'bracelets': 'https://images.unsplash.com/photo-1611591475285-a36ad5e14391?w=800&q=80',
+  'rings': 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&q=80',
+  'pendants': 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&q=80',
+
+  // Accessories
+  'handbags': 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&q=80',
+  'bags': 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&q=80',
+  'sunglasses': 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=800&q=80',
+  'scarves': 'https://images.unsplash.com/photo-1601924994987-69e26d50dc26?w=800&q=80',
+  'belts': 'https://images.unsplash.com/photo-1624222247344-550fb60583dc?w=800&q=80',
+
+  // Footwear
+  'heels': 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=800&q=80',
+  'flats': 'https://images.unsplash.com/photo-1560343776-97e7d202ff0e?w=800&q=80',
+  'sneakers': 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80',
+  'boots': 'https://images.unsplash.com/photo-1520639888713-7851133b1ed0?w=800&q=80',
+};
+
+const getSubCategoryImage = (subName: string, subSlug: string, parentSlug?: string) => {
+  const nameKey = (subName || '').toLowerCase().trim();
+  const slugKey = (subSlug || '').toLowerCase().trim();
+  if (SUBCATEGORY_IMAGES[nameKey]) return SUBCATEGORY_IMAGES[nameKey];
+  if (SUBCATEGORY_IMAGES[slugKey]) return SUBCATEGORY_IMAGES[slugKey];
+  if (parentSlug === 'jewellery') return 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&q=80';
+  if (parentSlug === 'accessories') return 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&q=80';
+  if (parentSlug === 'footwear') return 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=800&q=80';
+  return 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&q=80';
+};
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
 const TopBar = () => {
   const [announcements, setAnnouncements] = useState<string[]>([
-    "Free Shipping on orders over ₹2999" // Default fallback
+    "Free Shipping on all orders" // Default fallback
   ]);
   const [index, setIndex] = useState(0);
 
@@ -67,17 +112,114 @@ const TopBar = () => {
   );
 };
 
+const CustomUserMenu = () => {
+  const { user, isSignedIn, logout } = useAuth();
+  const { user: clerkUser } = useUser();
+  const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+
+  // Use MongoDB user data if available, otherwise fall back to Clerk user data
+  const rawName = user?.fullName || clerkUser?.fullName || clerkUser?.firstName || '';
+  const rawEmail = user?.email || clerkUser?.primaryEmailAddress?.emailAddress || '';
+  
+  // Apple hides real email behind a private relay
+  const isAppleRelay = rawEmail.endsWith('@privaterelay.appleid.com');
+  const displayName = rawName || (isAppleRelay ? 'Apple User' : 'User');
+  const displayEmail = isAppleRelay ? 'Apple Account (private email)' : rawEmail;
+  const displayAvatar = user?.avatar?.url || clerkUser?.imageUrl;
+  const displayInitial = displayName.charAt(0).toUpperCase();
+
+  if (!isSignedIn) return null;
+
+  return (
+    <div className="relative">
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        onBlur={() => setTimeout(() => setIsOpen(false), 200)}
+        className="w-9 h-9 rounded-full border-2 border-black/10 overflow-hidden hover:opacity-80 transition-all hover:border-black/30 hover:scale-105 bg-gray-100 flex items-center justify-center shrink-0"
+      >
+        {displayAvatar ? (
+          <img src={displayAvatar} alt={displayName} className="w-full h-full object-cover" />
+        ) : (
+          <span className="text-sm font-bold text-black">{displayInitial}</span>
+        )}
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-black/5 overflow-hidden flex flex-col z-50 origin-top-right"
+          >
+            <div className="p-4 border-b border-black/5 bg-gray-50/50">
+              <p className="font-serif font-bold text-black truncate">{displayName}</p>
+              <p className="text-[10px] text-gray-500 truncate mt-0.5 font-medium">{displayEmail}</p>
+            </div>
+            <div className="p-2 flex flex-col gap-1">
+              <button 
+                onClick={() => { setIsOpen(false); navigate('/profile'); }}
+                className="w-full flex items-center gap-3 text-left px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest text-gray-600 hover:text-black hover:bg-gray-50 rounded-xl transition-colors"
+              >
+                <User size={14} /> My Profile
+              </button>
+              <button 
+                onClick={() => { setIsOpen(false); logout(); navigate('/'); }}
+                className="w-full flex items-center gap-3 text-left px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+              >
+                <LogOut size={14} /> Sign Out
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+
 const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { user, isSignedIn, logout } = useAuth();
   const { setIsCartOpen, cart } = useCart();
   const { wishlist } = useWishlist();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
+  const [navLinks, setNavLinks] = useState<any[]>([{ name: 'Shop', path: '/shop' }]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetch(`${API_URL}/categories`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          const cats = data.data;
+          const parents = cats.filter((c: any) => !c.parentCategory && c.isActive).sort((a: any, b: any) => a.displayOrder - b.displayOrder);
+          const builtLinks = parents.map((p: any) => {
+            const subcats = cats.filter((c: any) => (c.parentCategory === p._id || c.parentCategory?._id === p._id) && c.isActive).sort((a: any, b: any) => a.displayOrder - b.displayOrder);
+            return {
+              name: p.name,
+              path: `/category/${p.slug}`,
+              mega: subcats.length > 0 ? subcats.map((sub: any) => ({
+                title: sub.name,
+                path: `/category/${p.slug}?sub=${sub.slug}`,
+                image: sub.image?.url || getSubCategoryImage(sub.name, sub.slug, p.slug)
+              })) : undefined
+            };
+          });
+          
+          builtLinks.push({ name: 'Shop', path: '/shop' });
+          setNavLinks(builtLinks);
+        }
+      })
+      .catch(console.error);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -87,70 +229,7 @@ const Navbar = () => {
 
   const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
 
-  const navLinks = [
-    {
-      name: 'Women',
-      path: '/category/Women',
-      mega: [
-        {
-          title: 'Ethnic Wear',
-          items: ['Sarees', 'Kurtas', 'Lehengas'],
-          image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=500&auto=format&fit=crop'
-        },
-        {
-          title: 'Western Wear',
-          items: ['Dresses', 'Tops', 'Jeans'],
-          image: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?q=80&w=500&auto=format&fit=crop'
-        },
-        {
-          title: 'Accessories',
-          items: ['Handbags', 'Jewelry', 'Footwear'],
-          image: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=500&auto=format&fit=crop'
-        }
-      ]
-    },
-    {
-      name: 'Men',
-      path: '/category/Men',
-      mega: [
-        {
-          title: 'Topwear',
-          items: ['Shirts', 'T-Shirts', 'Jackets'],
-          image: 'https://images.unsplash.com/photo-1488161628813-04466f872be2?q=80&w=500&auto=format&fit=crop'
-        },
-        {
-          title: 'Bottomwear',
-          items: ['Jeans', 'Trousers', 'Shorts'],
-          image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?q=80&w=500&auto=format&fit=crop'
-        },
-        {
-          title: 'Footwear',
-          items: ['Sneakers', 'Formal Shoes', 'Loafers'],
-          image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=500&auto=format&fit=crop'
-        }
-      ]
-    },
-    {
-      name: 'Kids',
-      path: '/category/Kids',
-      mega: [
-        {
-          title: 'Boys',
-          items: ['T-Shirts', 'Shirts', 'Jeans'],
-          image: 'https://images.unsplash.com/photo-1519457431-7571f0182746?q=80&w=500&auto=format&fit=crop'
-        },
-        {
-          title: 'Girls',
-          items: ['Dresses', 'Tops', 'Skirts'],
-          image: 'https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?q=80&w=500&auto=format&fit=crop'
-        }
-      ]
-    },
-    {
-      name: 'Shop',
-      path: '/shop'
-    }
-  ];
+
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,15 +243,12 @@ const Navbar = () => {
   return (
     <>
       <TopBar />
-      <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none pt-6 md:pt-8">
+      <div className={`fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none transition-all duration-500 ${isScrolled ? 'bg-white shadow-md' : 'pt-6 md:pt-8'}`}>
         <motion.nav
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className={`pointer-events-auto flex items-center justify-between px-6 md:px-10 h-16 md:h-20 rounded-full transition-all duration-700 ease-in-out ${isScrolled
-              ? 'w-[95%] md:w-[85%] max-w-6xl bg-white shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] border border-black/5'
-              : 'w-full max-w-7xl bg-transparent'
-            } ${isScrolled ? 'glassmorphism' : ''}`}
+          className={`pointer-events-auto flex items-center justify-between px-6 md:px-10 h-16 md:h-20 transition-all duration-700 ease-in-out w-full max-w-7xl ${isScrolled ? 'bg-transparent' : 'bg-transparent'}`}
         >
           {/* Left Side: Logo & Mobile Menu */}
           <div className="flex items-center gap-4 flex-1">
@@ -193,7 +269,7 @@ const Navbar = () => {
           </div>
 
           {/* Center: Desktop Nav Pill */}
-          <div className="hidden lg:flex items-center relative bg-black/5 backdrop-blur-md rounded-full p-1.5 border border-black/5">
+          <div className="hidden lg:flex items-center relative bg-white/90 backdrop-blur-xl shadow-xl border border-gray-200/80 rounded-full p-1.5 shadow-black/10">
             {navLinks.map((link) => (
               <div
                 key={link.name}
@@ -209,7 +285,7 @@ const Navbar = () => {
               >
                 <Link
                   to={link.path}
-                  className={`relative z-10 px-5 py-2 rounded-full text-[11px] font-bold uppercase tracking-widest transition-all duration-300 flex items-center gap-1.5 ${hoveredLink === link.name ? 'text-white' : 'text-luxury-black/70'
+                  className={`relative z-10 px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-1.5 ${hoveredLink === link.name ? 'text-white' : 'text-slate-900 hover:text-black'
                     }`}
                 >
                   {link.name}
@@ -250,16 +326,12 @@ const Navbar = () => {
                                 <p className="text-white text-[11px] font-bold uppercase tracking-widest">{section.title}</p>
                               </div>
                             </div>
-                            <ul className="space-y-4">
-                              {section.items.map((item) => (
-                                <li key={item}>
-                                  <Link to="/shop" className="text-[13px] text-gray-500 hover:text-black transition-colors flex items-center group">
-                                    {item}
-                                    <ArrowRight size={12} className="ml-2 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
-                                  </Link>
-                                </li>
-                              ))}
-                            </ul>
+                            <div className="mt-4 flex justify-between items-center px-2">
+                              <Link to={section.path || "/shop"} className="text-[13px] font-bold text-gray-800 hover:text-black transition-colors flex items-center group">
+                                View Collection
+                                <ArrowRight size={12} className="ml-2 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+                              </Link>
+                            </div>
                           </div>
                         ))}
                         <div className="col-span-1 bg-gray-50 rounded-[32px] p-8 flex flex-col justify-between border border-gray-100">
@@ -325,42 +397,15 @@ const Navbar = () => {
             <div className="h-4 w-px bg-black/10 mx-1 hidden lg:block" />
 
             <div className="hidden lg:block">
-              {user ? (
-                <div className="relative group">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    className="flex items-center gap-2 pl-2 pr-4 py-1.5 bg-black/5 hover:bg-black/10 rounded-full transition-colors"
-                  >
-                    <div className="w-7 h-7 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-bold">
-                      {user.name[0]}
-                    </div>
-                    <span className="text-[11px] font-bold uppercase tracking-widest text-black">{user.name.split(' ')[0]}</span>
-                  </motion.button>
-                  <div className="absolute right-0 mt-3 w-64 bg-white rounded-[32px] shadow-[0_30px_70px_-15px_rgba(0,0,0,0.15)] border border-gray-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 overflow-hidden">
-                    <div className="p-6 bg-gray-50/50 border-b border-gray-100">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Account</p>
-                      <p className="text-sm font-serif font-black text-black truncate">{user.name}</p>
-                    </div>
-                    <div className="p-2">
-                      <Link to="/profile" className="flex items-center gap-3 px-4 py-3.5 text-[12px] font-bold text-gray-600 hover:bg-gray-50 hover:text-black rounded-2xl transition-all">
-                        <User size={16} /> My Profile
-                      </Link>
-                      <Link to="/orders" className="flex items-center gap-3 px-4 py-3.5 text-[12px] font-bold text-gray-600 hover:bg-gray-50 hover:text-black rounded-2xl transition-all">
-                        <ShoppingBag size={16} /> My Orders
-                      </Link>
-                      <div className="h-px bg-gray-100 mx-4 my-1" />
-                      <button
-                        onClick={logout}
-                        className="w-full flex items-center gap-3 px-4 py-3.5 text-[12px] font-bold text-red-500 hover:bg-red-50 rounded-2xl transition-all"
-                      >
-                        <LogOut size={16} /> Logout
-                      </button>
-                    </div>
-                  </div>
+              {isSignedIn ? (
+                <div className="flex items-center">
+                  <CustomUserMenu />
                 </div>
               ) : (
-                <Link to="/login" className="px-7 py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-[0.15em] hover:bg-accent transition-all duration-300 shadow-xl shadow-black/10 hover:shadow-accent/20">
-                  Login
+                <Link to="/login">
+                  <button className="px-5 py-2.5 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-[0.15em] hover:bg-accent transition-all duration-300 shadow-xl shadow-black/10 hover:shadow-accent/20">
+                    Login
+                  </button>
                 </Link>
               )}
             </div>
@@ -400,41 +445,74 @@ const Navbar = () => {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.1 }}
+                    className="border-b border-gray-100 pb-4"
                   >
-                    <Link
-                      to={link.path}
-                      className="text-4xl font-serif font-bold text-luxury-black hover:text-accent transition-colors"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      {link.name}
-                    </Link>
+                    <div className="flex justify-between items-center">
+                      <Link
+                        to={link.path}
+                        className="text-3xl md:text-4xl font-serif font-bold text-black hover:text-gray-600 transition-colors"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        {link.name}
+                      </Link>
+                      {link.mega && link.mega.length > 0 && (
+                        <button 
+                          onClick={() => setMobileExpanded(mobileExpanded === link.name ? null : link.name)}
+                          className="p-2 bg-gray-50 rounded-full"
+                        >
+                          <ChevronDown size={24} className={`transition-transform duration-300 ${mobileExpanded === link.name ? 'rotate-180' : ''}`} />
+                        </button>
+                      )}
+                    </div>
+                    
+                    {/* Mobile Subcategories Accordion */}
+                    <AnimatePresence>
+                      {mobileExpanded === link.name && link.mega && (
+                        <motion.div 
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="overflow-hidden mt-4 pl-4 space-y-4 border-l-2 border-black/10"
+                        >
+                          {link.mega.map((sub: any) => (
+                            <Link 
+                              key={sub.title} 
+                              to={sub.path} 
+                              onClick={() => setIsMenuOpen(false)}
+                              className="block text-lg font-bold text-gray-600 hover:text-black transition-colors"
+                            >
+                              {sub.title}
+                            </Link>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </motion.div>
                 ))}
               </div>
 
               <div className="pt-8 border-t border-gray-100">
-                {!user ? (
-                  <Link
-                    to="/login"
-                    className="block w-full bg-luxury-black text-white text-center py-5 rounded-2xl font-bold uppercase tracking-widest"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Login / Sign Up
+                {!isSignedIn ? (
+                  <Link to="/login" onClick={() => setIsMenuOpen(false)}>
+                    <button className="block w-full bg-luxury-black text-white text-center py-5 rounded-2xl font-bold uppercase tracking-widest">
+                      Login
+                    </button>
                   </Link>
                 ) : (
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between bg-gray-50 p-4 rounded-2xl">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold">
-                        {user.name[0]}
+                      <div className="w-10 h-10 rounded-full bg-white border border-black/10 flex items-center justify-center overflow-hidden">
+                         {user?.avatar?.url ? <img src={user.avatar.url} className="w-full h-full object-cover" /> : <span className="font-bold">{user?.fullName?.charAt(0)}</span>}
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-luxury-black">{user.name}</p>
-                        <button onClick={logout} className="text-xs font-bold text-red-500">Logout</button>
+                        <p className="font-bold text-sm text-black">{user?.fullName}</p>
+                        <p className="text-[10px] text-gray-500">{user?.email}</p>
                       </div>
                     </div>
-                    <Link to="/profile" onClick={() => setIsMenuOpen(false)} className="p-3 bg-gray-100 rounded-full">
-                      <User size={20} />
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      <Link to="/profile" onClick={() => setIsMenuOpen(false)} className="p-2 text-gray-500 hover:text-black bg-white rounded-full shadow-sm"><User size={16} /></Link>
+                      <button onClick={() => { logout(); setIsMenuOpen(false); }} className="p-2 text-red-500 hover:text-red-600 bg-white rounded-full shadow-sm"><LogOut size={16} /></button>
+                    </div>
                   </div>
                 )}
               </div>

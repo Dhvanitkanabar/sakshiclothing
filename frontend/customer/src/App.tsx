@@ -4,6 +4,7 @@
  */
 
 import { lazy, Suspense } from 'react';
+import { ClerkProvider, AuthenticateWithRedirectCallback } from '@clerk/clerk-react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { AuthProvider } from './context/AuthContext';
@@ -28,7 +29,7 @@ const Profile = lazy(() => import('./pages/Profile'));
 const Wishlist = lazy(() => import('./pages/Wishlist'));
 const OrderSuccess = lazy(() => import('./pages/OrderSuccess'));
 const PaymentRetry = lazy(() => import('./pages/PaymentRetry'));
-const Admin = lazy(() => import('./pages/Admin'));
+
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -57,8 +58,8 @@ const AnimatedRoutes = () => {
                 </ProtectedRoute>
               } 
             />
-            <Route path="/login" element={<AuthPage />} />
-            <Route path="/signup" element={<AuthPage />} />
+            <Route path="/login/*" element={<AuthPage />} />
+            <Route path="/signup/*" element={<AuthPage />} />
             <Route 
               path="/profile" 
               element={
@@ -70,7 +71,9 @@ const AnimatedRoutes = () => {
             <Route path="/order-success" element={<OrderSuccess />} />
             <Route path="/payment-retry" element={<PaymentRetry />} />
             <Route path="/wishlist" element={<Wishlist />} />
-            <Route path="/admin" element={<Admin />} />
+
+            {/* OAuth callback — Clerk handles this automatically */}
+            <Route path="/sso-callback" element={<AuthenticateWithRedirectCallback />} />
           </Routes>
         </Suspense>
       </motion.div>
@@ -78,9 +81,16 @@ const AnimatedRoutes = () => {
   );
 };
 
+const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || '';
+
 export default function App() {
+  if (!clerkPubKey) {
+    console.error('Missing VITE_CLERK_PUBLISHABLE_KEY');
+  }
+
   return (
-    <AuthProvider>
+    <ClerkProvider publishableKey={clerkPubKey}>
+      <AuthProvider>
       <CartProvider>
         <WishlistProvider>
           <Router>
@@ -89,12 +99,13 @@ export default function App() {
         </WishlistProvider>
       </CartProvider>
     </AuthProvider>
+    </ClerkProvider>
   );
 }
 
 const AppContent = () => {
   const location = useLocation();
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
+  const isAuthPage = location.pathname.startsWith('/login') || location.pathname.startsWith('/signup');
 
   return (
     <div className="min-h-screen flex flex-col font-sans bg-white text-gray-900 overflow-x-hidden pb-20 lg:pb-0">
