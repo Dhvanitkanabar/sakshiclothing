@@ -81,6 +81,8 @@ const AnimatedRoutes = () => {
   );
 };
 
+import { LanguageProvider } from './context/LanguageContext';
+
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || '';
 
 export default function App() {
@@ -90,15 +92,17 @@ export default function App() {
 
   return (
     <ClerkProvider publishableKey={clerkPubKey}>
-      <AuthProvider>
-      <CartProvider>
-        <WishlistProvider>
-          <Router>
-            <AppContent />
-          </Router>
-        </WishlistProvider>
-      </CartProvider>
-    </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <Router>
+                <AppContent />
+              </Router>
+            </WishlistProvider>
+          </CartProvider>
+        </AuthProvider>
+      </LanguageProvider>
     </ClerkProvider>
   );
 }

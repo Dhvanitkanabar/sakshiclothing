@@ -7,6 +7,8 @@ import { useWishlist } from '../context/WishlistContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { useUser } from '@clerk/clerk-react';
 
+import { useLanguage, Language } from '../context/LanguageContext';
+
 const SUBCATEGORY_IMAGES: Record<string, string> = {
   // Clothing
   'dresses': 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&q=80',
@@ -54,6 +56,7 @@ const getSubCategoryImage = (subName: string, subSlug: string, parentSlug?: stri
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
 const TopBar = () => {
+  const { language, setLanguage, t } = useLanguage();
   const [announcements, setAnnouncements] = useState<string[]>([
     "Free Shipping on all orders" // Default fallback
   ]);
@@ -84,19 +87,30 @@ const TopBar = () => {
   return (
     <div className="bg-slate-900 text-white py-2 text-[10px] font-bold uppercase tracking-[0.2em] overflow-hidden relative h-8 flex items-center">
       <div className="max-w-7xl mx-auto px-4 w-full flex justify-between items-center">
-        <div className="hidden md:flex items-center gap-4 opacity-60">
-          <span className="flex items-center gap-1"><Globe size={10} /> IN / EN</span>
-          <span className="flex items-center gap-1">INR ₹</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 bg-white/10 px-2 py-0.5 rounded-full hover:bg-white/20 transition-colors">
+            <Globe size={11} className="text-gray-300 shrink-0" />
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as Language)}
+              className="bg-transparent text-white text-[10px] font-bold uppercase tracking-wider focus:outline-none cursor-pointer"
+            >
+              <option value="en" className="bg-slate-900 text-white">EN - English</option>
+              <option value="hi" className="bg-slate-900 text-white">हिं - हिन्दी</option>
+              <option value="gu" className="bg-slate-900 text-white">ગુજ - ગુજરાતી</option>
+            </select>
+          </div>
+          <span className="hidden sm:flex items-center gap-1 opacity-60">{t('nav.currency')}</span>
         </div>
 
-        <div className="flex-grow text-center relative h-full flex items-center justify-center">
+        <div className="flex-grow text-center relative h-full flex items-center justify-center px-2">
           <AnimatePresence mode="wait">
             <motion.p
               key={index}
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -20, opacity: 0 }}
-              className="absolute"
+              className="absolute truncate max-w-[200px] sm:max-w-none"
             >
               {announcements[index]}
             </motion.p>
@@ -104,8 +118,8 @@ const TopBar = () => {
         </div>
 
         <div className="hidden md:flex items-center gap-4 opacity-60">
-          <Link to="/track-order" className="hover:text-accent transition-colors">Track Order</Link>
-          <Link to="/stores" className="hover:text-accent transition-colors">Find a Store</Link>
+          <Link to="/track-order" className="hover:text-accent transition-colors">{t('nav.trackOrder')}</Link>
+          <Link to="/stores" className="hover:text-accent transition-colors">{t('nav.findStore')}</Link>
         </div>
       </div>
     </div>
@@ -404,7 +418,7 @@ const Navbar = () => {
               ) : (
                 <Link to="/login">
                   <button className="px-5 py-2.5 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-[0.15em] hover:bg-accent transition-all duration-300 shadow-xl shadow-black/10 hover:shadow-accent/20">
-                    Login
+                    {t('nav.login')}
                   </button>
                 </Link>
               )}
