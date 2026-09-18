@@ -191,7 +191,12 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
-  const [navLinks, setNavLinks] = useState<any[]>([{ name: 'Shop', path: '/shop' }]);
+  const [navLinks, setNavLinks] = useState<any[]>([
+    { name: 'Women', path: '/category/women' },
+    { name: 'Men', path: '/category/men' },
+    { name: 'Jewellery', path: '/category/jewellery' },
+    { name: 'Shop', path: '/shop' }
+  ]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -218,7 +223,12 @@ const Navbar = () => {
           setNavLinks(builtLinks);
         }
       })
-      .catch(console.error);
+      .catch(err => {
+        console.error(err);
+        setNavLinks([
+          { name: 'Shop', path: '/shop' }
+        ]);
+      });
   }, []);
 
   useEffect(() => {
