@@ -89,17 +89,39 @@ export const getAllOrders = asyncHandler(async (req, res) => {
   const filter = {};
   if (status) filter.orderStatus = status;
   if (search) {
-    filter.orderNumber = { $regex: search, $options: 'i' };
-    // To search by customer name, it requires a lookup or to fetch matching users first.
-    // For simplicity, we just filter by orderNumber here, and search by customer name in user search.
+    filter.$or = [
+      { orderNumber: { $regex: search, $options: 'i' } }
+    ];
   }
   const skip = (page - 1) * limit;
   const orders = await orderService.getAllOrders(filter, sort ? { [sort]: -1 } : undefined, skip, Number(limit));
   return res.status(200).json(new ApiResponse(200, orders, 'All orders fetched successfully'));
 });
 
+export const acceptOrder = asyncHandler(async (req, res) => {
+  const order = await orderService.acceptOrder(req.params.id, req.user);
+  return res.status(200).json(new ApiResponse(200, order, 'Order accepted successfully'));
+});
+
+export const rejectOrder = asyncHandler(async (req, res) => {
+  const { reason } = req.body;
+  if (!reason || !reason.trim()) {
+    throw new ApiError(400, 'Rejection/cancellation reason is required');
+  }
+  const order = await orderService.rejectOrder(req.params.id, reason.trim(), req.user);
+  return res.status(200).json(new ApiResponse(200, order, 'Order rejected/cancelled successfully'));
+});
+
+export const trackOrderPublic = asyncHandler(async (req, res) => {
+  const { orderId, email, phone } = req.query;
+  if (!orderId) {
+    throw new ApiError(400, 'Order ID is required');
+  }
+  const order = await orderService.trackOrderPublic(orderId.trim(), email?.trim(), phone?.trim(), req.user?._id);
+  return res.status(200).json(new ApiResponse(200, order, 'Order tracking details fetched successfully'));
+});
+
 export const approveReturn = asyncHandler(async (req, res) => {
-  // Placeholder for return approval logic
   const order = await orderService.updateOrderStatus(req.params.id, 'returned', 'Return approved by admin');
   return res.status(200).json(new ApiResponse(200, order, 'Return approved successfully'));
 });

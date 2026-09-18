@@ -29,6 +29,7 @@ const Profile = lazy(() => import('./pages/Profile'));
 const Wishlist = lazy(() => import('./pages/Wishlist'));
 const OrderSuccess = lazy(() => import('./pages/OrderSuccess'));
 const PaymentRetry = lazy(() => import('./pages/PaymentRetry'));
+const TrackOrder = lazy(() => import('./pages/TrackOrder'));
 
 
 const AnimatedRoutes = () => {
@@ -71,6 +72,7 @@ const AnimatedRoutes = () => {
             <Route path="/order-success" element={<OrderSuccess />} />
             <Route path="/payment-retry" element={<PaymentRetry />} />
             <Route path="/wishlist" element={<Wishlist />} />
+            <Route path="/track-order" element={<TrackOrder />} />
 
             {/* OAuth callback — Clerk handles this automatically */}
             <Route path="/sso-callback" element={<AuthenticateWithRedirectCallback />} />

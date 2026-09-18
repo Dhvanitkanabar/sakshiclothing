@@ -66,12 +66,55 @@ const OrderDetails = () => {
       const data = await res.json();
       if (data.success) {
         setOrder((prev: any) => ({ ...prev, orderStatus: status }));
-        alert(`Order status updated to ${STATUS_LABELS[status]}`);
+        alert(`Order status updated to ${STATUS_LABELS[status] || status}`);
       } else {
         alert(data.message || 'Failed to update status');
       }
     } catch {
       alert('Network error');
+    }
+  };
+
+  const handleAcceptOrder = async () => {
+    try {
+      const res = await fetch(`${API_URL}/orders/admin/${id}/accept`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (data.success) {
+        setOrder(data.data);
+        alert('Order accepted & confirmation email dispatched to customer.');
+      } else {
+        alert(data.message || 'Failed to accept order');
+      }
+    } catch {
+      alert('Network error accepting order');
+    }
+  };
+
+  const handleRejectOrder = async (reason: string) => {
+    if (!reason || !reason.trim()) {
+      alert('A valid cancellation reason is required.');
+      return;
+    }
+    try {
+      const res = await fetch(`${API_URL}/orders/admin/${id}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ reason: reason.trim() })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setOrder(data.data);
+        alert('Order rejected & cancellation email dispatched to customer.');
+      } else {
+        alert(data.message || 'Failed to reject order');
+      }
+    } catch {
+      alert('Network error rejecting order');
     }
   };
 

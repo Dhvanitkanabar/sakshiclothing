@@ -1,5 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 import { ORDER_STATUS, PAYMENT_STATUS } from '../constants/index.js';
+import Counter from './Counter.model.js';
 
 const orderItemSchema = new Schema({
   product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
@@ -73,12 +74,26 @@ const orderSchema = new Schema(
         ORDER_STATUS.SHIPPED,
         ORDER_STATUS.DELIVERED,
         ORDER_STATUS.CANCELLED,
+        'pending_approval',
+        'confirmed',
         'packed',
-        'outForDelivery',
+        'dispatched',
+        'in_transit',
+        'out_for_delivery',
+        'rejected',
         'returned',
         'refunded'
       ],
-      default: ORDER_STATUS.PENDING
+      default: 'pending_approval'
+    },
+    approvalStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending'
+    },
+    rejectionReason: {
+      type: String,
+      default: null
     },
     paymentStatus: {
       type: String,
@@ -93,7 +108,9 @@ const orderSchema = new Schema(
     tracking: {
       courierName: String,
       trackingNumber: String,
-      trackingUrl: String
+      trackingUrl: String,
+      carrier: String,
+      status: String
     },
     invoice: {
       invoiceNumber: String,
@@ -115,10 +132,11 @@ const orderSchema = new Schema(
   }
 );
 
-// Indexes
-
+// Indexes for fast lookup
+orderSchema.index({ orderNumber: 1 });
 orderSchema.index({ customer: 1, createdAt: -1 });
 orderSchema.index({ orderStatus: 1 });
+orderSchema.index({ approvalStatus: 1 });
 orderSchema.index({ paymentStatus: 1 });
 
 // Virtuals
@@ -128,19 +146,20 @@ orderSchema.virtual('isPaid').get(function () {
 
 // Pre-save hook to add initial timeline event
 orderSchema.pre('save', function (next) {
-  if (this.isNew) {
+  if (this.isNew && (!this.timeline || this.timeline.length === 0)) {
     this.timeline.push({ status: this.orderStatus, note: 'Order placed successfully' });
   }
   next();
 });
 
-// Schema Methods
+// Atomic sequential order number generator (ORDERSC1, ORDERSC2, ...)
 orderSchema.statics.generateOrderNumber = async function () {
-  const count = await this.countDocuments();
-  const prefix = 'SAKSHI';
-  const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  const paddedCount = (count + 1).toString().padStart(6, '0');
-  return `${prefix}-${dateStr}-${paddedCount}`;
+  const counter = await Counter.findByIdAndUpdate(
+    'orders',
+    { $inc: { seq: 1 } },
+    { new: true, upsert: true }
+  );
+  return `ORDERSC${counter.seq}`;
 };
 
 const Order = mongoose.model('Order', orderSchema);
