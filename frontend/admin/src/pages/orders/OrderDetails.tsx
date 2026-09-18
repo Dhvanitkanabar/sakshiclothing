@@ -182,21 +182,39 @@ const OrderDetails = () => {
           </p>
         </div>
 
-        {/* Quick Status Update */}
-        <div className="flex gap-2 flex-wrap">
-          {!isCancelled && !isDelivered && (
-            <>
-              <select
-                defaultValue=""
-                onChange={e => e.target.value && handleStatusUpdate(e.target.value)}
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none"
+        {/* Quick Status Update & Actions */}
+        <div className="flex items-center gap-3 flex-wrap">
+          {order.orderStatus === 'pending_approval' && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleAcceptOrder}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold text-xs rounded-xl shadow-md transition-all"
               >
-                <option value="" disabled>Update Status…</option>
-                {Object.entries(STATUS_LABELS).map(([v, l]) => (
-                  <option key={v} value={v}>{l}</option>
-                ))}
-              </select>
-            </>
+                Accept Order
+              </button>
+              <button
+                onClick={() => {
+                  const reason = prompt('Please enter rejection/cancellation reason:');
+                  if (reason !== null) handleRejectOrder(reason);
+                }}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-md transition-all"
+              >
+                Reject Order
+              </button>
+            </div>
+          )}
+
+          {!isCancelled && !isDelivered && (
+            <select
+              defaultValue=""
+              onChange={e => e.target.value && handleStatusUpdate(e.target.value)}
+              className="border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold bg-white focus:outline-none shadow-sm"
+            >
+              <option value="" disabled>Update Status…</option>
+              {Object.entries(STATUS_LABELS).map(([v, l]) => (
+                <option key={v} value={v}>{l}</option>
+              ))}
+            </select>
           )}
         </div>
       </div>
