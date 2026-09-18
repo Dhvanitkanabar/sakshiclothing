@@ -82,7 +82,7 @@ const TopBar = () => {
   }, [announcements]);
 
   return (
-    <div className="bg-slate-900 text-white py-2 text-[10px] font-bold uppercase tracking-[0.2em] overflow-hidden relative h-8 flex items-center">
+    <div className="bg-black/5 backdrop-blur-md text-slate-800 border-b border-black/5 py-2 text-[10px] font-bold uppercase tracking-[0.2em] overflow-hidden relative h-8 flex items-center z-50">
       <div className="max-w-7xl mx-auto px-4 w-full flex justify-between items-center">
         <div className="hidden md:flex items-center gap-4 opacity-60">
           <span className="flex items-center gap-1"><Globe size={10} /> IN / EN</span>
@@ -239,8 +239,6 @@ const Navbar = () => {
 
   const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
 
-
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -253,7 +251,7 @@ const Navbar = () => {
   return (
     <>
       <TopBar />
-      <div className={`fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none transition-all duration-500 ${isScrolled ? 'bg-white shadow-md' : 'pt-6 md:pt-8'}`}>
+      <div className={`fixed top-8 left-0 right-0 z-50 flex justify-center pointer-events-none transition-all duration-500 ${isScrolled ? 'bg-white/80 backdrop-blur-md shadow-md top-0 pt-0' : 'pt-4 md:pt-6'}`}>
         <motion.nav
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
