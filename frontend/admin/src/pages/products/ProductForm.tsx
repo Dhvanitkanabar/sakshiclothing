@@ -49,12 +49,25 @@ export default function ProductForm() {
       adminFetch(`${API_URL}/products/${id}`)
         .then(res => res.json())
         .then(data => {
-          if (data.success) {
+          if (data.success && data.data) {
+            const raw = data.data;
+            const parsedImages = (raw.images || []).map((img: any) => {
+              if (typeof img === 'string') return { url: img, publicId: img };
+              if (typeof img === 'object') return { url: img.url || img.secureUrl || '', publicId: img.publicId || img.url || '' };
+              return null;
+            }).filter(Boolean);
+
+            if (parsedImages.length === 0 && raw.thumbnail) {
+              const thumbUrl = typeof raw.thumbnail === 'string' ? raw.thumbnail : raw.thumbnail?.url;
+              if (thumbUrl) parsedImages.push({ url: thumbUrl, publicId: raw.thumbnail?.publicId || thumbUrl });
+            }
+
             setFormData(prev => ({
               ...prev,
-              ...data.data,
-              category: data.data.category?._id || data.data.category || '',
-              subCategory: data.data.subCategory?._id || data.data.subCategory || '',
+              ...raw,
+              category: raw.category?._id || raw.category || '',
+              subCategory: raw.subCategory?._id || raw.subCategory || '',
+              images: parsedImages
             }));
           }
         });
