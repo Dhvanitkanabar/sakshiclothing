@@ -97,29 +97,42 @@ const ProductDetails = () => {
               />
             </div>
             
-            {product.images && product.images.length > 0 && (
-              <div className="flex justify-center gap-3 overflow-x-auto no-scrollbar pb-2">
-                <button 
-                  onClick={() => setMainImage(product.image)}
-                  className={`w-16 h-20 shrink-0 rounded-2xl overflow-hidden border-2 transition-all ${
-                    mainImage === product.image ? 'border-black shadow-sm' : 'border-transparent opacity-70 hover:opacity-100'
-                  }`}
-                >
-                  <img src={product.image} alt="Thumbnail 1" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                </button>
-                {product.images.map((img, idx) => (
-                  <button 
-                    key={idx}
-                    onClick={() => setMainImage(img)}
-                    className={`w-16 h-20 shrink-0 rounded-2xl overflow-hidden border-2 transition-all ${
-                      mainImage === img ? 'border-black shadow-sm' : 'border-transparent opacity-70 hover:opacity-100'
-                    }`}
-                  >
-                    <img src={img} alt={`Thumbnail ${idx + 2}`} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                  </button>
-                ))}
-              </div>
-            )}
+            {/* Image Gallery Thumbnails */}
+            {(() => {
+              const parseUrl = (img: any): string => {
+                if (!img) return '';
+                if (typeof img === 'string') return img;
+                if (typeof img === 'object' && img.url) return img.url;
+                return '';
+              };
+
+              const allImages = Array.from(
+                new Set(
+                  [
+                    parseUrl(product.image),
+                    ...(product.images || []).map(parseUrl)
+                  ].filter(Boolean)
+                )
+              );
+
+              if (allImages.length <= 1) return null;
+
+              return (
+                <div className="flex justify-center gap-3 overflow-x-auto no-scrollbar pb-2">
+                  {allImages.map((imgUrl, idx) => (
+                    <button 
+                      key={idx}
+                      onClick={() => setMainImage(imgUrl)}
+                      className={`w-16 h-20 shrink-0 rounded-2xl overflow-hidden border-2 transition-all ${
+                        mainImage === imgUrl ? 'border-black shadow-sm' : 'border-transparent opacity-70 hover:opacity-100'
+                      }`}
+                    >
+                      <img src={imgUrl} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
 
           {/* Info Section */}

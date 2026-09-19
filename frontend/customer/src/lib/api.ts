@@ -21,16 +21,33 @@ export const authedFetch = async (url: string, options: RequestInit = {}, clerkT
 };
 
 export const mapBackendProductToFrontend = (backendProduct: any): Product => {
+  const parseImageUrl = (img: any): string => {
+    if (!img) return '';
+    if (typeof img === 'string') return img;
+    if (typeof img === 'object' && img.url) return img.url;
+    return '';
+  };
+
+  const imagesList: string[] = Array.isArray(backendProduct.images)
+    ? backendProduct.images.map(parseImageUrl).filter(Boolean)
+    : [];
+
+  const mainImageUrl =
+    parseImageUrl(backendProduct.thumbnail) ||
+    parseImageUrl(backendProduct.image) ||
+    imagesList[0] ||
+    'https://images.unsplash.com/photo-1445205170230-053b830c6050?q=80&w=1000&auto=format&fit=crop';
+
   return {
     id: backendProduct._id || backendProduct.id,
     name: backendProduct.name,
-    price: backendProduct.pricing?.basePrice || 0,
+    price: backendProduct.pricing?.basePrice ?? backendProduct.price ?? 0,
     category: backendProduct.category?.name || backendProduct.category || '',
     subCategory: backendProduct.tags?.[0] || '', // Mapping tags to subcategory for UI compatibility
     sizes: backendProduct.variants?.map((v: any) => v.size).filter(Boolean) || [],
     variants: backendProduct.variants || [],
-    image: backendProduct.thumbnail?.url || backendProduct.images?.[0]?.url || 'https://via.placeholder.com/500',
-    images: backendProduct.images?.map((img: any) => img.url) || [],
+    image: mainImageUrl,
+    images: imagesList.length > 0 ? imagesList : [mainImageUrl],
     description: backendProduct.description || backendProduct.shortDescription || '',
     featured: backendProduct.isFeatured || false,
     rating: backendProduct.averageRating || 5
