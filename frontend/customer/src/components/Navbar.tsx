@@ -205,14 +205,19 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
-  const [navLinks, setNavLinks] = useState<any[]>([{ name: 'Shop', path: '/shop' }]);
+  const [navLinks, setNavLinks] = useState<any[]>([
+    { name: 'Women', path: '/category/women' },
+    { name: 'Men', path: '/category/men' },
+    { name: 'Jewellery', path: '/category/jewellery' },
+    { name: 'Shop', path: '/shop' }
+  ]);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetch(`${API_URL}/categories`)
-      .then(res => res.json())
+      .then(res => res.ok ? res.json() : null)
       .then(data => {
-        if (data.success && data.data) {
+        if (data && data.success && data.data && data.data.length > 0) {
           const cats = data.data;
           const parents = cats.filter((c: any) => !c.parentCategory && c.isActive).sort((a: any, b: any) => a.displayOrder - b.displayOrder);
           const builtLinks = parents.map((p: any) => {
@@ -232,7 +237,9 @@ const Navbar = () => {
           setNavLinks(builtLinks);
         }
       })
-      .catch(console.error);
+      .catch(err => {
+        console.warn('Backend cold start / fallback navigation mode active:', err);
+      });
   }, []);
 
   useEffect(() => {
