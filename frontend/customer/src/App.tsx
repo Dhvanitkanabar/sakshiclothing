@@ -85,13 +85,9 @@ const AnimatedRoutes = () => {
 
 import { LanguageProvider } from './context/LanguageContext';
 
-const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || '';
+const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || 'pk_test_cmVndWxhci1rb2RpYWstNjg2NS5jbGVyay5hY2NvdW50cy5kZXYk';
 
 export default function App() {
-  if (!clerkPubKey) {
-    console.error('Missing VITE_CLERK_PUBLISHABLE_KEY');
-  }
-
   return (
     <ClerkProvider publishableKey={clerkPubKey}>
       <LanguageProvider>
