@@ -3,6 +3,7 @@ import {
   Search, ShieldBan, ShieldCheck, User as UserIcon,
   Mail, Phone, Calendar, ShoppingBag, Heart, Package, MapPin, X, ChevronRight
 } from 'lucide-react';
+import { adminFetch } from '../../lib/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
@@ -19,7 +20,7 @@ export default function CustomerList() {
 
   const fetchCustomers = () => {
     setLoading(true);
-    fetch(`${API_URL}/users/admin/all?search=${search}`, { credentials: 'include' })
+    adminFetch(`${API_URL}/users/admin/all?search=${search}`)
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -43,7 +44,7 @@ export default function CustomerList() {
     setSelectedId(id);
     setActiveTab('overview');
     setDetailLoading(true);
-    fetch(`${API_URL}/users/admin/${id}/details`, { credentials: 'include' })
+    adminFetch(`${API_URL}/users/admin/${id}/details`)
       .then(res => res.json())
       .then(data => { if (data.success) setSelectedData(data.data); })
       .catch(console.error)
@@ -53,7 +54,7 @@ export default function CustomerList() {
   const handleAction = async (id: string, action: 'block' | 'unblock' | 'deactivate', e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      const res = await fetch(`${API_URL}/users/admin/${id}/${action}`, { method: 'PATCH', credentials: 'include' });
+      const res = await adminFetch(`${API_URL}/users/admin/${id}/${action}`, { method: 'PATCH' });
       const data = await res.json();
       if (data.success) {
         fetchCustomers();
@@ -66,7 +67,7 @@ export default function CustomerList() {
 
   const handleDetailAction = async (id: string, action: 'block' | 'unblock' | 'deactivate') => {
     try {
-      const res = await fetch(`${API_URL}/users/admin/${id}/${action}`, { method: 'PATCH', credentials: 'include' });
+      const res = await adminFetch(`${API_URL}/users/admin/${id}/${action}`, { method: 'PATCH' });
       const data = await res.json();
       if (data.success) {
         fetchCustomers();

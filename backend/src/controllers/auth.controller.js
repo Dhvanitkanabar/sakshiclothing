@@ -6,12 +6,12 @@ import { asyncHandler } from '../utils/asyncHandler.js'; // Will create this
 const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
-  sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
 };
 
 const accessCookieOptions = {
   ...cookieOptions,
-  maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days (changed from 15 mins for testing)
+  maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
 };
 
 const refreshCookieOptions = {
@@ -36,7 +36,7 @@ class AuthController {
     res.cookie('refreshToken', refreshToken, refreshCookieOptions);
 
     return res.status(HTTP_STATUS.OK).json(
-      new ApiResponse(HTTP_STATUS.OK, { user }, 'Login successful')
+      new ApiResponse(HTTP_STATUS.OK, { user, accessToken }, 'Login successful')
     );
   });
 
@@ -77,7 +77,7 @@ class AuthController {
     delete userObj.refreshToken;
 
     return res.status(HTTP_STATUS.OK).json(
-      new ApiResponse(HTTP_STATUS.OK, { user: userObj }, 'Admin login successful')
+      new ApiResponse(HTTP_STATUS.OK, { user: userObj, accessToken }, 'Admin login successful')
     );
   });
 

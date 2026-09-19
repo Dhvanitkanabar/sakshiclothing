@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Search, Bell } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { adminFetch } from '../lib/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
@@ -15,7 +16,7 @@ const Topbar = () => {
 
   useEffect(() => {
     if (search.length > 2) {
-      fetch(`${API_URL}/search/admin?q=${search}`, { credentials: 'include' })
+      adminFetch(`${API_URL}/search/admin?q=${search}`)
         .then(res => res.json())
         .then(data => {
           if (data.success) {
@@ -30,7 +31,7 @@ const Topbar = () => {
   }, [search]);
 
   useEffect(() => {
-    fetch(`${API_URL}/notifications/admin`, { credentials: 'include' })
+    adminFetch(`${API_URL}/notifications/admin`)
       .then(res => res.json())
       .then(data => {
         if (data.success) {

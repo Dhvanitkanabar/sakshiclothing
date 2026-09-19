@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Package, Tag, ImageIcon, Search, Filter, Sparkles } from 'lucide-react';
+import { adminFetch } from '../../lib/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
@@ -13,7 +14,7 @@ export default function ProductList() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_URL}/products?limit=50`, { credentials: 'include' });
+      const res = await adminFetch(`${API_URL}/products?limit=50`);
       const data = await res.json();
       if (data.success) {
         setProducts(data.data.data || []);
@@ -32,7 +33,7 @@ export default function ProductList() {
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this product?')) {
       try {
-        await fetch(`${API_URL}/products/${id}`, { method: 'DELETE', credentials: 'include' });
+        await adminFetch(`${API_URL}/products/${id}`, { method: 'DELETE' });
         fetchProducts();
       } catch (err) {
         console.error(err);
@@ -43,11 +44,10 @@ export default function ProductList() {
   const handleToggleStatus = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === 'published' ? 'draft' : 'published';
     try {
-      await fetch(`${API_URL}/products/${id}/status`, {
+      await adminFetch(`${API_URL}/products/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-        credentials: 'include'
+        body: JSON.stringify({ status: newStatus })
       });
       fetchProducts();
     } catch (err) {

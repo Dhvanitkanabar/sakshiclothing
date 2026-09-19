@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { adminFetch } from '../../lib/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
@@ -23,7 +24,7 @@ export default function CategoryForm() {
   const [categories, setCategories] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch(`${API_URL}/categories`, { credentials: 'include' }).then(res => res.json()).then(data => {
+    adminFetch(`${API_URL}/categories`).then(res => res.json()).then(data => {
       if (data.success) {
         // Only allow top-level categories to be parents
         const parentCats = data.data.filter((c: any) => c._id !== id && !c.parentCategory);
@@ -36,7 +37,7 @@ export default function CategoryForm() {
     });
 
     if (isEdit) {
-      fetch(`${API_URL}/categories/${id}`, { credentials: 'include' })
+      adminFetch(`${API_URL}/categories/${id}`)
         .then(res => res.json())
         .then(data => {
           if (data.success) {
@@ -92,10 +93,9 @@ export default function CategoryForm() {
     delete payload.parentCategory;
 
     try {
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(payload)
       });
       const data = await res.json();

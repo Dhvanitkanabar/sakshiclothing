@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, RefreshCcw, Eye } from 'lucide-react';
 import { toast } from 'sonner';
+import { adminFetch } from '../../lib/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
@@ -19,9 +20,7 @@ const PaymentsManager = () => {
       if (statusFilter) query.append('status', statusFilter);
       if (gatewayFilter) query.append('gateway', gatewayFilter);
 
-      const res = await fetch(`${API_URL}/payments?${query.toString()}`, {
-        credentials: 'include'
-      });
+      const res = await adminFetch(`${API_URL}/payments?${query.toString()}`);
       const data = await res.json();
       if (data.success) {
         setPayments(data.data.payments);

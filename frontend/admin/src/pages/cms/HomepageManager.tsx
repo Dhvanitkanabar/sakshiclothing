@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { adminFetch } from '../../lib/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
@@ -16,11 +17,11 @@ export default function HomepageManager() {
 
   const fetchCMS = async () => {
     try {
-      const bRes = await fetch(`${API_URL}/cms/banners`, { credentials: 'include' });
+      const bRes = await adminFetch(`${API_URL}/cms/banners`);
       const bData = await bRes.json();
       if (bData.success) setBanners(bData.data || []);
 
-      const aRes = await fetch(`${API_URL}/cms/announcements`, { credentials: 'include' });
+      const aRes = await adminFetch(`${API_URL}/cms/announcements`);
       const aData = await aRes.json();
       if (aData.success) setAnnouncements(aData.data || []);
     } catch (err) {
@@ -35,10 +36,9 @@ export default function HomepageManager() {
   const handleBannerSubmit = async (e: any) => {
     e.preventDefault();
     try {
-      await fetch(`${API_URL}/cms/banners`, {
+      await adminFetch(`${API_URL}/cms/banners`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(bannerForm)
       });
       setBannerForm({ title: '', subtitle: '', buttonText: '', buttonLink: '', image: { url: '' }, homepageSection: 'hero' });
@@ -50,7 +50,7 @@ export default function HomepageManager() {
 
   const handleBannerDelete = async (id: string) => {
     if (confirm('Delete banner?')) {
-      await fetch(`${API_URL}/cms/banners/${id}`, { method: 'DELETE', credentials: 'include' });
+      await adminFetch(`${API_URL}/cms/banners/${id}`, { method: 'DELETE' });
       fetchCMS();
     }
   };
@@ -59,10 +59,9 @@ export default function HomepageManager() {
     if (!announcementText) return;
     const newArr = [...announcements, { text: announcementText, isActive: true }];
     try {
-      await fetch(`${API_URL}/cms/announcements`, {
+      await adminFetch(`${API_URL}/cms/announcements`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ announcementBar: newArr })
       });
       setAnnouncementText('');
@@ -75,10 +74,9 @@ export default function HomepageManager() {
   const handleAnnouncementDelete = async (index: number) => {
     const newArr = announcements.filter((_, i) => i !== index);
     try {
-      await fetch(`${API_URL}/cms/announcements`, {
+      await adminFetch(`${API_URL}/cms/announcements`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ announcementBar: newArr })
       });
       fetchCMS();

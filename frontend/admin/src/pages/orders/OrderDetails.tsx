@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Package, MapPin, CreditCard, Calendar, Truck, RotateCcw, AlertCircle } from 'lucide-react';
+import { adminFetch } from '../../lib/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
@@ -32,7 +33,7 @@ const OrderDetails = () => {
     if (!id) return;
     const fetchOrder = async () => {
       try {
-        const res = await fetch(`${API_URL}/orders/${id}`, { credentials: 'include' });
+        const res = await adminFetch(`${API_URL}/orders/${id}`);
         const data = await res.json();
         if (data.success) {
           setOrder(data.data);
@@ -57,10 +58,9 @@ const OrderDetails = () => {
 
   const handleStatusUpdate = async (status: string) => {
     try {
-      const res = await fetch(`${API_URL}/orders/admin/${id}/status`, {
+      const res = await adminFetch(`${API_URL}/orders/admin/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ status })
       });
       const data = await res.json();
@@ -77,10 +77,9 @@ const OrderDetails = () => {
 
   const handleAcceptOrder = async () => {
     try {
-      const res = await fetch(`${API_URL}/orders/admin/${id}/accept`, {
+      const res = await adminFetch(`${API_URL}/orders/admin/${id}/accept`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
+        headers: { 'Content-Type': 'application/json' }
       });
       const data = await res.json();
       if (data.success) {
@@ -100,10 +99,9 @@ const OrderDetails = () => {
       return;
     }
     try {
-      const res = await fetch(`${API_URL}/orders/admin/${id}/reject`, {
+      const res = await adminFetch(`${API_URL}/orders/admin/${id}/reject`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ reason: reason.trim() })
       });
       const data = await res.json();
@@ -121,10 +119,9 @@ const OrderDetails = () => {
   const handleSaveTracking = async () => {
     setSavingTracking(true);
     try {
-      const res = await fetch(`${API_URL}/orders/admin/${id}/tracking`, {
+      const res = await adminFetch(`${API_URL}/orders/admin/${id}/tracking`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ tracking: trackingInput })
       });
       const data = await res.json();

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import ImageUpload from '../../components/ImageUpload';
 import { Package, Layers, Image as ImageIcon, DollarSign, ArrowLeft } from 'lucide-react';
+import { adminFetch } from '../../lib/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
@@ -30,7 +31,7 @@ export default function ProductForm() {
 
   useEffect(() => {
     // Fetch categories
-    fetch(`${API_URL}/categories`, { credentials: 'include' })
+    adminFetch(`${API_URL}/categories`)
       .then(res => res.json())
       .then(data => {
         if (data.success && data.data) {
@@ -45,7 +46,7 @@ export default function ProductForm() {
   useEffect(() => {
     if (isEdit) {
       // Fetch existing
-      fetch(`${API_URL}/products/${id}`, { credentials: 'include' })
+      adminFetch(`${API_URL}/products/${id}`)
         .then(res => res.json())
         .then(data => {
           if (data.success) {
@@ -132,10 +133,9 @@ export default function ProductForm() {
         }))
       };
 
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(payload)
       });
       const data = await res.json();

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Package, ArrowDown, ChevronRight, ChevronDown, Box } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { adminFetch } from '../../lib/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
@@ -14,8 +15,8 @@ export default function InventoryDashboard() {
 
   useEffect(() => {
     Promise.all([
-      fetch(`${API_URL}/categories`, { credentials: 'include' }).then(res => res.json()),
-      fetch(`${API_URL}/products?limit=1000`, { credentials: 'include' }).then(res => res.json())
+      adminFetch(`${API_URL}/categories`).then(res => res.json()),
+      adminFetch(`${API_URL}/products?limit=1000`).then(res => res.json())
     ]).then(([catData, prodData]) => {
       if (catData.success) {
         setCategories(catData.data || []);

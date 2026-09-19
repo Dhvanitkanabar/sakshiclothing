@@ -1,5 +1,6 @@
 import { useState, useEffect, Fragment } from 'react';
 import { Link } from 'react-router-dom';
+import { adminFetch } from '../../lib/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
@@ -9,7 +10,7 @@ export default function CategoryList() {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch(`${API_URL}/categories`, { credentials: 'include' });
+      const res = await adminFetch(`${API_URL}/categories`);
       const data = await res.json();
       if (data.success) {
         setCategories(data.data || []);
@@ -28,7 +29,7 @@ export default function CategoryList() {
   const handleToggleStatus = async (id: string, currentStatus: boolean) => {
     try {
       const endpoint = currentStatus ? 'status' : 'restore';
-      await fetch(`${API_URL}/categories/${id}/${endpoint}`, { method: 'PATCH', credentials: 'include' });
+      await adminFetch(`${API_URL}/categories/${id}/${endpoint}`, { method: 'PATCH' });
       fetchCategories();
     } catch (err) {
       console.error(err);

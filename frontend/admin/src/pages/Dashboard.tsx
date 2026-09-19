@@ -4,6 +4,7 @@ import {
   ShoppingBag, Users, Package, TrendingUp,
   Clock, CheckCircle, XCircle, IndianRupee, ArrowUpRight
 } from 'lucide-react';
+import { adminFetch } from '../lib/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
@@ -42,7 +43,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API_URL}/dashboard/stats`, { credentials: 'include' })
+    adminFetch(`${API_URL}/dashboard/stats`)
       .then(r => r.json())
       .then(res => { if (res.success) setData(res.data); })
       .catch(console.error)

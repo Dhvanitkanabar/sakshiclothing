@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Eye, Search, Filter, Download } from 'lucide-react';
+import { adminFetch } from '../../lib/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
@@ -28,14 +29,7 @@ const OrderList = () => {
     setLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
-      const headers: Record<string, string> = {};
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-
-      const res = await fetch(`${API_URL}/orders/admin/all`, {
-        headers,
-        credentials: 'include'
-      });
+      const res = await adminFetch(`${API_URL}/orders/admin/all`);
       const data = await res.json();
       if (data.success) {
         const orderList = Array.isArray(data.data)
