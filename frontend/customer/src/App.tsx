@@ -16,6 +16,8 @@ import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
 import ProtectedRoute from './components/ProtectedRoute';
 import { motion, AnimatePresence } from 'motion/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
+import { Analytics } from '@vercel/analytics/react';
 
 // Lazy loading pages for performance
 const Home = lazy(() => import('./pages/Home'));
@@ -119,6 +121,8 @@ const AppContent = () => {
       {!isAuthPage && <BottomNav />}
       {!isAuthPage && <Footer />}
       <Toaster position="top-center" richColors />
+      <SpeedInsights />
+      <Analytics />
     </div>
   );
 };
