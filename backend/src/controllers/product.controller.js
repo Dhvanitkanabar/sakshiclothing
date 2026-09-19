@@ -62,7 +62,13 @@ class ProductController {
     ];
     const data = {};
     for (const field of allowedFields) {
-      if (req.body[field] !== undefined) data[field] = req.body[field];
+      if (req.body[field] !== undefined) {
+        if ((field === 'subCategory' || field === 'brand' || field === 'category') && req.body[field] === '') {
+          data[field] = null;
+        } else {
+          data[field] = req.body[field];
+        }
+      }
     }
     
     const product = await ProductService.createProduct(data, req.user._id);
@@ -77,7 +83,13 @@ class ProductController {
     ];
     const data = {};
     for (const field of allowedFields) {
-      if (req.body[field] !== undefined) data[field] = req.body[field];
+      if (req.body[field] !== undefined) {
+        if ((field === 'subCategory' || field === 'brand' || field === 'category') && req.body[field] === '') {
+          data[field] = null;
+        } else {
+          data[field] = req.body[field];
+        }
+      }
     }
 
     const product = await ProductService.updateProduct(req.params.id, data, req.user._id);

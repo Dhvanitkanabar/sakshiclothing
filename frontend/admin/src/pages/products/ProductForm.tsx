@@ -117,6 +117,7 @@ export default function ProductForm() {
     try {
       const payload = {
         ...formData,
+        subCategory: formData.subCategory && formData.subCategory.trim() ? formData.subCategory : undefined,
         pricing: {
           ...formData.pricing,
           basePrice: Number(formData.pricing.basePrice),
