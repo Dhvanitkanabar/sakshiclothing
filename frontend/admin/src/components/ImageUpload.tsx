@@ -156,6 +156,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             <ImageIcon size={14} /> Uploaded Images
           </h4>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {existingImages.map((img) => (
               <div key={img.publicId || img.secureUrl} className="relative group aspect-square rounded-xl overflow-hidden border border-gray-100 bg-gray-50 shadow-sm hover:shadow-md transition-all">
                 <img src={img.thumbnailUrl || img.secureUrl} alt="Upload" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" referrerPolicy="no-referrer" />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3">
