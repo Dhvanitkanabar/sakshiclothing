@@ -198,6 +198,7 @@ const Navbar = () => {
   const { user, isSignedIn, logout } = useAuth();
   const { setIsCartOpen, cart } = useCart();
   const { wishlist } = useWishlist();
+  const { t } = useLanguage();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
