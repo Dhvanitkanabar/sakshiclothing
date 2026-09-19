@@ -1,4 +1,0 @@
-{
-  "buildCommand": "cd frontend/customer && npm run build",
-  "outputDirectory": "frontend/customer/dist"
-}
