@@ -634,6 +634,14 @@ export const Home: React.FC = () => {
                       src={prod.image}
                       alt={prod.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        const fallback = "https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=1200&auto=format&fit=crop";
+                        if (target.src !== fallback) {
+                          target.src = fallback;
+                        }
+                      }}
                     />
                   </Link>
 
@@ -880,6 +888,14 @@ export const Home: React.FC = () => {
                       src={spotlightProduct.image}
                       alt={spotlightProduct.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        const fallback = "https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=1200&auto=format&fit=crop";
+                        if (target.src !== fallback) {
+                          target.src = fallback;
+                        }
+                      }}
                     />
                   </Link>
                   <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-white text-[10px] font-sans">

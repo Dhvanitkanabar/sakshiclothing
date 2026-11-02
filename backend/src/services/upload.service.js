@@ -29,10 +29,26 @@ class UploadService {
 
     // Read file buffer for permanent database persistence (protects against cloud container disk wipe)
     let buffer = null;
-    try {
-      buffer = await fs.readFile(file.path);
-    } catch (readErr) {
-      console.warn('[Upload Service] Could not read file buffer:', readErr.message);
+    const pathCandidates = [
+      file.path,
+      path.resolve(file.path),
+      path.join(process.cwd(), file.path),
+      path.join(process.cwd(), 'uploads', file.filename),
+      path.join(process.cwd(), 'backend/uploads', file.filename),
+    ];
+
+    for (const candidate of pathCandidates) {
+      try {
+        buffer = await fs.readFile(candidate);
+        if (buffer && buffer.length > 0) {
+          console.log(`[Upload Service] Successfully read buffer (${buffer.length} bytes) from: ${candidate}`);
+          break;
+        }
+      } catch {}
+    }
+
+    if (!buffer) {
+      console.warn('[Upload Service] Warning: Could not read file buffer from any candidate path');
     }
 
     const secureUrl = `${baseUrl}/${normalizedPath}`;

@@ -80,6 +80,13 @@ const Wishlist = () => {
                   alt={product.name}
                   className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                   referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    const fallback = "https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=1200&auto=format&fit=crop";
+                    if (target.src !== fallback) {
+                      target.src = fallback;
+                    }
+                  }}
                 />
                 
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />

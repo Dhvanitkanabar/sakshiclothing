@@ -198,8 +198,14 @@ app.use(requestLogger);
 import fs from 'fs';
 import Upload from './models/Upload.model.js';
 
-app.get(['/uploads/:filename', '/api/v1/uploads/file/:filename'], async (req, res, next) => {
-  const { filename } = req.params;
+app.get(['/uploads/:filename(*)', '/api/v1/uploads/file/:filename(*)'], async (req, res, next) => {
+  const rawParam = req.params.filename || req.params[0] || '';
+  const filename = path.basename(rawParam);
+
+  if (!filename) {
+    return res.redirect(302, 'https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=1200&auto=format&fit=crop');
+  }
+
   const localCandidates = [
     path.join(__dirname, '../uploads', filename),
     path.join(process.cwd(), 'uploads', filename),
@@ -215,7 +221,14 @@ app.get(['/uploads/:filename', '/api/v1/uploads/file/:filename'], async (req, re
 
   // Fallback to MongoDB Atlas if Render container disk was wiped on redeploy
   try {
-    const record = await Upload.findOne({ publicId: filename }).lean();
+    const record = await Upload.findOne({
+      $or: [
+        { publicId: filename },
+        { publicId: rawParam },
+        { secureUrl: { $regex: filename, $options: 'i' } }
+      ]
+    }).lean();
+
     if (record && record.data) {
       const buffer = Buffer.isBuffer(record.data) ? record.data : Buffer.from(record.data.buffer || record.data);
       // Cache back to local disk
@@ -233,7 +246,8 @@ app.get(['/uploads/:filename', '/api/v1/uploads/file/:filename'], async (req, re
     console.error('[Upload Persistent Handler Error]:', err.message);
   }
 
-  next();
+  // If the file was lost due to legacy ephemeral deployment, redirect seamlessly to luxury placeholder
+  return res.redirect(302, 'https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=1200&auto=format&fit=crop');
 });
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));

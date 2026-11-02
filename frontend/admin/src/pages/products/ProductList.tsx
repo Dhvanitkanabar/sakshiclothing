@@ -172,7 +172,18 @@ export default function ProductList() {
                     <td className="px-6 py-4 font-medium text-slate-900 flex items-center gap-4">
                       {product.thumbnail?.url ? (
                         <div className="w-14 h-14 rounded-2xl overflow-hidden border border-slate-100 bg-slate-50 flex-shrink-0 shadow-xs">
-                          <img src={product.thumbnail.url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                          <img 
+                            src={product.thumbnail.url} 
+                            alt="" 
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                            onError={(e) => {
+                              const target = e.currentTarget;
+                              const fallback = "https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=300&auto=format&fit=crop";
+                              if (target.src !== fallback) {
+                                target.src = fallback;
+                              }
+                            }}
+                          />
                         </div>
                       ) : (
                         <div className="w-14 h-14 rounded-2xl border border-slate-100 bg-slate-50 flex-shrink-0 flex items-center justify-center text-slate-300">

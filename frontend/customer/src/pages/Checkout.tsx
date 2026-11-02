@@ -668,7 +668,19 @@ const Checkout = () => {
                 {cart.map(item => (
                   <div key={`${item.id}-${item.selectedSize}`} className="flex gap-4">
                     <div className="w-20 h-24 bg-gray-50 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100">
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      <img 
+                        src={item.image} 
+                        alt={item.name} 
+                        className="w-full h-full object-cover" 
+                        referrerPolicy="no-referrer" 
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          const fallback = "https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=600&auto=format&fit=crop";
+                          if (target.src !== fallback) {
+                            target.src = fallback;
+                          }
+                        }}
+                      />
                     </div>
                     <div className="flex-grow py-1 flex flex-col justify-between">
                       <div>
