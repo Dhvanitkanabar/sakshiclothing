@@ -113,18 +113,32 @@ const apiLimiter = rateLimit({
 app.use('/api/', apiLimiter);
 
 // Configure CORS dynamically for Production & Staging
-const allowedOriginsList = process.env.ALLOWED_ORIGINS
+const parsedAllowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(url => url.trim())
-  : [
-      process.env.CLIENT_URL,
-      process.env.ADMIN_URL,
-      'http://localhost:5173',
-      'http://localhost:3001'
-    ].filter(Boolean);
+  : [];
+
+const allowedOriginsList = Array.from(new Set([
+  ...parsedAllowedOrigins,
+  process.env.CLIENT_URL,
+  process.env.ADMIN_URL,
+  'https://www.sakshiclothing.store',
+  'https://sakshiclothing.store',
+  'https://admin.sakshiclothing.store',
+  'https://sakshi-clothing-customer.vercel.app',
+  'https://sakshi-clothing-admin.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3001'
+].filter(Boolean)));
 
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin || allowedOriginsList.includes(origin) || allowedOriginsList.includes('*')) {
+    if (
+      !origin || 
+      allowedOriginsList.includes(origin) || 
+      allowedOriginsList.includes('*') ||
+      origin.endsWith('sakshiclothing.store') ||
+      origin.endsWith('vercel.app')
+    ) {
       callback(null, true);
     } else {
       callback(null, true); // Fallback allow dynamically
