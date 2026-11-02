@@ -20,7 +20,6 @@ import { toast } from 'sonner';
 export const Footer: React.FC = () => {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
-  const [copiedCode, setCopiedCode] = useState(false);
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,14 +28,7 @@ export const Footer: React.FC = () => {
       return;
     }
     setSubscribed(true);
-    toast.success('Welcome to the Sakshi Patron Circle! Use coupon code SAKSHI20 for 20% off.');
-  };
-
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText('SAKSHI20');
-    setCopiedCode(true);
-    toast.success('Privilege code SAKSHI20 copied to clipboard');
-    setTimeout(() => setCopiedCode(false), 3000);
+    toast.success('Welcome to the Sakshi Atelier Circle! You are now subscribed to private previews.');
   };
 
   return (
@@ -65,14 +57,14 @@ export const Footer: React.FC = () => {
                 <span>THE SAKSHI ATELIER CIRCLE</span>
               </div>
               <h3 className="text-2xl sm:text-4xl font-sans font-light text-white leading-tight">
-                Unlock <span className="italic font-normal text-amber-300">20% Discount</span>
+                Private Previews & <span className="italic font-normal text-amber-300">Exclusive Drops</span>
               </h3>
               <p className="text-stone-400 text-xs sm:text-sm font-light leading-relaxed">
-                Subscribe to receive seasonal sale alerts, festive discount codes, and new arrival drops.
+                Join our private patron circle to receive early access to new collection drops, limited jewellery suites, and invitations to seasonal exhibitions.
               </p>
             </div>
 
-            {/* Newsletter or Unlocked Coupon */}
+            {/* Newsletter Subscription */}
             {!subscribed ? (
               <form onSubmit={handleSubscribe} className="w-full lg:w-auto flex flex-col sm:flex-row gap-3 min-w-full sm:min-w-[420px]">
                 <input
@@ -92,26 +84,23 @@ export const Footer: React.FC = () => {
                 </button>
               </form>
             ) : (
-              <div className="bg-black/50 border border-amber-400/40 rounded-2xl p-4 sm:p-5 flex items-center gap-4">
+              <div className="bg-black/60 border border-amber-400/40 rounded-2xl p-4 sm:p-6 flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-amber-400/20 text-amber-300 flex items-center justify-center shrink-0">
+                  <Check size={20} />
+                </div>
                 <div>
-                  <p className="text-[10px] font-sans uppercase tracking-widest text-amber-300">
-                    VIP Patron Code Unlocked
+                  <p className="text-xs font-sans uppercase tracking-widest text-amber-300 font-bold">
+                    Invitation Confirmed
                   </p>
-                  <p className="text-lg font-sans font-bold text-white tracking-widest">
-                    SAKSHI20
+                  <p className="text-xs sm:text-sm text-stone-300 font-light mt-0.5">
+                    Welcome to the Atelier Circle. You will receive private previews of our newest collections.
                   </p>
                 </div>
-                <button
-                  onClick={handleCopyCode}
-                  className="px-4 py-2 bg-amber-400 text-black rounded-xl text-xs font-sans uppercase tracking-wider font-bold hover:bg-white transition-colors flex items-center gap-1.5"
-                >
-                  {copiedCode ? <Check size={13} /> : <Copy size={13} />}
-                  <span>{copiedCode ? 'Copied' : 'Copy'}</span>
-                </button>
               </div>
             )}
           </div>
         </div>
+
 
         {/* 2. 5-COLUMN EDITORIAL FOOTER NAVIGATION */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 sm:gap-12 mb-16 sm:mb-20">

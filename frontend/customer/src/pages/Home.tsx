@@ -360,10 +360,6 @@ export const Home: React.FC = () => {
     return () => clearInterval(testTimer);
   }, [testimonials.length]);
 
-  const copyCoupon = () => {
-    navigator.clipboard.writeText('SAKSHI20');
-    toast.success('Festive privilege code SAKSHI20 copied to clipboard');
-  };
 
   return (
     <div className="bg-[#FAF8F5] text-stone-900 min-h-screen overflow-x-hidden selection:bg-amber-400 selection:text-black pb-24 lg:pb-0">
@@ -1049,41 +1045,42 @@ export const Home: React.FC = () => {
         </div>
       </motion.section>
 
-      {/* 7. PROMOTIONAL PRIVILEGE CODE BANNER (SCROLL REVEAL) */}
+      {/* 7. MAISON EXCELLENCE & ARTISANAL GUARANTEE (SCROLL REVEAL) */}
       <motion.section 
-        id="privilege-section"
+        id="authenticity-section"
         initial={{ opacity: 0, scale: 0.96, y: 50 }}
         whileInView={{ opacity: 1, scale: 1, y: 0 }}
         viewport={{ once: true, amount: 0.2, margin: "0px 0px -50px 0px" }}
         transition={{ duration: 0.85, ease: [0.19, 1, 0.22, 1] }}
         className="px-5 sm:px-8 max-w-7xl mx-auto my-16 sm:my-24"
       >
-        <div className="bg-gradient-to-r from-amber-950 via-stone-900 to-stone-950 text-white rounded-3xl p-6 sm:p-12 relative overflow-hidden shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8">
+        <div className="bg-gradient-to-r from-stone-950 via-[#1b1714] to-amber-950/80 text-white rounded-3xl p-6 sm:p-12 relative overflow-hidden shadow-2xl border border-amber-900/40 flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8">
           <div className="space-y-3 sm:space-y-4 max-w-xl text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-400/20 text-amber-300 rounded-full text-xs font-sans uppercase tracking-wider">
-              <Clock size={13} /> Exclusive Atelier Privilege
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-400/15 border border-amber-400/25 text-amber-300 rounded-full text-xs font-sans uppercase tracking-wider">
+              <ShieldCheck size={13} className="text-amber-400" />
+              <span>AUTHENTICITY & CRAFTSMANSHIP GUARANTEE</span>
             </div>
             <h3 className="text-2xl sm:text-4xl md:text-5xl font-sans font-light leading-tight">
-              Enjoy Flat <span className="font-bold text-amber-300">20% Discount</span> on Your Order
+              Heirloom Artistry. <span className="italic font-normal text-amber-300">Certified Heritage.</span>
             </h3>
             <p className="text-stone-300 text-xs sm:text-sm md:text-base font-light leading-relaxed">
-              Apply code <span className="font-sans font-bold text-amber-300 bg-black/40 px-2 py-0.5 rounded">SAKSHI20</span> at checkout for instant 20% savings across all Silks, Sherwanis, Lehengas, and Jewellery.
+              Every Sakshi bridal ensemble, Varanasi handloom weave, and handcrafted Polki suite is certified for authenticity. Crafted by master karigars with complimentary insured doorstep delivery across India.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 shrink-0 w-full sm:w-auto">
-            <button
-              onClick={copyCoupon}
+            <Link
+              to="/shop?category=Women&sub=Bridal Lehengas"
               className="w-full sm:w-auto px-6 py-3.5 sm:py-4 bg-white/10 hover:bg-white/20 text-white rounded-2xl text-xs font-sans uppercase tracking-widest font-bold transition-all border border-white/25 flex items-center justify-center gap-2"
             >
-              <Copy size={14} />
-              <span>Copy Code</span>
-            </button>
+              <Crown size={14} className="text-amber-300" />
+              <span>Bridal Trousseau</span>
+            </Link>
             <Link
               to="/shop"
               className="w-full sm:w-auto px-7 py-3.5 sm:py-4 bg-amber-400 text-stone-950 hover:bg-white rounded-2xl text-xs font-sans uppercase tracking-widest font-bold transition-all shadow-xl inline-flex items-center justify-center gap-2"
             >
               <ShoppingBag size={14} />
-              <span>Shop Collection</span>
+              <span>Explore The Atelier</span>
             </Link>
           </div>
         </div>
