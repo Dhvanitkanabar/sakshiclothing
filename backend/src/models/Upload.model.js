@@ -26,6 +26,13 @@ const uploadSchema = new Schema(
     bytes: {
       type: Number,
     },
+    data: {
+      type: Buffer,
+    },
+    contentType: {
+      type: String,
+      default: 'image/jpeg',
+    },
     folder: {
       type: String,
     },

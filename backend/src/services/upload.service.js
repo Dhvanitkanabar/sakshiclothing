@@ -27,12 +27,22 @@ class UploadService {
       baseUrl = baseUrl.replace(/^http:\/\//, 'https://');
     }
 
+    // Read file buffer for permanent database persistence (protects against cloud container disk wipe)
+    let buffer = null;
+    try {
+      buffer = await fs.readFile(file.path);
+    } catch (readErr) {
+      console.warn('[Upload Service] Could not read file buffer:', readErr.message);
+    }
+
     const secureUrl = `${baseUrl}/${normalizedPath}`;
 
     const uploadData = {
       publicId: file.filename, 
       secureUrl: secureUrl,
       thumbnailUrl: secureUrl,
+      data: buffer,
+      contentType: file.mimetype || 'image/jpeg',
       width: 0,
       height: 0,
       format: file.mimetype.split('/')[1] || 'jpeg',

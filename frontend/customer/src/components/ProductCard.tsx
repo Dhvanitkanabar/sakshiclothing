@@ -94,6 +94,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, dark = false 
             loading="lazy"
             className="h-full w-full object-cover object-center transition-all duration-700 group-hover:scale-105"
             referrerPolicy="no-referrer"
+            onError={(e) => {
+              const target = e.currentTarget;
+              if (target.src !== fallbackImage) {
+                target.src = fallbackImage;
+              }
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </Link>

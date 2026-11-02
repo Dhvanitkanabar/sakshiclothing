@@ -194,7 +194,48 @@ app.use(compression());
 // Request logging
 app.use(requestLogger);
 
-// Static files and temporary uploads folders setup
+// Static files and persistent uploads handler
+import fs from 'fs';
+import Upload from './models/Upload.model.js';
+
+app.get(['/uploads/:filename', '/api/v1/uploads/file/:filename'], async (req, res, next) => {
+  const { filename } = req.params;
+  const localCandidates = [
+    path.join(__dirname, '../uploads', filename),
+    path.join(process.cwd(), 'uploads', filename),
+    path.join(process.cwd(), 'backend/uploads', filename),
+  ];
+
+  for (const candidate of localCandidates) {
+    if (fs.existsSync(candidate)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      return res.sendFile(path.resolve(candidate));
+    }
+  }
+
+  // Fallback to MongoDB Atlas if Render container disk was wiped on redeploy
+  try {
+    const record = await Upload.findOne({ publicId: filename }).lean();
+    if (record && record.data) {
+      const buffer = Buffer.isBuffer(record.data) ? record.data : Buffer.from(record.data.buffer || record.data);
+      // Cache back to local disk
+      try {
+        const destDir = path.join(process.cwd(), 'uploads');
+        if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
+        await fs.promises.writeFile(path.join(destDir, filename), buffer);
+      } catch {}
+
+      res.setHeader('Content-Type', record.contentType || (record.format ? `image/${record.format}` : 'image/jpeg'));
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      return res.send(buffer);
+    }
+  } catch (err) {
+    console.error('[Upload Persistent Handler Error]:', err.message);
+  }
+
+  next();
+});
+
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/uploads', express.static(path.join(process.cwd(), 'backend/uploads')));
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));

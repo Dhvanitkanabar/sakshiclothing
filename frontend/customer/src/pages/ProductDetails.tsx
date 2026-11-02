@@ -145,10 +145,17 @@ export const ProductDetails = () => {
           <div className="lg:col-span-7 space-y-4">
             <div className="w-full aspect-[4/5] max-h-[640px] rounded-3xl overflow-hidden bg-stone-100 border border-stone-200/90 shadow-md relative group">
               <img 
-                src={mainImage || product.image} 
+                src={mainImage || product.image || "https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=1200&auto=format&fit=crop"} 
                 alt={product.name} 
                 className="w-full h-full object-cover rounded-3xl" 
                 referrerPolicy="no-referrer" 
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  const fallback = "https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=1200&auto=format&fit=crop";
+                  if (target.src !== fallback) {
+                    target.src = fallback;
+                  }
+                }}
               />
               <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-md text-[9px] font-sans tracking-widest uppercase font-bold text-stone-900">
                 {product.category} · {product.subCategory || 'HAUTE COUTURE'}
@@ -166,7 +173,19 @@ export const ProductDetails = () => {
                       mainImage === imgUrl ? 'border-amber-800 shadow-sm scale-102' : 'border-stone-200 opacity-60 hover:opacity-100'
                     }`}
                   >
-                    <img src={imgUrl} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    <img 
+                      src={imgUrl} 
+                      alt={`Thumbnail ${idx + 1}`} 
+                      className="w-full h-full object-cover" 
+                      referrerPolicy="no-referrer" 
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        const fallback = "https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=600&auto=format&fit=crop";
+                        if (target.src !== fallback) {
+                          target.src = fallback;
+                        }
+                      }}
+                    />
                   </button>
                 ))}
               </div>
