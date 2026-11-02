@@ -167,7 +167,13 @@ productSchema.pre('save', function(next) {
 // Schema Methods
 productSchema.methods.calculateDiscount = function(variantId = null) {
   if (variantId) {
-    const variant = this.variants.id(variantId);
+    let variant = null;
+    if (typeof this.variants?.id === 'function') {
+      try { variant = this.variants.id(variantId); } catch {}
+    }
+    if (!variant && Array.isArray(this.variants)) {
+      variant = this.variants.find(v => v._id?.toString() === variantId.toString());
+    }
     if (variant && variant.discount) {
       return variant.price - variant.discount;
     }

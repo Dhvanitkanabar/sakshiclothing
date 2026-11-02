@@ -1,8 +1,21 @@
 import mongoose from 'mongoose';
 import cartRepository from '../repositories/cart.repository.js';
-import ProductRepository from '../repositories/product.repository.js';
+import Product from '../models/Product.model.js';
 import ApiError from '../utils/ApiError.js';
 import { HTTP_STATUS } from '../constants/index.js';
+
+const findVariant = (variants, variantId) => {
+  if (!variants || !Array.isArray(variants) || variants.length === 0) return null;
+  if (!variantId) return variants[0];
+  const targetIdStr = variantId.toString();
+  if (typeof variants.id === 'function') {
+    try {
+      const found = variants.id(variantId);
+      if (found) return found;
+    } catch {}
+  }
+  return variants.find(v => v._id?.toString() === targetIdStr) || variants[0];
+};
 
 class CartService {
   async getCart(userId, guestId) {
@@ -14,13 +27,14 @@ class CartService {
   }
 
   async addToCart(userId, guestId, productId, variantId, quantity) {
-    const product = await ProductRepository.findById(productId);
+    const product = await Product.findById(productId);
     if (!product) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Product not found');
 
-    let variant = (product.variants && mongoose.Types.ObjectId.isValid(variantId)) ? product.variants.id(variantId) : null;
+    let variant = findVariant(product.variants, variantId);
     
     // Auto-create or resolve default variant if product has no variants or variantId is default/missing
-    if (!variant && product.variants.length === 0) {
+    if (!variant && (!product.variants || product.variants.length === 0)) {
+      if (!product.variants) product.variants = [];
       product.variants.push({
         size: 'Standard',
         price: product.pricing?.basePrice || 0,
@@ -59,7 +73,7 @@ class CartService {
     }
 
     const existingItemIndex = cart.items.findIndex(
-      item => item.product._id.toString() === productId && item.variantId.toString() === variantId
+      item => item.product._id.toString() === productId && item.variantId?.toString() === variantId?.toString()
     );
 
     if (existingItemIndex > -1) {
@@ -74,7 +88,7 @@ class CartService {
         product: productId,
         variantId: variantId,
         quantity: quantity,
-        price: product.pricing.basePrice, // assuming flat basePrice for simplicity as per existing schema
+        price: product.pricing?.basePrice || 0,
         subtotal: 0 // Will be set by pre-save
       });
     }
@@ -88,11 +102,13 @@ class CartService {
     const cart = await cartRepository.findCartByUserOrGuest(userId, guestId);
     if (!cart) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Cart not found');
 
-    const item = cart.items.find(i => i.product._id.toString() === productId && i.variantId.toString() === variantId);
+    const item = cart.items.find(i => i.product._id.toString() === productId && i.variantId?.toString() === variantId?.toString());
     if (!item) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Item not in cart');
 
-    const product = await ProductRepository.findById(productId);
-    const variant = product.variants.id(variantId);
+    const product = await Product.findById(productId);
+    if (!product) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Product not found');
+    const variant = findVariant(product.variants, variantId);
+    if (!variant) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Variant not found');
     if (variant.stock < quantity) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Insufficient stock');
 
     item.quantity = quantity;

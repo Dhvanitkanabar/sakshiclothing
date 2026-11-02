@@ -34,7 +34,15 @@ class OrderService {
         throw new ApiError(400, `Product ${product.name} is currently unavailable`);
       }
 
-      let variant = item.variantId ? product.variants.id(item.variantId) : null;
+      let variant = null;
+      if (item.variantId) {
+        if (typeof product.variants?.id === 'function') {
+          try { variant = product.variants.id(item.variantId); } catch {}
+        }
+        if (!variant && Array.isArray(product.variants)) {
+          variant = product.variants.find(v => v._id?.toString() === item.variantId?.toString());
+        }
+      }
       if (!variant && product.variants && product.variants.length > 0) {
         variant = product.variants[0];
       }
