@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Product } from '../types';
 import ProductCard from '../components/ProductCard';
 import { motion, AnimatePresence } from 'motion/react';
@@ -6,11 +6,38 @@ import Skeleton from '../components/ui/Skeleton';
 import { fetchProducts, getCachedProducts } from '../lib/api';
 import { PRODUCTS } from '../data/products';
 import { SearchX, SlidersHorizontal, X, Sparkles } from 'lucide-react';
-import ProductFilmstripCarousel from '../components/ProductFilmstripCarousel';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+
+const CATEGORY_META: Record<string, { badge: string; title: string; description: string; subcategories: string[] }> = {
+  men: {
+    badge: "SAKSHI ATELIER · MEN'S COUTURE",
+    title: "Men's Collection",
+    description: "Contemporary tailoring, classic sherwanis, kurtas, jackets, and refined menswear handcrafted by master artisans in Surat.",
+    subcategories: ['All', 'Kurtas & Kurta Sets', 'Jackets & Blazers', 'Ethnic & Festive Wear', 'Shirts & Trousers']
+  },
+  women: {
+    badge: "SAKSHI ATELIER · WOMEN'S COUTURE",
+    title: "Women's Collection",
+    description: "Handcrafted lehengas, artisanal sarees, couture anarkalis, and contemporary silhouettes designed for timeless elegance.",
+    subcategories: ['All', 'Ethnic & Festive Sets', 'Dresses & Indo-Western', 'Sarees & Drapes', 'Suits & Kurtis']
+  },
+  kids: {
+    badge: "SAKSHI ATELIER · KIDS COUTURE",
+    title: "Kids Collection",
+    description: "Charming festive wear, artisanal kurtas, celebratory ensembles, and comfort-first occasion wear for boys and girls.",
+    subcategories: ['All', 'Boys Clothing', 'Girls Clothing', 'Kids Festive & Ethnic Wear', 'Casual & Party Wear']
+  },
+  jewellery: {
+    badge: "SAKSHI ATELIER · HEIRLOOM JEWELLERY",
+    title: "Jewellery Collection",
+    description: "Heirloom Kundan suites, bespoke chokers, temple bangles, and artisan-crafted festive jewellery.",
+    subcategories: ['All', 'Necklaces & Chokers', 'Earrings & Jhumkas', 'Bangles & Bracelets', 'Festive Jewellery Sets']
+  }
+};
 
 export const Shop = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const query = searchParams.get('q');
   const mood = searchParams.get('mood');
   const categoryParam = searchParams.get('category');
@@ -26,12 +53,12 @@ export const Shop = () => {
   const [sortBy, setSortBy] = useState('featured');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  const [categories, setCategories] = useState<string[]>(['All']);
-  const [subCategories, setSubCategories] = useState<string[]>(['All']);
+  const categories = ['All', 'Women', 'Men', 'Kids', 'Jewellery'];
 
+  // Two-way sync with search params
   useEffect(() => {
-    if (categoryParam) setSelectedCategory(categoryParam);
-    if (subParam) setSelectedSubCategory(subParam);
+    setSelectedCategory(categoryParam || 'All');
+    setSelectedSubCategory(subParam || 'All');
   }, [categoryParam, subParam]);
 
   useEffect(() => {
@@ -42,22 +69,46 @@ export const Shop = () => {
       const validData = (data && data.length > 0) ? data : PRODUCTS;
       setProducts(validData);
       setFilteredProducts(validData);
-
-      const coreCategories = ['Women', 'Men', 'Kids', 'Jewellery'];
-      const cats = new Set<string>(coreCategories);
-      const subs = new Set<string>();
-      validData.forEach(p => {
-        if (p.category) cats.add(p.category);
-        if (p.subCategory) subs.add(p.subCategory);
-      });
-      setCategories(['All', ...Array.from(cats)]);
-      setSubCategories(['All', ...Array.from(subs).filter(Boolean)]);
-
       setLoading(false);
     };
     loadProducts();
     return () => { isMounted = false; };
   }, []);
+
+  // Category metadata (badge, title, description, subcategories)
+  const categoryMeta = useMemo(() => {
+    const key = (selectedCategory || '').toLowerCase();
+    if (CATEGORY_META[key]) {
+      return CATEGORY_META[key];
+    }
+    return {
+      badge: "ATELIER & ARCHIVE · SURAT",
+      title: "All Collections",
+      description: "Curated artisanal apparel across Women, Men, Kids, and Heirloom Jewellery handcrafted by master artisans in Surat.",
+      subcategories: ['All']
+    };
+  }, [selectedCategory]);
+
+  // Dynamic subcategories: merge static defaults with dynamic ones from products in that category
+  const activeSubcategories = useMemo(() => {
+    if (selectedCategory === 'All') {
+      const dynamicSubs = new Set<string>();
+      products.forEach(p => {
+        if (p.subCategory) dynamicSubs.add(p.subCategory);
+      });
+      return ['All', ...Array.from(dynamicSubs).filter(Boolean)];
+    }
+
+    const defaultSubs = categoryMeta.subcategories;
+    const dynamicSubs = new Set<string>(defaultSubs);
+    products
+      .filter(p => p.category?.toLowerCase() === selectedCategory.toLowerCase())
+      .forEach(p => {
+        if (p.subCategory) dynamicSubs.add(p.subCategory);
+      });
+
+    return Array.from(dynamicSubs);
+  }, [selectedCategory, categoryMeta, products]);
 
   useEffect(() => {
     if (loading) return;
@@ -82,7 +133,7 @@ export const Shop = () => {
     }
 
     if (selectedCategory !== 'All') {
-      result = result.filter(p => p.category.toLowerCase() === selectedCategory.toLowerCase());
+      result = result.filter(p => p.category?.toLowerCase() === selectedCategory.toLowerCase());
     }
 
     if (selectedSubCategory !== 'All') {
@@ -103,39 +154,51 @@ export const Shop = () => {
     setFilteredProducts(result);
   }, [selectedCategory, selectedSubCategory, priceRange, sortBy, products, loading, query, mood]);
 
+  const handleCategoryClick = (cat: string) => {
+    setSelectedCategory(cat);
+    setSelectedSubCategory('All');
+    if (cat === 'All') {
+      navigate('/shop');
+    } else {
+      navigate(`/shop?category=${encodeURIComponent(cat)}`);
+    }
+  };
+
+  const handleSubCategoryClick = (sub: string) => {
+    setSelectedSubCategory(sub);
+    if (sub === 'All') {
+      if (selectedCategory === 'All') {
+        navigate('/shop');
+      } else {
+        navigate(`/shop?category=${encodeURIComponent(selectedCategory)}`);
+      }
+    } else {
+      navigate(`/shop?category=${encodeURIComponent(selectedCategory)}&sub=${encodeURIComponent(sub)}`);
+    }
+  };
+
   return (
     <div className="bg-[#FAF8F5] min-h-screen text-stone-900 selection:bg-amber-400 selection:text-black pb-28 lg:pb-16">
-      {/* Header */}
-      <header className="pt-14 sm:pt-20 pb-10 sm:pb-14 px-5 sm:px-8 max-w-7xl mx-auto text-center">
+      {/* Category Header */}
+      <header className="pt-14 sm:pt-20 pb-8 sm:pb-12 px-5 sm:px-8 max-w-7xl mx-auto text-center">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          key={selectedCategory}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
+          transition={{ duration: 0.5 }}
           className="space-y-3 sm:space-y-4"
         >
           <span className="text-[10px] font-sans uppercase tracking-[0.3em] text-amber-900 font-bold block">
-            ATELIER & ARCHIVE · SURAT
+            {categoryMeta.badge}
           </span>
           <h1 className="text-3xl sm:text-5xl md:text-6xl font-sans font-light text-stone-900 tracking-tight">
-            {query ? `Search: "${query}"` : mood ? `${mood} Edit` : 'The Imperial Wardrobe'}
+            {query ? `Search: "${query}"` : mood ? `${mood} Edit` : categoryMeta.title}
           </h1>
           <p className="text-stone-600 text-xs sm:text-sm md:text-base font-light max-w-2xl mx-auto leading-relaxed">
-            Pure Ahimsa mulberry silks, hand-beaten 24k gold zardozi embroidery, and heirloom Banarasi pit loom weaves handcrafted for discerning connoisseurs.
+            {categoryMeta.description}
           </p>
         </motion.div>
       </header>
-
-      {/* 3D Editorial Lookbook Rail */}
-      {!query && products.length > 0 && (
-        <div className="mb-10 sm:mb-16">
-          <ProductFilmstripCarousel
-            products={products.slice(0, 8)}
-            title="Seasonal Lookbook Rail"
-            subtitle="Interact with 3D perspectives to preview full cuts, embroidery finishes, and silhouette drape."
-            variant="beige"
-          />
-        </div>
-      )}
 
       {/* Horizontal Filter Chips & Filter Drawer Trigger */}
       <div className="sticky top-14 sm:top-16 z-30 bg-[#FAF8F5]/90 backdrop-blur-xl border-y border-stone-200/80 py-3 sm:py-4 px-4 sm:px-8">
@@ -145,7 +208,7 @@ export const Shop = () => {
             {categories.map(cat => (
               <button
                 key={cat}
-                onClick={() => setSelectedCategory(cat)}
+                onClick={() => handleCategoryClick(cat)}
                 className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full text-xs font-sans uppercase tracking-wider font-bold whitespace-nowrap transition-all snap-start ${
                   selectedCategory.toLowerCase() === cat.toLowerCase()
                     ? 'bg-stone-900 text-white shadow-xs' 
@@ -155,13 +218,14 @@ export const Shop = () => {
                 {cat}
               </button>
             ))}
-            {subCategories.length > 1 && (
+
+            {activeSubcategories.length > 1 && (
               <>
                 <div className="w-px h-7 bg-stone-300 mx-1 shrink-0 self-center" />
-                {subCategories.map(sub => (
+                {activeSubcategories.map(sub => (
                   <button
                     key={sub}
-                    onClick={() => setSelectedSubCategory(sub)}
+                    onClick={() => handleSubCategoryClick(sub)}
                     className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs font-sans uppercase tracking-wider font-medium whitespace-nowrap transition-all snap-start ${
                       selectedSubCategory.toLowerCase() === sub.toLowerCase()
                         ? 'bg-amber-900 text-white shadow-xs' 
@@ -201,87 +265,84 @@ export const Shop = () => {
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className="fixed inset-y-0 right-0 w-full max-w-sm sm:max-w-md bg-white z-50 p-6 sm:p-8 flex flex-col justify-between shadow-2xl overflow-y-auto"
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white z-50 p-6 sm:p-8 flex flex-col justify-between shadow-2xl overflow-y-auto"
             >
-              <div>
-                <div className="flex justify-between items-center pb-6 border-b border-stone-200 mb-6">
-                  <h2 className="text-xl sm:text-2xl font-sans font-bold text-stone-900">Filter & Refine</h2>
+              <div className="space-y-6 sm:space-y-8">
+                <div className="flex items-center justify-between border-b border-stone-200 pb-4">
+                  <h3 className="text-xl font-sans font-bold text-stone-900">Filter & Refine</h3>
                   <button 
-                    onClick={() => setIsFilterOpen(false)} 
-                    className="p-2 hover:bg-stone-100 rounded-full transition-colors text-stone-600"
+                    onClick={() => setIsFilterOpen(false)}
+                    className="p-2 text-stone-400 hover:text-stone-900 rounded-full hover:bg-stone-100 transition-colors"
                   >
                     <X size={20} />
                   </button>
                 </div>
 
-                <div className="space-y-6">
-                  <div className="space-y-3">
-                    <span className="text-[10px] font-sans uppercase tracking-widest text-stone-400 font-bold block">
-                      SORT ARCHIVE BY
-                    </span>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        { id: 'featured', label: 'Curated' },
-                        { id: 'newest', label: 'New Arrivals' },
-                        { id: 'low-high', label: 'Price: Low to High' },
-                        { id: 'high-low', label: 'Price: High to Low' },
-                      ].map(option => (
-                        <button
-                          key={option.id}
-                          onClick={() => setSortBy(option.id)}
-                          className={`text-left px-3.5 py-2.5 rounded-xl text-xs font-sans transition-all border ${
-                            sortBy === option.id 
-                              ? 'bg-stone-900 text-white border-stone-900 font-bold' 
-                              : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
+                {/* Price Range */}
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center text-xs font-sans uppercase tracking-wider text-stone-500 font-bold">
+                    <span>Price Range</span>
+                    <span className="text-stone-900 font-bold">₹{priceRange[0].toLocaleString('en-IN')} - ₹{priceRange[1].toLocaleString('en-IN')}</span>
                   </div>
+                  <input 
+                    type="range" 
+                    min={0} 
+                    max={160000} 
+                    step={2000}
+                    value={priceRange[1]}
+                    onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
+                    className="w-full accent-stone-900 h-1.5 bg-stone-200 rounded-lg cursor-pointer"
+                  />
+                  <div className="flex justify-between text-[11px] text-stone-400 font-sans">
+                    <span>₹0</span>
+                    <span>₹1,60,000+</span>
+                  </div>
+                </div>
 
-                  <div className="space-y-3 pt-2 border-t border-stone-100">
-                    <span className="text-[10px] font-sans uppercase tracking-widest text-stone-400 font-bold block">
-                      MAXIMUM PRICE
-                    </span>
-                    <div className="space-y-2">
-                      <input 
-                        type="range" 
-                        min="10000" 
-                        max="160000" 
-                        step="5000"
-                        value={priceRange[1]}
-                        onChange={(e) => setPriceRange([0, parseInt(e.target.value)])}
-                        className="w-full h-1.5 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-amber-600"
-                      />
-                      <div className="flex justify-between text-xs font-sans text-stone-500">
-                        <span>₹10,000</span>
-                        <span className="font-bold text-stone-900">₹{priceRange[1].toLocaleString('en-IN')}</span>
-                      </div>
-                    </div>
+                {/* Sort Option */}
+                <div className="space-y-3">
+                  <label className="text-xs font-sans uppercase tracking-wider text-stone-500 font-bold block">
+                    Sort Order
+                  </label>
+                  <div className="grid grid-cols-1 gap-2">
+                    {[
+                      { id: 'featured', label: '✦ Atelier Curated' },
+                      { id: 'low-high', label: 'Price: Low to High' },
+                      { id: 'high-low', label: 'Price: High to Low' },
+                      { id: 'newest', label: 'Seasonal Highlights' }
+                    ].map(sort => (
+                      <button
+                        key={sort.id}
+                        onClick={() => setSortBy(sort.id)}
+                        className={`text-left px-4 py-3 rounded-xl text-xs font-sans font-medium transition-all ${
+                          sortBy === sort.id 
+                            ? 'bg-stone-900 text-white font-bold' 
+                            : 'bg-stone-50 text-stone-700 hover:bg-stone-100'
+                        }`}
+                      >
+                        {sort.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-stone-200 mt-8 space-y-2">
-                <button 
-                  onClick={() => setIsFilterOpen(false)}
-                  className="w-full py-3.5 bg-stone-900 text-white rounded-2xl text-xs font-sans uppercase tracking-widest font-bold shadow-md hover:bg-amber-800 transition-colors"
-                >
-                  Show {filteredProducts.length} Products
-                </button>
+              <div className="pt-6 border-t border-stone-200 flex gap-3">
                 <button
                   onClick={() => {
-                    setSelectedCategory('All');
-                    setSelectedSubCategory('All');
                     setPriceRange([0, 160000]);
                     setSortBy('featured');
                   }}
-                  className="w-full py-2.5 text-stone-500 hover:text-stone-950 text-xs font-sans transition-colors"
+                  className="flex-1 py-3 border border-stone-200 rounded-xl text-xs font-sans font-bold uppercase tracking-wider text-stone-700 hover:bg-stone-50"
                 >
-                  Reset All Filters
+                  Reset
+                </button>
+                <button
+                  onClick={() => setIsFilterOpen(false)}
+                  className="flex-1 py-3 bg-stone-900 text-white rounded-xl text-xs font-sans font-bold uppercase tracking-wider hover:bg-amber-800 transition-colors shadow-md"
+                >
+                  Apply Filters
                 </button>
               </div>
             </motion.div>
@@ -289,8 +350,8 @@ export const Shop = () => {
         )}
       </AnimatePresence>
 
-      {/* Product Grid (2 columns on mobile, 3 on tablet, 4 on desktop) */}
-      <main className="py-10 sm:py-16 px-4 sm:px-8 max-w-7xl mx-auto">
+      {/* Main Product Showcase Grid */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-8 mt-8 sm:mt-12">
         {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-6 lg:gap-8">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
@@ -345,7 +406,7 @@ export const Shop = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-xl py-4 text-left">
                   <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200/70 space-y-1">
                     <p className="text-xs font-bold text-stone-900">Handcrafted Excellence</p>
-                    <p className="text-[11px] text-stone-500 font-light">Artisanal embroidery and pure textiles tailored to perfection.</p>
+                    <p className="text-[11px] text-stone-500 font-light">Artisanal tailoring and pure textiles designed to perfection.</p>
                   </div>
                   <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200/70 space-y-1">
                     <p className="text-xs font-bold text-stone-900">Curated New Drop</p>
@@ -359,19 +420,13 @@ export const Shop = () => {
 
                 <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
                   <button
-                    onClick={() => {
-                      setSelectedCategory('All');
-                      setSelectedSubCategory('All');
-                    }}
+                    onClick={() => handleCategoryClick('All')}
                     className="w-full sm:w-auto px-6 py-3 rounded-xl bg-stone-900 text-white font-sans uppercase tracking-widest text-xs font-bold hover:bg-amber-800 transition-colors shadow-md"
                   >
                     Explore Available Collections
                   </button>
                   <button
-                    onClick={() => {
-                      setSelectedCategory('Women');
-                      setSelectedSubCategory('All');
-                    }}
+                    onClick={() => handleCategoryClick('Women')}
                     className="w-full sm:w-auto px-6 py-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 font-sans uppercase tracking-widest text-xs font-bold transition-colors"
                   >
                     View Women's Collection
@@ -395,6 +450,7 @@ export const Shop = () => {
                     setSelectedSubCategory('All');
                     setPriceRange([0, 160000]);
                     setSortBy('featured');
+                    navigate('/shop');
                   }}
                   className="px-8 py-3 bg-stone-900 text-white rounded-2xl text-xs font-sans uppercase tracking-widest font-bold hover:bg-amber-800 transition-colors"
                 >

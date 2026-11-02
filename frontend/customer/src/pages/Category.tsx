@@ -157,7 +157,7 @@ export const Category = () => {
             transition={{ delay: 0.35 }}
             className="text-white/80 text-xs sm:text-sm font-light max-w-lg mx-auto tracking-wide"
           >
-            Authentic handcrafted fashion curated with precision, pure Ahimsa silks, and Rajputana royal traditions.
+            Authentic handcrafted fashion curated with precision, premium tailoring, and contemporary silhouettes.
           </motion.p>
 
           {/* Highlights Bar */}
