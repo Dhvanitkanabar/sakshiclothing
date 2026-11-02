@@ -13,14 +13,31 @@ class OrderRepository {
   }
 
   async findByUser(userId) {
-    return await Order.find({ customer: userId })
+    return await Order.find({
+      customer: userId,
+      orderStatus: { $ne: 'payment_pending' },
+      $or: [
+        { paymentStatus: 'completed' },
+        { 'payment.method': 'cod' }
+      ]
+    })
       .sort({ createdAt: -1 })
       .populate('products.product', 'name thumbnail images');
   }
 
   async findAll(filter = {}, sort = { createdAt: -1 }, skip = 0, limit = 10) {
-    const total = await Order.countDocuments(filter);
-    const orders = await Order.find(filter)
+    // Exclude unpaid online payment drafts and pending gateway intents
+    const placedOrderFilter = {
+      orderStatus: { $ne: 'payment_pending' },
+      $or: [
+        { paymentStatus: 'completed' },
+        { 'payment.method': 'cod' }
+      ],
+      ...filter
+    };
+
+    const total = await Order.countDocuments(placedOrderFilter);
+    const orders = await Order.find(placedOrderFilter)
       .sort(sort)
       .skip(skip)
       .limit(limit)

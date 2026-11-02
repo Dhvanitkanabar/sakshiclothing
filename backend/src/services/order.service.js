@@ -3,15 +3,16 @@ import addressRepository from '../repositories/address.repository.js';
 import Product from '../models/Product.model.js';
 import Order from '../models/Order.model.js';
 import User from '../models/User.model.js';
+import Payment from '../models/Payment.model.js';
 import AuditLog from '../models/AuditLog.model.js';
 import Notification from '../models/Notification.model.js';
 import { ApiError } from '../utils/ApiError.js';
-import { ORDER_STATUS } from '../constants/index.js';
+import { ORDER_STATUS, PAYMENT_STATUS } from '../constants/index.js';
 import { sendOrderConfirmationEmail, sendOrderRejectionEmail } from '../utils/emailService.js';
 import mongoose from 'mongoose';
 
 class OrderService {
-  async createCheckoutOrder(userId, items, shippingAddressId) {
+  async createCheckoutOrder(userId, items, shippingAddressId, paymentInfo = {}) {
     if (!items || items.length === 0) {
       throw new ApiError(400, 'Order items cannot be empty');
     }
@@ -87,12 +88,32 @@ class OrderService {
     const orderNumber = await orderRepository.generateOrderNumber();
     const grandTotal = itemsTotal; // No shipping/tax for now
 
+    const isPaid = paymentInfo.paymentStatus === 'completed';
+    const isCod = paymentInfo.method === 'cod';
+
     const orderData = {
       orderNumber,
       customer: userId,
       products: orderItems,
-      orderStatus: 'pending_approval',
+      orderStatus: (isPaid || isCod) ? 'pending_approval' : 'payment_pending',
       approvalStatus: 'pending',
+      paymentStatus: isPaid ? PAYMENT_STATUS.COMPLETED : PAYMENT_STATUS.PENDING,
+      payment: {
+        method: paymentInfo.method || (isCod ? 'cod' : 'pending'),
+        transactionId: paymentInfo.transactionId || null,
+        gatewayResponse: paymentInfo.gatewayResponse || null
+      },
+      authenticity: {
+        isGenuine: true,
+        riskScore: isPaid ? 'Low Risk (Payment Verified)' : (isCod ? 'Low Risk (Cash On Delivery)' : 'Unverified (Payment Pending)'),
+        paymentVerified: isPaid,
+        addressVerified: true,
+        verificationNotes: [
+          isPaid
+            ? `Online payment of ₹${grandTotal} successfully verified via ${paymentInfo.method} (Txn: ${paymentInfo.transactionId})`
+            : (isCod ? `Cash on delivery selected (₹${grandTotal} to be collected on delivery)` : 'Awaiting online payment verification')
+        ]
+      },
       shippingAddress: {
         fullName: shippingAddress.fullName,
         phone: shippingAddress.phone,
@@ -130,6 +151,26 @@ class OrderService {
     }
 
     const newOrder = await orderRepository.create(orderData);
+
+    if (newOrder) {
+      try {
+        await Payment.create({
+          order: newOrder._id,
+          customer: userId,
+          gateway: paymentInfo.method || (isCod ? 'cod' : 'razorpay'),
+          gatewayOrderId: paymentInfo.gatewayOrderId || null,
+          gatewayPaymentId: paymentInfo.transactionId || null,
+          amount: grandTotal,
+          currency: 'INR',
+          status: isPaid ? PAYMENT_STATUS.COMPLETED : PAYMENT_STATUS.PENDING,
+          method: paymentInfo.method || (isCod ? 'cod' : 'razorpay'),
+          gatewayResponse: paymentInfo.gatewayResponse || null
+        });
+      } catch (paymentErr) {
+        console.error('Payment audit record notice:', paymentErr.message);
+      }
+    }
+
     return newOrder;
   }
 

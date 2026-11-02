@@ -188,12 +188,19 @@ export const setDefaultAddress = async (id: string, clerkToken?: string | null) 
   }
 };
 
-export const placeOrder = async (shippingAddressId: string, isFromCart = true, clerkToken?: string | null, items?: any[]) => {
+export const placeOrder = async (
+  shippingAddressId: string,
+  isFromCart = true,
+  clerkToken?: string | null,
+  items?: any[],
+  paymentMethod: string = 'cod',
+  payment?: any
+) => {
   try {
     const res = await authedFetch(`${API_URL}/orders/checkout`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ shippingAddressId, isFromCart, items })
+      body: JSON.stringify({ shippingAddressId, isFromCart, items, paymentMethod, payment })
     }, clerkToken);
     return await res.json();
   } catch (e) {

@@ -10,6 +10,14 @@ class DashboardService {
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
 
+    const validOrderBase = {
+      orderStatus: { $ne: 'payment_pending' },
+      $or: [
+        { paymentStatus: 'completed' },
+        { 'payment.method': 'cod' }
+      ]
+    };
+
     const [
       totalOrders,
       pendingOrders,
@@ -27,29 +35,29 @@ class DashboardService {
       outOfStockProducts,
       totalCategories
     ] = await Promise.all([
-      Order.countDocuments(),
-      Order.countDocuments({ orderStatus: { $in: ['pending', 'pending_approval'] } }),
-      Order.countDocuments({ orderStatus: { $in: ['processing', 'confirmed'] } }),
-      Order.countDocuments({ orderStatus: 'shipped' }),
-      Order.countDocuments({ orderStatus: 'delivered' }),
+      Order.countDocuments(validOrderBase),
+      Order.countDocuments({ ...validOrderBase, orderStatus: { $in: ['pending', 'pending_approval'] } }),
+      Order.countDocuments({ ...validOrderBase, orderStatus: { $in: ['processing', 'confirmed'] } }),
+      Order.countDocuments({ ...validOrderBase, orderStatus: 'shipped' }),
+      Order.countDocuments({ ...validOrderBase, orderStatus: 'delivered' }),
       Order.countDocuments({ orderStatus: { $in: ['cancelled', 'rejected'] } }),
       Order.aggregate([
-        { $match: { createdAt: { $gte: todayStart }, orderStatus: { $nin: ['cancelled', 'rejected'] } } },
+        { $match: { ...validOrderBase, createdAt: { $gte: todayStart }, orderStatus: { $nin: ['cancelled', 'rejected'] } } },
         { $group: { _id: null, total: { $sum: '$totals.grandTotal' } } }
       ]).then(r => r[0]?.total || 0),
       Order.aggregate([
-        { $match: { orderStatus: { $nin: ['cancelled', 'rejected'] } } },
+        { $match: { ...validOrderBase, orderStatus: { $nin: ['cancelled', 'rejected'] } } },
         { $group: { _id: null, total: { $sum: '$totals.grandTotal' } } }
       ]).then(r => r[0]?.total || 0),
       User.countDocuments({ role: 'user' }),
       Product.countDocuments(),
-      Order.find()
+      Order.find(validOrderBase)
         .sort({ createdAt: -1 })
         .limit(10)
         .populate('customer', 'fullName email')
         .lean(),
       Order.aggregate([
-        { $match: { createdAt: { $gte: weekAgo }, orderStatus: { $nin: ['cancelled', 'rejected'] } } },
+        { $match: { ...validOrderBase, createdAt: { $gte: weekAgo }, orderStatus: { $nin: ['cancelled', 'rejected'] } } },
         {
           $group: {
             _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },

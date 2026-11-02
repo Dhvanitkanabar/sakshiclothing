@@ -132,20 +132,31 @@ const OrderList = ({ defaultSection }: OrderListProps) => {
     return list.reduce((sum: number, item: any) => sum + (Number(item.quantity) || 1), 0);
   }, []);
 
+  // Helper to determine if an order is genuinely placed and valid to display
+  const isOrderPlaced = useCallback((order: any) => {
+    // Online orders must have completed payment. COD orders can be pending until cash is collected on delivery.
+    if (order.orderStatus === 'payment_pending') return false;
+    const isPaid = order.paymentStatus === 'completed';
+    const isCod = order.payment?.method === 'cod';
+    return isPaid || isCod;
+  }, []);
+
   // Delivered & completed orders belong strictly to Order History
   const pendingOrders = useMemo(() => {
     return orders.filter(o => {
+      if (!isOrderPlaced(o)) return false;
       const eff = getEffectiveStatus(o);
       return !['delivered', 'rejected', 'cancelled', 'returned', 'refunded'].includes(eff);
     });
-  }, [orders, getEffectiveStatus]);
+  }, [orders, getEffectiveStatus, isOrderPlaced]);
 
   const historyOrders = useMemo(() => {
     return orders.filter(o => {
+      if (!isOrderPlaced(o)) return false;
       const eff = getEffectiveStatus(o);
       return ['delivered', 'rejected', 'cancelled', 'returned', 'refunded'].includes(eff);
     });
-  }, [orders, getEffectiveStatus]);
+  }, [orders, getEffectiveStatus, isOrderPlaced]);
 
   const baseOrders = useMemo(() => {
     return activeSection === 'pending' ? pendingOrders : historyOrders;
@@ -384,8 +395,19 @@ const OrderList = ({ defaultSection }: OrderListProps) => {
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-sm font-bold text-gray-900">
-                    ₹{(order.totals?.grandTotal || 0).toLocaleString('en-IN')}
+                  <td className="px-4 py-3 text-sm">
+                    <span className="font-bold text-gray-900 block">
+                      ₹{(order.totals?.grandTotal || 0).toLocaleString('en-IN')}
+                    </span>
+                    {order.paymentStatus === 'completed' ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 mt-0.5">
+                        ✓ Paid ({order.payment?.method || 'Online'})
+                      </span>
+                    ) : order.payment?.method === 'cod' ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 mt-0.5">
+                        Cash on Delivery
+                      </span>
+                    ) : null}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     {(() => {

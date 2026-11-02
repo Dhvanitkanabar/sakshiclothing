@@ -189,7 +189,11 @@ const Checkout = () => {
     setShowConfirmation(true);
   };
 
-  const openRazorpayModal = (intentData: any, orderData: any, activeToken: string | null) => {
+  const openRazorpayModal = (
+    razorpayOrder: { order_id: string; amount: number; currency: string },
+    finalAddressId: string,
+    activeToken: string | null
+  ) => {
     const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
     if (!razorpayKey || razorpayKey.includes('REPLACE_WITH')) {
       toast.error('Razorpay Live Key is not configured yet. Please add your Key ID in frontend/customer/.env');
@@ -205,11 +209,11 @@ const Checkout = () => {
 
     const options: any = {
       key: razorpayKey,
-      amount: intentData.amount, // amount in paise
-      currency: intentData.currency || 'INR',
+      amount: razorpayOrder.amount, // amount in paise
+      currency: razorpayOrder.currency || 'INR',
       name: 'Sakshi Clothing',
-      description: `Order #${orderData.orderNumber}`,
-      order_id: intentData.gatewayOrderId,
+      description: 'Handcrafted Bespoke Atelier Order',
+      order_id: razorpayOrder.order_id,
       // If user selected UPI, prioritize UPI apps and live dynamic QR code
       ...(selectedPaymentMode === 'upi' ? {
         config: {
@@ -231,41 +235,45 @@ const Checkout = () => {
       } : {}),
       handler: async function (response: any) {
         setLoading(true);
-        const toastId = toast.loading('Securing live bank confirmation...');
+        const toastId = toast.loading('Payment successful! Verifying & placing your order...');
         try {
           const freshToken = await getFreshClerkToken() || activeToken;
-          const verifyRes = await authedFetch(`${API_URL}/payments/verify-payment`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+          
+          // Place the order ONLY after payment is successful and confirmed
+          const orderRes = await placeOrder(
+            finalAddressId,
+            true,
+            freshToken,
+            cart.map(item => ({
+              productId: item.id,
+              variantId: item.variantId,
+              quantity: item.quantity
+            })),
+            'razorpay',
+            {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              order_id: response.razorpay_order_id,
-              payment_id: response.razorpay_payment_id,
-              orderId: orderData._id || orderData.id,
-              orderNumber: orderData.orderNumber
-            })
-          }, freshToken);
+              razorpay_signature: response.razorpay_signature
+            }
+          );
 
-          const verifyData = await verifyRes.json();
           toast.dismiss(toastId);
 
-          if (verifyRes.ok && verifyData.success) {
+          if (orderRes && orderRes.success) {
             try {
               const bc = new BroadcastChannel('sakshi_order_sync');
-              bc.postMessage({ type: 'ORDER_PLACED', orderId: orderData.orderNumber });
+              bc.postMessage({ type: 'ORDER_PLACED', orderId: orderRes.data.orderNumber });
               bc.close();
             } catch {}
-            toast.success('Live payment received! Your bespoke order is confirmed.');
+            toast.success(`Live payment received! Your bespoke order #${orderRes.data.orderNumber} is confirmed.`);
             clearCart();
-            navigate('/order-success', { state: { orderId: orderData.orderNumber, total: finalTotal } });
+            navigate('/order-success', { state: { orderId: orderRes.data.orderNumber, total: finalTotal } });
           } else {
-            toast.error(verifyData.error || verifyData.message || 'Payment verification failed: Signature mismatch.');
+            toast.error(orderRes?.message || 'Payment signature verification failed. Order could not be placed.');
           }
         } catch (verifErr: any) {
           toast.dismiss(toastId);
-          console.error('Payment verification error:', verifErr);
+          console.error('Order placement verification error:', verifErr);
           toast.error(verifErr.message || 'Payment verification encountered an issue.');
         } finally {
           setLoading(false);
@@ -278,12 +286,12 @@ const Checkout = () => {
       },
       modal: {
         ondismiss: function () {
-          toast.info('Payment window closed.');
+          toast.info('Payment window closed. Order was NOT placed.');
           setLoading(false);
+          setShowConfirmation(false);
         }
       },
       notes: {
-        order_number: orderData.orderNumber,
         selected_mode: selectedPaymentMode
       },
       theme: { color: '#1c1917' }
@@ -292,14 +300,16 @@ const Checkout = () => {
     try {
       const rzp = new (window as any).Razorpay(options);
       rzp.on('payment.failed', function (response: any) {
-        toast.error(response?.error?.description || 'Payment failed or declined by your bank.');
+        toast.error(response?.error?.description || 'Payment failed or declined. Order was NOT placed.');
         setLoading(false);
+        setShowConfirmation(false);
       });
       rzp.open();
     } catch (e: any) {
       console.error('Razorpay initialization exception:', e);
       toast.error('Unable to open payment modal. Please refresh and retry.');
       setLoading(false);
+      setShowConfirmation(false);
     }
   };
 
@@ -333,63 +343,108 @@ const Checkout = () => {
         }
       }
 
-      toast.loading('Securing your transaction...');
-      const orderRes = await placeOrder(finalAddressId, true, activeToken, cart.map(item => ({
-        productId: item.id,
-        variantId: item.variantId,
-        quantity: item.quantity
-      })));
-
-      toast.dismiss();
-      if (!orderRes.success) {
-        toast.error(orderRes.message || 'Transaction could not be completed.');
-        setLoading(false);
-        return;
-      }
-
+      // Case 1: Cash on Delivery (COD)
       if (paymentGateway === 'cod') {
-        toast.success('Order confirmed. Welcome to the Maison.');
+        toast.loading('Placing your Cash on Delivery order...');
+        const orderRes = await placeOrder(
+          finalAddressId,
+          true,
+          activeToken,
+          cart.map(item => ({
+            productId: item.id,
+            variantId: item.variantId,
+            quantity: item.quantity
+          })),
+          'cod'
+        );
+
+        toast.dismiss();
+        if (!orderRes.success) {
+          toast.error(orderRes.message || 'Transaction could not be completed.');
+          setLoading(false);
+          return;
+        }
+
+        toast.success('Order confirmed via Cash on Delivery. Welcome to the Maison.');
         try {
           const bc = new BroadcastChannel('sakshi_order_sync');
           bc.postMessage({ type: 'ORDER_PLACED', orderId: orderRes.data.orderNumber });
           bc.close();
         } catch {}
-        clearCart(); // Local clear
+        clearCart();
         navigate('/order-success', { state: { orderId: orderRes.data.orderNumber, total: finalTotal } });
         return;
       }
 
-      // Create Payment Intent with active token
-      const intentRes = await authedFetch(`${API_URL}/payments/create-intent`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId: orderRes.data._id || orderRes.data.id, gateway: paymentGateway })
-      }, activeToken);
-      const intentData = await intentRes.json();
+      // Case 2: Online Payment via Razorpay
+      if (paymentGateway === 'razorpay') {
+        toast.loading('Initializing secure payment gateway...');
+        const amountInPaise = Math.round(finalTotal * 100);
 
-      if (!intentData.success) {
-        toast.error(intentData.message || 'Failed to initialize payment.');
-        setLoading(false);
+        const createRes = await fetch(`${API_URL}/payments/create-order`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: amountInPaise,
+            currency: 'INR',
+            receipt: `rcpt_${Date.now()}`
+          })
+        });
+
+        const createData = await createRes.json();
+        toast.dismiss();
+
+        if (!createData.success || !createData.order_id) {
+          toast.error(createData.error || 'Failed to initialize payment gateway.');
+          setLoading(false);
+          return;
+        }
+
+        setShowConfirmation(false);
+        openRazorpayModal(
+          {
+            order_id: createData.order_id,
+            amount: createData.amount,
+            currency: createData.currency
+          },
+          finalAddressId,
+          activeToken
+        );
         return;
       }
 
-      setShowConfirmation(false);
-      if (paymentGateway === 'razorpay') {
-        openRazorpayModal(intentData.data, orderRes.data, activeToken);
-      } else if (paymentGateway === 'stripe') {
-        toast.info('Redirecting to Stripe...');
-        setTimeout(() => {
-          toast.success('Payment simulated successfully.');
-          clearCart();
-          navigate('/order-success', { state: { orderId: orderRes.data.orderNumber, total: finalTotal } });
-        }, 1500);
+      // Case 3: Stripe / Alternative
+      if (paymentGateway === 'stripe') {
+        toast.info('Redirecting to Stripe payment...');
+        setTimeout(async () => {
+          const orderRes = await placeOrder(
+            finalAddressId,
+            true,
+            activeToken,
+            cart.map(item => ({
+              productId: item.id,
+              variantId: item.variantId,
+              quantity: item.quantity
+            })),
+            'stripe',
+            { paymentStatus: 'completed' }
+          );
+          if (orderRes.success) {
+            toast.success('Payment verified! Your order is placed.');
+            clearCart();
+            navigate('/order-success', { state: { orderId: orderRes.data.orderNumber, total: finalTotal } });
+          } else {
+            toast.error(orderRes.message || 'Failed to complete order.');
+          }
+          setLoading(false);
+        }, 1200);
+        return;
       }
 
     } catch (error) {
       toast.dismiss();
       console.error('Error placing order:', error);
       toast.error('Transaction could not be completed.');
-    } finally {
       setLoading(false);
     }
   };

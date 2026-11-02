@@ -92,10 +92,12 @@ const orderSchema = new Schema(
       type: String,
       enum: [
         ORDER_STATUS.PENDING,
+        ORDER_STATUS.PAYMENT_PENDING,
         ORDER_STATUS.PROCESSING,
         ORDER_STATUS.SHIPPED,
         ORDER_STATUS.DELIVERED,
         ORDER_STATUS.CANCELLED,
+        'payment_pending',
         'pending_approval',
         'confirmed',
         'packed',

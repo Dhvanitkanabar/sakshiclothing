@@ -1,15 +1,55 @@
 import orderService from '../services/order.service.js';
 import cartService from '../services/cart.service.js';
+import razorpayAdapter from '../services/adapters/razorpay.adapter.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { generateInvoiceHTML } from '../utils/invoiceGenerator.js';
 
 export const checkout = asyncHandler(async (req, res) => {
-  const { shippingAddressId, items, isFromCart } = req.body;
+  const { shippingAddressId, items, isFromCart, paymentMethod = 'cod', payment } = req.body;
 
   if (!shippingAddressId) {
     throw new ApiError(400, 'Shipping address is required');
+  }
+
+  let paymentInfo = {
+    method: paymentMethod,
+    paymentStatus: 'pending'
+  };
+
+  // Strictly enforce verified payment for online orders: An order MUST NEVER be placed if payment is pending or failed
+  if (paymentMethod === 'razorpay') {
+    const orderId = payment?.razorpay_order_id || payment?.order_id;
+    const paymentId = payment?.razorpay_payment_id || payment?.payment_id;
+    const signature = payment?.razorpay_signature || payment?.signature;
+
+    if (!orderId || !paymentId || !signature) {
+      throw new ApiError(400, 'Payment details (razorpay_order_id, razorpay_payment_id, razorpay_signature) are strictly required. Orders cannot be placed if payment is pending or incomplete.');
+    }
+
+    const isValid = razorpayAdapter.verifyPaymentSignature(orderId, paymentId, signature);
+    if (!isValid) {
+      throw new ApiError(400, 'Payment verification failed: Invalid cryptographic signature. Order cannot be placed.');
+    }
+
+    paymentInfo = {
+      method: 'razorpay',
+      transactionId: paymentId,
+      gatewayOrderId: orderId,
+      gatewayResponse: payment,
+      paymentStatus: 'completed'
+    };
+  } else if (paymentMethod === 'cod') {
+    paymentInfo = {
+      method: 'cod',
+      transactionId: `COD-${Date.now()}`,
+      gatewayOrderId: null,
+      gatewayResponse: null,
+      paymentStatus: 'pending'
+    };
+  } else {
+    throw new ApiError(400, `Unsupported payment method: ${paymentMethod}`);
   }
 
   let orderItems = items;
@@ -30,7 +70,7 @@ export const checkout = asyncHandler(async (req, res) => {
     }
   }
 
-  const order = await orderService.createCheckoutOrder(req.user._id, orderItems, shippingAddressId);
+  const order = await orderService.createCheckoutOrder(req.user._id, orderItems, shippingAddressId, paymentInfo);
 
   // If from cart and successful, clear cart
   if (isFromCart) {
@@ -58,7 +98,7 @@ export const cancelOrder = asyncHandler(async (req, res) => {
 
 // Buy Now — checkout a single product without touching cart
 export const buyNow = asyncHandler(async (req, res) => {
-  const { productId, variantId, quantity = 1, shippingAddressId } = req.body;
+  const { productId, variantId, quantity = 1, shippingAddressId, paymentMethod = 'cod', payment } = req.body;
   if (!productId || !variantId || !shippingAddressId) {
     throw new ApiError(400, 'productId, variantId and shippingAddressId are required');
   }
@@ -68,10 +108,41 @@ export const buyNow = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Quantity must be a positive integer');
   }
 
+  let paymentInfo = { method: paymentMethod, paymentStatus: 'pending' };
+  if (paymentMethod === 'razorpay') {
+    const orderId = payment?.razorpay_order_id || payment?.order_id;
+    const paymentId = payment?.razorpay_payment_id || payment?.payment_id;
+    const signature = payment?.razorpay_signature || payment?.signature;
+
+    if (!orderId || !paymentId || !signature) {
+      throw new ApiError(400, 'Payment details are required. Order cannot be placed if payment is pending.');
+    }
+    const isValid = razorpayAdapter.verifyPaymentSignature(orderId, paymentId, signature);
+    if (!isValid) {
+      throw new ApiError(400, 'Payment verification failed: Invalid signature.');
+    }
+    paymentInfo = {
+      method: 'razorpay',
+      transactionId: paymentId,
+      gatewayOrderId: orderId,
+      gatewayResponse: payment,
+      paymentStatus: 'completed'
+    };
+  } else if (paymentMethod === 'cod') {
+    paymentInfo = {
+      method: 'cod',
+      transactionId: `COD-${Date.now()}`,
+      gatewayOrderId: null,
+      gatewayResponse: null,
+      paymentStatus: 'pending'
+    };
+  }
+
   const order = await orderService.createCheckoutOrder(
     req.user._id,
     [{ productId, variantId, quantity: parsedQty }],
-    shippingAddressId
+    shippingAddressId,
+    paymentInfo
   );
   return res.status(201).json(new ApiResponse(201, order, 'Order placed successfully'));
 });
