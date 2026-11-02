@@ -2,18 +2,18 @@ import { z } from 'zod';
 import { PRODUCT_STATUS } from '../constants/index.js';
 
 const imageSchema = z.object({
-  url: z.string().url(),
-  publicId: z.string(),
+  url: z.string().min(1),
+  publicId: z.string().optional(),
   alt: z.string().optional(),
   isPrimary: z.boolean().optional(),
   displayOrder: z.number().optional()
 });
 
 const variantSchema = z.object({
-  color: z.string().optional(),
-  size: z.string().optional(),
-  sku: z.string().optional(),
-  barcode: z.string().optional(),
+  color: z.string().optional().or(z.literal('')),
+  size: z.string().optional().or(z.literal('')),
+  sku: z.string().optional().or(z.literal('')),
+  barcode: z.string().optional().or(z.literal('')),
   price: z.number().min(0),
   discount: z.number().min(0).optional(),
   stock: z.number().min(0),

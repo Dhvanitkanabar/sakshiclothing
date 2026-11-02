@@ -3,22 +3,39 @@ import fs from 'fs/promises';
 import path from 'path';
 
 class UploadService {
-  async processUpload(file, userId, folderName) {
-    // For local storage, the file is saved in 'uploads/'
-    // We construct a public URL to serve it via express.static
-    
+  async processUpload(file, userId, folderName, req = null) {
     // Normalize path to use forward slashes for URLs
     const normalizedPath = file.path.replace(/\\/g, '/');
-    const baseUrl = process.env.API_URL || 'http://localhost:5000';
+
+    let baseUrl = process.env.API_URL;
+    if (!baseUrl && req) {
+      const host = req.headers['x-forwarded-host'] || req.get('host') || '';
+      const proto = req.headers['x-forwarded-proto'] || (host.includes('onrender.com') ? 'https' : req.protocol);
+      if (host) {
+        baseUrl = `${proto}://${host}`;
+      }
+    }
+
+    if (!baseUrl) {
+      baseUrl = process.env.NODE_ENV === 'production' || process.env.RENDER
+        ? 'https://sakshi-clothing-backend.onrender.com'
+        : 'http://localhost:5000';
+    }
+
+    // Always enforce HTTPS if in production or on render
+    if (baseUrl.includes('onrender.com') || baseUrl.includes('sakshiclothing.store')) {
+      baseUrl = baseUrl.replace(/^http:\/\//, 'https://');
+    }
+
     const secureUrl = `${baseUrl}/${normalizedPath}`;
 
     const uploadData = {
       publicId: file.filename, 
       secureUrl: secureUrl,
-      thumbnailUrl: secureUrl, // Local storage doesn't auto-generate thumbnails, use original
+      thumbnailUrl: secureUrl,
       width: 0,
       height: 0,
-      format: file.mimetype.split('/')[1],
+      format: file.mimetype.split('/')[1] || 'jpeg',
       bytes: file.size,
       folder: folderName || 'sakshi-clothing/misc',
       uploadedBy: userId,

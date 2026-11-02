@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Search, Bell } from 'lucide-react';
+import { Search, Bell, Menu } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { adminFetch } from '../lib/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
-const Topbar = () => {
+interface TopbarProps {
+  onOpenMobileMenu?: () => void;
+}
+
+const Topbar = ({ onOpenMobileMenu }: TopbarProps) => {
   const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [results, setResults] = useState<any>(null);
@@ -42,18 +46,27 @@ const Topbar = () => {
   }, []);
 
   return (
-    <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/80 px-8 py-3.5 flex justify-between items-center sticky top-0 z-40 shadow-xs">
-      <div className="flex items-center gap-6">
-        <div className="relative">
+    <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-8 py-3.5 flex justify-between items-center sticky top-0 z-30 shadow-xs">
+      <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+        <button
+          type="button"
+          onClick={onOpenMobileMenu}
+          className="lg:hidden p-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 transition-colors shrink-0"
+          aria-label="Open mobile navigation menu"
+        >
+          <Menu size={18} />
+        </button>
+
+        <div className="relative flex-1 max-w-xs sm:max-w-sm lg:max-w-md">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
           <input
             type="text"
-            placeholder="Search products, orders, customers... (Ctrl + K)"
+            placeholder="Search products, orders... (⌘K)"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 pr-10 py-2 rounded-xl border border-slate-200 w-80 lg:w-96 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-xs bg-slate-50/50 transition-all font-sans"
+            className="w-full pl-9 pr-8 sm:pl-10 sm:pr-10 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-xs bg-slate-50/50 transition-all font-sans"
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-sans text-slate-400 border border-slate-200 rounded px-1.5 py-0.5 bg-white">⌘K</span>
+          <span className="hidden sm:inline-block absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-sans text-slate-400 border border-slate-200 rounded px-1.5 py-0.5 bg-white">⌘K</span>
 
           {showResults && results && (
             <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 max-h-[400px] overflow-y-auto z-50 p-3">

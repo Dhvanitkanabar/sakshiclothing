@@ -124,26 +124,73 @@ export default function ProductForm() {
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
+
+    if (!formData.name || !formData.name.trim()) {
+      alert('Please enter a product name.');
+      return;
+    }
+
+    if (!formData.category) {
+      alert('Please select a Category before publishing.');
+      return;
+    }
+
     const url = isEdit ? `${API_URL}/products/${id}` : `${API_URL}/products`;
     const method = isEdit ? 'PUT' : 'POST';
 
+    // Calculate basePrice from variants if basePrice is 0 or empty
+    let basePrice = Number(formData.pricing.basePrice) || 0;
+    if (basePrice <= 0 && formData.variants.length > 0) {
+      basePrice = Number(formData.variants[0].price) || 0;
+    }
+
+    // Calculate total stock from variants if not set
+    let totalStock = Number(formData.inventory.totalStock) || 0;
+    if (formData.variants.length > 0) {
+      const variantStockSum = formData.variants.reduce((acc, v) => acc + (Number(v.stock) || 0), 0);
+      if (variantStockSum > 0 || totalStock <= 0) {
+        totalStock = variantStockSum;
+      }
+    }
+
     try {
-      const payload = {
-        ...formData,
-        subCategory: formData.subCategory && formData.subCategory.trim() ? formData.subCategory : undefined,
+      const cleanedVariants = formData.variants.map((v) => {
+        const item: any = {
+          size: v.size || 'Standard',
+          price: Number(v.price) || basePrice || 0,
+          stock: Number(v.stock) || 0,
+        };
+        if (v.sku && v.sku.trim()) {
+          item.sku = v.sku.trim();
+        }
+        if (v.color && v.color.trim()) {
+          item.color = v.color.trim();
+        }
+        return item;
+      });
+
+      const payload: any = {
+        name: formData.name.trim(),
+        slug: formData.slug ? formData.slug.trim().toLowerCase() : formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
+        description: formData.description.trim(),
+        category: formData.category,
+        subCategory: formData.subCategory && formData.subCategory.trim() ? formData.subCategory.trim() : undefined,
+        status: formData.status || 'published',
+        tags: formData.tags || [],
         pricing: {
-          ...formData.pricing,
-          basePrice: Number(formData.pricing.basePrice),
+          basePrice: basePrice,
           discountPrice: formData.pricing.discountPrice ? Number(formData.pricing.discountPrice) : undefined
         },
         inventory: {
-          ...formData.inventory,
-          totalStock: Number(formData.inventory.totalStock)
+          totalStock: totalStock,
+          lowStockThreshold: 5
         },
-        variants: formData.variants.map(v => ({
-          ...v,
-          price: Number(v.price),
-          stock: Number(v.stock),
+        variants: cleanedVariants,
+        images: formData.images.map((img, idx) => ({
+          url: img.url,
+          publicId: img.publicId || `img_${Date.now()}_${idx}`,
+          isPrimary: idx === 0,
+          displayOrder: idx
         }))
       };
 
@@ -156,19 +203,19 @@ export default function ProductForm() {
       if (data.success) {
         navigate('/products');
       } else {
-        let errorMsg = data.message;
+        let errorMsg = data.message || 'Failed to save product';
         if (data.errors) {
           if (Array.isArray(data.errors)) {
-            errorMsg = data.errors.map((e: any) => `${e.field}: ${e.message}`).join('\n');
+            errorMsg = data.errors.map((e: any) => `${e.field || ''}: ${e.message}`).join('\n');
           } else if (typeof data.errors === 'object') {
-            errorMsg = Object.values(data.errors).map((e: any) => e.message).join('\n');
+            errorMsg = Object.values(data.errors).map((e: any) => e.message || e).join('\n');
           }
         }
-        alert('Error:\n' + errorMsg);
+        alert('Product Error:\n' + errorMsg);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert('An unexpected error occurred. Please check the console.');
+      alert('An unexpected error occurred while saving product: ' + (err.message || 'Check console.'));
     }
   };
 
@@ -359,11 +406,11 @@ export default function ProductForm() {
           />
         </div>
 
-        <div className="flex justify-end gap-4 pt-6 border-t border-gray-200 sticky bottom-4 bg-white/80 backdrop-blur p-4 rounded-2xl shadow-lg border">
-          <button type="button" onClick={() => navigate('/products')} className="px-6 py-2.5 border-2 border-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-50 transition-colors">
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200 sticky bottom-4 bg-white/95 backdrop-blur p-4 rounded-2xl shadow-lg border z-30">
+          <button type="button" onClick={() => navigate('/products')} className="w-full sm:w-auto px-6 py-2.5 border-2 border-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-50 transition-colors text-center">
             Cancel
           </button>
-          <button type="submit" className="px-8 py-2.5 bg-black text-white font-bold rounded-lg shadow-md hover:bg-gray-800 transition-colors">
+          <button type="submit" className="w-full sm:w-auto px-8 py-2.5 bg-black text-white font-bold rounded-lg shadow-md hover:bg-gray-800 transition-colors text-center">
             {isEdit ? 'Update Product' : 'Publish Product'}
           </button>
         </div>

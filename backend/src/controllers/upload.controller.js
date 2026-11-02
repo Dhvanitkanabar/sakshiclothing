@@ -8,7 +8,7 @@ class UploadController {
       }
 
       const folderName = req.body.folder || 'misc';
-      const uploadRecord = await uploadService.processUpload(req.file, req.user._id, folderName);
+      const uploadRecord = await uploadService.processUpload(req.file, req.user._id, folderName, req);
 
       res.status(201).json({
         success: true,
@@ -28,7 +28,7 @@ class UploadController {
       const folderName = req.body.folder || 'misc';
       
       const uploadPromises = req.files.map(file => 
-        uploadService.processUpload(file, req.user._id, folderName)
+        uploadService.processUpload(file, req.user._id, folderName, req)
       );
       
       const uploadRecords = await Promise.all(uploadPromises);

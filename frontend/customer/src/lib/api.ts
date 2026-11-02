@@ -21,12 +21,28 @@ export const authedFetch = async (url: string, options: RequestInit = {}, clerkT
   });
 };
 
+export const normalizeImageUrl = (url: string): string => {
+  if (!url) return '';
+  const backendBase = import.meta.env.VITE_API_URL
+    ? import.meta.env.VITE_API_URL.replace(/\/api\/v1\/?$/, '')
+    : 'https://sakshi-clothing-backend.onrender.com';
+
+  if (url.startsWith('http://localhost:5000/')) {
+    return url.replace('http://localhost:5000', backendBase);
+  }
+  if (url.startsWith('/uploads/')) {
+    return `${backendBase}${url}`;
+  }
+  return url;
+};
+
 export const mapBackendProductToFrontend = (backendProduct: any): Product => {
   const parseImageUrl = (img: any): string => {
     if (!img) return '';
-    if (typeof img === 'string') return img;
-    if (typeof img === 'object' && img.url) return img.url;
-    return '';
+    let raw = '';
+    if (typeof img === 'string') raw = img;
+    else if (typeof img === 'object' && img.url) raw = img.url;
+    return normalizeImageUrl(raw);
   };
 
   const imagesList: string[] = Array.isArray(backendProduct.images)

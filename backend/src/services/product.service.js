@@ -26,6 +26,58 @@ class ProductService {
       }
     }
 
+    // Process and clean variants if provided
+    if (data.variants && data.variants.length > 0) {
+      data.variants = data.variants.map((v, i) => {
+        const cleaned = { ...v };
+        if (!cleaned.sku || !cleaned.sku.toString().trim()) {
+          delete cleaned.sku;
+        } else {
+          cleaned.sku = cleaned.sku.toString().trim();
+        }
+        cleaned.price = Number(cleaned.price) || 0;
+        cleaned.stock = Number(cleaned.stock) || 0;
+        return cleaned;
+      });
+
+      const totalStock = data.variants.reduce((acc, v) => acc + (Number(v.stock) || 0), 0);
+      data.inventory = data.inventory || {};
+      data.inventory.totalStock = totalStock;
+
+      if ((!data.pricing?.basePrice || data.pricing.basePrice === 0) && data.variants[0]?.price) {
+        data.pricing = data.pricing || {};
+        data.pricing.basePrice = Number(data.variants[0].price);
+      }
+    }
+
+    // Process images and ensure each has a publicId
+    if (data.images && Array.isArray(data.images) && data.images.length > 0) {
+      data.images = data.images.map((img, idx) => {
+        if (typeof img === 'string') {
+          return {
+            url: img,
+            publicId: `img_${Date.now()}_${idx}`,
+            isPrimary: idx === 0,
+            displayOrder: idx
+          };
+        }
+        return {
+          ...img,
+          publicId: img.publicId || `img_${Date.now()}_${idx}`,
+          isPrimary: img.isPrimary !== undefined ? img.isPrimary : idx === 0,
+          displayOrder: img.displayOrder !== undefined ? img.displayOrder : idx
+        };
+      });
+
+      if (!data.thumbnail && data.images[0]) {
+        data.thumbnail = data.images[0];
+      }
+    }
+
+    if (data.status === PRODUCT_STATUS.PUBLISHED) {
+      data.isPublished = true;
+    }
+
     data.createdBy = userId;
     return await ProductRepository.create(data);
   }

@@ -8,9 +8,18 @@ import logger from '../utils/logger.js';
 const errorHandler = (err, req, res, next) => {
   let error = err;
 
-  // If the error is not a custom ApiError instance, wrap it
-  if (!(error instanceof ApiError)) {
-    const statusCode = error.statusCode || (error.name === 'ValidationError' ? 400 : 500);
+  // Handle MongoDB Duplicate Key (E11000)
+  if (err.code === 11000) {
+    const field = Object.keys(err.keyValue || {})[0] || 'field';
+    const value = err.keyValue ? err.keyValue[field] : '';
+    error = new ApiError(409, `A record with ${field} "${value}" already exists. Please choose a different ${field}.`);
+  } else if (err.name === 'CastError') {
+    error = new ApiError(400, `Invalid ID format for ${err.path}: ${err.value}`);
+  } else if (err.name === 'ValidationError') {
+    const messages = Object.values(err.errors || {}).map((e) => e.message);
+    error = new ApiError(400, `Validation Failed: ${messages.join(', ')}`, messages);
+  } else if (!(error instanceof ApiError)) {
+    const statusCode = error.statusCode || 500;
     const message = error.message || 'Internal Server Error';
     error = new ApiError(statusCode, message, error.errors || [], err.stack);
   }
