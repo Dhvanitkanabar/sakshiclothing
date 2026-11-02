@@ -41,8 +41,12 @@ class OrderRepository {
       .sort(sort)
       .skip(skip)
       .limit(limit)
-      .populate('customer', 'fullName email')
-      .populate('products.product', 'name thumbnail images');
+      .populate('customer', 'fullName email phone')
+      .populate({
+        path: 'products.product',
+        select: 'name thumbnail images category basePrice',
+        populate: { path: 'category', select: 'name slug' }
+      });
     return { orders, total };
   }
 

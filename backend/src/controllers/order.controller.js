@@ -157,13 +157,22 @@ export const getInvoice = asyncHandler(async (req, res) => {
 
 // Admin Controllers
 export const getAllOrders = asyncHandler(async (req, res) => {
-  const { status, search, sort, page = 1, limit = 10 } = req.query;
+  const { status, search, sort, page = 1, limit = 50, startDate, endDate } = req.query;
   const filter = {};
-  if (status) filter.orderStatus = status;
+  if (status && status !== 'all') filter.orderStatus = status;
   if (search) {
     filter.$or = [
       { orderNumber: { $regex: search, $options: 'i' } }
     ];
+  }
+  if (startDate || endDate) {
+    filter.createdAt = {};
+    if (startDate) filter.createdAt.$gte = new Date(startDate);
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      filter.createdAt.$lte = end;
+    }
   }
   const skip = (page - 1) * limit;
   const orders = await orderService.getAllOrders(filter, sort ? { [sort]: -1 } : undefined, skip, Number(limit));
