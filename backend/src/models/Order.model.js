@@ -159,7 +159,6 @@ const orderSchema = new Schema(
 );
 
 // Indexes for fast lookup
-orderSchema.index({ orderNumber: 1 });
 orderSchema.index({ customer: 1, createdAt: -1 });
 orderSchema.index({ orderStatus: 1 });
 orderSchema.index({ approvalStatus: 1 });

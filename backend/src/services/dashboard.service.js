@@ -13,6 +13,8 @@ class DashboardService {
     const [
       totalOrders,
       pendingOrders,
+      processingOrders,
+      shippedOrders,
       deliveredOrders,
       cancelledOrders,
       revenueToday,
@@ -26,15 +28,17 @@ class DashboardService {
       totalCategories
     ] = await Promise.all([
       Order.countDocuments(),
-      Order.countDocuments({ orderStatus: 'pending' }),
+      Order.countDocuments({ orderStatus: { $in: ['pending', 'pending_approval'] } }),
+      Order.countDocuments({ orderStatus: { $in: ['processing', 'confirmed'] } }),
+      Order.countDocuments({ orderStatus: 'shipped' }),
       Order.countDocuments({ orderStatus: 'delivered' }),
-      Order.countDocuments({ orderStatus: 'cancelled' }),
+      Order.countDocuments({ orderStatus: { $in: ['cancelled', 'rejected'] } }),
       Order.aggregate([
-        { $match: { createdAt: { $gte: todayStart }, orderStatus: { $ne: 'cancelled' } } },
+        { $match: { createdAt: { $gte: todayStart }, orderStatus: { $nin: ['cancelled', 'rejected'] } } },
         { $group: { _id: null, total: { $sum: '$totals.grandTotal' } } }
       ]).then(r => r[0]?.total || 0),
       Order.aggregate([
-        { $match: { orderStatus: { $ne: 'cancelled' } } },
+        { $match: { orderStatus: { $nin: ['cancelled', 'rejected'] } } },
         { $group: { _id: null, total: { $sum: '$totals.grandTotal' } } }
       ]).then(r => r[0]?.total || 0),
       User.countDocuments({ role: 'user' }),
@@ -45,7 +49,7 @@ class DashboardService {
         .populate('customer', 'fullName email')
         .lean(),
       Order.aggregate([
-        { $match: { createdAt: { $gte: weekAgo }, orderStatus: { $ne: 'cancelled' } } },
+        { $match: { createdAt: { $gte: weekAgo }, orderStatus: { $nin: ['cancelled', 'rejected'] } } },
         {
           $group: {
             _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
@@ -70,20 +74,24 @@ class DashboardService {
       Category.countDocuments()
     ]);
 
+    const averageOrderValue = totalOrders > 0 ? Math.round(revenueTotal / totalOrders) : 0;
+
     return {
       stats: {
         totalOrders,
         pendingOrders,
+        processingOrders,
+        shippedOrders,
         deliveredOrders,
         cancelledOrders,
         revenueToday,
         revenueTotal,
+        averageOrderValue,
         totalCustomers,
         totalProducts,
         lowStockProducts,
         outOfStockProducts,
         totalCategories
-
       },
       recentOrders,
       revenueWeekly
