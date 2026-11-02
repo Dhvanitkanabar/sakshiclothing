@@ -15,6 +15,13 @@ class ProductRepository {
       .populate('category', 'name slug');
   }
 
+  async slugExists(slug, excludeId = null) {
+    const query = { slug };
+    if (excludeId) query._id = { $ne: excludeId };
+    return Boolean(await Product.exists(query));
+  }
+
+
   async updateById(id, data) {
     return await Product.findByIdAndUpdate(id, data, { new: true, runValidators: true });
   }

@@ -36,6 +36,27 @@ export default function CategoryList() {
     }
   };
 
+  const [seeding, setSeeding] = useState(false);
+
+  const handleSeedDefaults = async () => {
+    if (!confirm('This will load/restore all standard luxury categories (Women, Men, Bridal, Jewellery, Accessories, Footwear) and their subcategories. Proceed?')) return;
+    setSeeding(true);
+    try {
+      const res = await adminFetch(`${API_URL}/categories/seed-defaults`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        alert('Standard categories and subcategories synced successfully!');
+        fetchCategories();
+      } else {
+        alert('Failed: ' + (data.message || 'Error seeding'));
+      }
+    } catch (err: any) {
+      alert('Error: ' + err.message);
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   // Build tree
   const parentCategories = categories.filter(c => !c.parentCategory);
   const getSubcategories = (parentId: string) => categories.filter(c => c.parentCategory?._id === parentId || c.parentCategory === parentId);
@@ -63,17 +84,27 @@ export default function CategoryList() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Categories</h1>
-        <div className="flex gap-4">
-          <Link to="/categories/add?type=sub" className="bg-white border-2 border-black text-black font-bold px-4 py-2 rounded hover:bg-gray-50">
-            Add Subcategory
+      <div className="flex flex-wrap justify-between items-center mb-6 gap-3">
+        <h1 className="text-2xl font-bold">Categories & Subcategories</h1>
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={handleSeedDefaults}
+            disabled={seeding}
+            className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold px-4 py-2 rounded text-sm transition-colors shadow-sm disabled:opacity-50"
+            title="Populate missing standard luxury categories and subcategories"
+          >
+            {seeding ? 'Syncing...' : '⚡ Restore Standard Categories'}
+          </button>
+          <Link to="/categories/add?type=sub" className="bg-white border-2 border-black text-black font-bold px-4 py-2 rounded hover:bg-gray-50 text-sm">
+            + Add Subcategory
           </Link>
-          <Link to="/categories/add" className="bg-black border-2 border-black text-white font-bold px-4 py-2 rounded hover:bg-gray-900">
-            Add Category
+          <Link to="/categories/add" className="bg-black border-2 border-black text-white font-bold px-4 py-2 rounded hover:bg-gray-900 text-sm">
+            + Add Category
           </Link>
         </div>
       </div>
+
 
       <div className="bg-white shadow rounded overflow-hidden">
         <table className="w-full text-left text-sm text-gray-500">

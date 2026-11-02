@@ -5,12 +5,16 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 
 class CategoryController {
   createCategory = asyncHandler(async (req, res) => {
-    const allowedFields = ['name', 'slug', 'description', 'parent', 'image', 'isActive'];
+    const allowedFields = ['name', 'slug', 'description', 'parent', 'parentCategory', 'image', 'isActive', 'displayOrder'];
     const data = {};
     for (const field of allowedFields) {
       if (req.body[field] !== undefined) {
-        if (field === 'parent') data.parentCategory = req.body[field];
-        else data[field] = req.body[field];
+        if (field === 'parent' || field === 'parentCategory') {
+          const val = req.body[field];
+          data.parentCategory = (val && typeof val === 'string' && val.trim() !== '' && val !== 'null') ? val.trim() : null;
+        } else {
+          data[field] = req.body[field];
+        }
       }
     }
     const category = await CategoryService.createCategory(data);
@@ -18,12 +22,16 @@ class CategoryController {
   });
 
   updateCategory = asyncHandler(async (req, res) => {
-    const allowedFields = ['name', 'slug', 'description', 'parent', 'image', 'isActive'];
+    const allowedFields = ['name', 'slug', 'description', 'parent', 'parentCategory', 'image', 'isActive', 'displayOrder'];
     const data = {};
     for (const field of allowedFields) {
       if (req.body[field] !== undefined) {
-        if (field === 'parent') data.parentCategory = req.body[field] === '' ? null : req.body[field];
-        else data[field] = req.body[field];
+        if (field === 'parent' || field === 'parentCategory') {
+          const val = req.body[field];
+          data.parentCategory = (val && typeof val === 'string' && val.trim() !== '' && val !== 'null') ? val.trim() : null;
+        } else {
+          data[field] = req.body[field];
+        }
       }
     }
     const category = await CategoryService.updateCategory(req.params.id, data);
@@ -60,6 +68,12 @@ class CategoryController {
     await CategoryService.restoreCategory(req.params.id);
     return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, null, 'Category restored'));
   });
+
+  seedDefaults = asyncHandler(async (req, res) => {
+    const seeded = await CategoryService.seedDefaultCategories();
+    return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, seeded, 'Standard categories and subcategories created successfully'));
+  });
 }
 
 export default new CategoryController();
+

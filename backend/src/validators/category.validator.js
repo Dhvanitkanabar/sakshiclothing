@@ -1,21 +1,16 @@
 import { z } from 'zod';
 
 export const createCategorySchema = z.object({
-  name: z.string().min(2).max(100),
-  slug: z.string().min(2),
+  name: z.string().min(1, 'Category name is required').max(100),
+  slug: z.string().min(1).optional(),
   parentCategory: z.string().nullable().optional(), // ObjectId or null
+  parent: z.string().nullable().optional(), // Alias used by some form submissions
   description: z.string().optional(),
-  image: z.object({
-    url: z.string().url().optional(),
-    publicId: z.string().optional()
-  }).optional(),
+  image: z.any().optional(),
   isActive: z.boolean().optional(),
   displayOrder: z.number().optional(),
-  seo: z.object({
-    title: z.string().optional(),
-    description: z.string().optional(),
-    keywords: z.array(z.string()).optional()
-  }).optional()
+  seo: z.any().optional()
 });
 
 export const updateCategorySchema = createCategorySchema.partial();
+

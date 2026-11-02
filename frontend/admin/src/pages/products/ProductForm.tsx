@@ -36,12 +36,16 @@ export default function ProductForm() {
       .then(data => {
         if (data.success && data.data) {
           setCategories(data.data);
-          if (!isEdit && data.data.length > 0) {
-            setFormData(prev => ({ ...prev, category: data.data[0]._id }));
+          if (!isEdit) {
+            const firstTopLevel = data.data.find((c: any) => !c.parentCategory);
+            if (firstTopLevel) {
+              setFormData(prev => prev.category ? prev : ({ ...prev, category: firstTopLevel._id }));
+            }
           }
         }
       });
   }, [isEdit]);
+
 
   useEffect(() => {
     if (isEdit) {
@@ -83,12 +87,33 @@ export default function ProductForm() {
       setFormData(prev => {
         const newData = { ...prev, [name]: value };
         if (name === 'category') {
-          newData.subCategory = ''; // Reset subCategory if category changes
+          // If changing category, check if current subcategory still belongs to it, else reset
+          if (newData.subCategory) {
+            const currentSub = categories.find(c => c._id === newData.subCategory);
+            const parentId = currentSub?.parentCategory 
+              ? (typeof currentSub.parentCategory === 'object' ? (currentSub.parentCategory._id || currentSub.parentCategory.id) : currentSub.parentCategory)
+              : null;
+            if (parentId && String(parentId) !== String(value)) {
+              newData.subCategory = '';
+            }
+          }
+        } else if (name === 'subCategory' && value) {
+          // Auto-align parent category if a subcategory from another parent is picked
+          const chosenSub = categories.find(c => c._id === value);
+          if (chosenSub && chosenSub.parentCategory) {
+            const parentId = typeof chosenSub.parentCategory === 'object' 
+              ? (chosenSub.parentCategory._id || chosenSub.parentCategory.id) 
+              : chosenSub.parentCategory;
+            if (parentId) {
+              newData.category = String(parentId);
+            }
+          }
         }
         return newData;
       });
     }
   };
+
 
   const addTag = () => {
     if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
@@ -216,14 +241,12 @@ export default function ProductForm() {
         navigate('/products');
       } else {
         let errorMsg = data.message || 'Failed to save product';
-        if (data.errors) {
-          if (Array.isArray(data.errors)) {
-            errorMsg = data.errors.map((e: any) => `${e.field || ''}: ${e.message}`).join('\n');
-          } else if (typeof data.errors === 'object') {
-            errorMsg = Object.values(data.errors).map((e: any) => e.message || e).join('\n');
-          }
+        if (Array.isArray(data.errors) && data.errors.length > 0) {
+          errorMsg = data.errors.map((e: any) => `${e.field ? e.field + ': ' : ''}${e.message || e}`).join('\n');
+        } else if (data.errors && typeof data.errors === 'object' && Object.keys(data.errors).length > 0) {
+          errorMsg = Object.values(data.errors).map((e: any) => e.message || e).join('\n');
         }
-        alert('Product Error:\n' + errorMsg);
+        alert('Product Error:\n\n' + errorMsg);
       }
     } catch (err: any) {
       console.error(err);
@@ -236,6 +259,20 @@ export default function ProductForm() {
   const currentTotalStock = Number(formData.inventory.totalStock) || 0;
   const isStockMatching = !hasVariants || variantStockSum === currentTotalStock;
   const stockDifference = Math.abs(currentTotalStock - variantStockSum);
+
+  // Directly matched subcategories
+  const directSubcategories = categories.filter(c => {
+    if (!c.parentCategory) return false;
+    const pId = typeof c.parentCategory === 'object' ? (c.parentCategory._id || c.parentCategory.id) : c.parentCategory;
+    return pId && String(pId) === String(formData.category);
+  });
+
+  // Other available subcategories for smart auto-alignment
+  const otherSubcategories = categories.filter(c => {
+    if (!c.parentCategory) return false;
+    const pId = typeof c.parentCategory === 'object' ? (c.parentCategory._id || c.parentCategory.id) : c.parentCategory;
+    return pId && String(pId) !== String(formData.category);
+  });
 
   return (
     <div className="max-w-5xl mx-auto pb-16">
@@ -280,17 +317,51 @@ export default function ProductForm() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Subcategory</label>
-              <select name="subCategory" value={formData.subCategory} onChange={handleChange} className="w-full border-gray-200 border p-3 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all outline-none bg-white">
-                <option value="">Select a Subcategory (Optional)</option>
-                {categories.filter(c => 
-                  c.parentCategory && 
-                  (c.parentCategory._id === formData.category || c.parentCategory === formData.category)
-                ).map(c => (
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-semibold text-gray-700">Subcategory</label>
+                <a 
+                  href="/categories/add?type=sub" 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  + Add Subcategory
+                </a>
+              </div>
+              <select 
+                name="subCategory" 
+                value={formData.subCategory} 
+                onChange={handleChange} 
+                className="w-full border-gray-200 border p-3 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all outline-none bg-white"
+              >
+                <option value="">
+                  {directSubcategories.length > 0 
+                    ? `Select a Subcategory (${directSubcategories.length} available)` 
+                    : 'Select a Subcategory (Optional)'}
+                </option>
+                {directSubcategories.map(c => (
                   <option key={c._id} value={c._id}>{c.name}</option>
                 ))}
+                {otherSubcategories.length > 0 && (
+                  <optgroup label="Other Available Subcategories (Auto-aligns Category)">
+                    {otherSubcategories.map(c => {
+                      const pName = typeof c.parentCategory === 'object' ? c.parentCategory.name : 'Other';
+                      return (
+                        <option key={c._id} value={c._id}>
+                          {c.name} (under {pName})
+                        </option>
+                      );
+                    })}
+                  </optgroup>
+                )}
               </select>
+              {formData.category && directSubcategories.length === 0 && (
+                <p className="text-[11px] text-amber-700 bg-amber-50 px-2.5 py-1.5 mt-1.5 rounded-lg border border-amber-200">
+                  Tip: No subcategories are linked directly under this category yet. You can pick from "Other Available Subcategories" or create a new one.
+                </p>
+              )}
             </div>
+
             <div>
               <label className="block text-sm">Status</label>
               <select name="status" value={formData.status} onChange={handleChange} className="w-full border p-2 rounded">

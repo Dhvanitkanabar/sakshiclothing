@@ -26,7 +26,22 @@ const startServer = async () => {
     logger.info('[Server] Connecting to MongoDB...');
     await connectDB();
 
+    // Auto-seed default luxury categories & subcategories if DB has <= 3 categories
+    try {
+      const CategoryService = (await import('./services/category.service.js')).default;
+      const Category = (await import('./models/Category.model.js')).default;
+      const catCount = await Category.countDocuments();
+      if (catCount <= 3) {
+        logger.info(`[Server] Detected ${catCount} categories, auto-seeding standard luxury categories and subcategories...`);
+        await CategoryService.seedDefaultCategories();
+        logger.info('[Server] Standard categories and subcategories auto-seeded successfully.');
+      }
+    } catch (seedErr) {
+      logger.warn(`[Server] Auto-seed notice: ${seedErr.message}`);
+    }
+
     // 2. Start listening on the specified port
+
     const server = app.listen(PORT, '0.0.0.0', () => {
       logger.info(`[Server] E-Commerce server running on port: ${PORT}`);
       logger.info(`[Server] Mode: ${process.env.NODE_ENV}`);

@@ -88,9 +88,15 @@ export default function CategoryForm() {
     const url = isEdit ? `${API_URL}/categories/${id}` : `${API_URL}/categories`;
     const method = isEdit ? 'PUT' : 'POST';
     
-    const payload: any = { ...formData };
-    payload.parent = payload.parentCategory ? payload.parentCategory : null;
-    delete payload.parentCategory;
+    const parentVal = formData.parentCategory && formData.parentCategory.trim() ? formData.parentCategory.trim() : null;
+    const payload: any = {
+      name: formData.name.trim(),
+      slug: formData.slug.trim(),
+      description: formData.description.trim(),
+      parentCategory: parentVal,
+      parent: parentVal,
+      isActive: formData.isActive
+    };
 
     try {
       const res = await adminFetch(url, {
@@ -102,12 +108,15 @@ export default function CategoryForm() {
       if (data.success) {
         navigate('/categories');
       } else {
-        alert('Error: ' + JSON.stringify(data.message));
+        const msg = data.message || (data.errors ? JSON.stringify(data.errors) : 'Failed to save category');
+        alert('Category Error:\n\n' + msg);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      alert('Error saving category: ' + (err.message || 'Please check console.'));
     }
   };
+
 
   const isSub = isSubcategoryMode || Boolean(formData.parentCategory);
 

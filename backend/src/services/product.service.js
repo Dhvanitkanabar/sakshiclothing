@@ -1,34 +1,39 @@
 import ProductRepository from '../repositories/product.repository.js';
 import CategoryRepository from '../repositories/category.repository.js';
+import Product from '../models/Product.model.js';
 import ApiError from '../utils/ApiError.js';
 import { HTTP_STATUS, PRODUCT_STATUS } from '../constants/index.js';
 
 class ProductService {
   async createProduct(data, userId) {
-    // Basic slug generation if not provided
-    if (!data.slug && data.name) {
-      data.slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    // Robust slug generation that never collides in MongoDB
+    let baseSlug = data.slug || (data.name ? data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') : `prod-${Date.now()}`);
+    let candidateSlug = baseSlug;
+    let suffixCount = 1;
+    while (await ProductRepository.slugExists(candidateSlug)) {
+      candidateSlug = `${baseSlug}-${Date.now().toString(36).slice(-3)}${suffixCount > 1 ? `-${suffixCount}` : ''}`;
+      suffixCount++;
+      if (suffixCount > 15) {
+        candidateSlug = `${baseSlug}-${Date.now()}`;
+        break;
+      }
     }
-
-    // Ensure slug is unique by auto-suffixing if duplicate found
-    const existing = await ProductRepository.findBySlug(data.slug);
-    if (existing) {
-      data.slug = `${data.slug}-${Date.now().toString(36).slice(-4)}`;
-    }
+    data.slug = candidateSlug;
 
     if (data.subCategory) {
       const sub = await CategoryRepository.findById(data.subCategory);
       if (!sub) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Subcategory not found');
       }
-      if (sub.parentCategory?._id?.toString() !== data.category && sub.parentCategory?.toString() !== data.category) {
+      const parentId = sub.parentCategory?._id ? sub.parentCategory._id.toString() : sub.parentCategory?.toString();
+      if (parentId && data.category && parentId !== data.category.toString()) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Subcategory does not belong to the selected Category');
       }
     }
 
     // Process and clean variants if provided
     if (data.variants && data.variants.length > 0) {
-      data.variants = data.variants.map((v, i) => {
+      data.variants = data.variants.map((v) => {
         const cleaned = { ...v };
         if (!cleaned.sku || !cleaned.sku.toString().trim()) {
           delete cleaned.sku;
@@ -39,6 +44,29 @@ class ProductService {
         cleaned.stock = Number(cleaned.stock) || 0;
         return cleaned;
       });
+
+      // Check for duplicate SKUs in the request and existing in database
+      const seenSkus = new Set();
+      for (const v of data.variants) {
+        if (v.sku) {
+          const skuUpper = v.sku.toUpperCase();
+          if (seenSkus.has(skuUpper)) {
+            throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Duplicate SKU "${v.sku}" found in your variants. Each variant must have a unique SKU.`);
+          }
+          seenSkus.add(skuUpper);
+
+          const existingWithSku = await Product.findOne({
+            'variants.sku': v.sku
+          }).select('name');
+
+          if (existingWithSku) {
+            throw new ApiError(
+              HTTP_STATUS.CONFLICT,
+              `SKU "${v.sku}" is already in use by product "${existingWithSku.name}". Please enter a unique SKU (e.g. ${v.sku}-2).`
+            );
+          }
+        }
+      }
 
       const variantStockSum = data.variants.reduce((acc, v) => acc + (Number(v.stock) || 0), 0);
       data.inventory = data.inventory || {};
@@ -61,6 +89,7 @@ class ProductService {
         data.pricing.basePrice = Number(data.variants[0].price);
       }
     }
+
 
     // Process images and ensure each has a publicId
     if (data.images && Array.isArray(data.images) && data.images.length > 0) {
@@ -100,13 +129,22 @@ class ProductService {
       throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Product not found');
     }
 
+    if (data.slug) {
+      let candidateSlug = data.slug.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+      if (await ProductRepository.slugExists(candidateSlug, id)) {
+        candidateSlug = `${candidateSlug}-${Date.now().toString(36).slice(-3)}`;
+      }
+      data.slug = candidateSlug;
+    }
+
     if (data.subCategory) {
       const sub = await CategoryRepository.findById(data.subCategory);
       if (!sub) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Subcategory not found');
       }
-      const actualCategory = data.category || product.category?.toString();
-      if (sub.parentCategory?._id?.toString() !== actualCategory && sub.parentCategory?.toString() !== actualCategory) {
+      const actualCategory = data.category || (product.category ? product.category._id || product.category : null);
+      const parentId = sub.parentCategory?._id ? sub.parentCategory._id.toString() : sub.parentCategory?.toString();
+      if (parentId && actualCategory && parentId !== actualCategory.toString()) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Subcategory does not belong to the selected Category');
       }
     }
@@ -123,6 +161,30 @@ class ProductService {
         cleaned.stock = Number(cleaned.stock) || 0;
         return cleaned;
       });
+
+      // Check for duplicate SKUs in the request and database
+      const seenSkus = new Set();
+      for (const v of data.variants) {
+        if (v.sku) {
+          const skuUpper = v.sku.toUpperCase();
+          if (seenSkus.has(skuUpper)) {
+            throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Duplicate SKU "${v.sku}" found in your variants. Each variant must have a unique SKU.`);
+          }
+          seenSkus.add(skuUpper);
+
+          const existingWithSku = await Product.findOne({
+            'variants.sku': v.sku,
+            _id: { $ne: id }
+          }).select('name');
+
+          if (existingWithSku) {
+            throw new ApiError(
+              HTTP_STATUS.CONFLICT,
+              `SKU "${v.sku}" is already in use by product "${existingWithSku.name}". Please enter a unique SKU.`
+            );
+          }
+        }
+      }
 
       const variantStockSum = data.variants.reduce((acc, v) => acc + (Number(v.stock) || 0), 0);
       data.inventory = data.inventory || {};
@@ -144,6 +206,7 @@ class ProductService {
     }
 
     data.updatedBy = userId;
+
     return await ProductRepository.updateById(id, data);
   }
 

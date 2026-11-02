@@ -17,10 +17,12 @@ router.get('/:id', optionalAuth, CategoryController.getCategoryById);
 router.use(authenticate);
 router.use(authorize(ROLES.ADMIN));
 
+router.post('/seed-defaults', CategoryController.seedDefaults);
 router.post('/', validateRequest(createCategorySchema), CategoryController.createCategory);
 router.put('/:id', validateRequest(updateCategorySchema), CategoryController.updateCategory);
 router.patch('/:id/status', CategoryController.softDeleteCategory); // disable
 router.patch('/:id/restore', CategoryController.restoreCategory); // enable
 router.delete('/:id', CategoryController.deleteCategory);
+
 
 export default router;
