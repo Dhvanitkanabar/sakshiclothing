@@ -1,11 +1,12 @@
 import nodemailer from 'nodemailer';
+import mongoose from 'mongoose';
 import StoreSettings from '../models/StoreSettings.model.js';
 
 export const getTransporter = async (customConfig = null, forcePort = null) => {
   let cfg = customConfig;
 
-  // 1. If no custom config, try StoreSettings from MongoDB
-  if (!cfg || !cfg.user || !cfg.password) {
+  // 1. If no custom config, try StoreSettings from MongoDB (only if connected)
+  if ((!cfg || !cfg.user || !cfg.password) && mongoose.connection?.readyState === 1) {
     try {
       const settings = await StoreSettings.findOne().lean();
       if (settings?.smtp?.user && settings?.smtp?.password) {
