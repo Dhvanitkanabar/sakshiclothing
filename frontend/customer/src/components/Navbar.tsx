@@ -200,7 +200,6 @@ export const Navbar = () => {
     {
       name: "Bridal",
       path: "/shop?category=Bridal",
-      badge: "Couture",
       dropdown: [
         { label: "Red & Crimson Lehengas", path: "/shop?category=Women&sub=Bridal Lehengas" },
         { label: "Pastel & Blush Lehengas", path: "/shop?category=Women&sub=Bridal Lehengas" },
@@ -231,8 +230,7 @@ export const Navbar = () => {
     },
     {
       name: "New In",
-      path: "/shop?sortBy=newest",
-      isNew: true
+      path: "/shop?sortBy=newest"
     }
   ];
 
@@ -241,75 +239,62 @@ export const Navbar = () => {
       {/* 1. Viewport Fixed Container */}
       <div className="fixed top-0 left-0 right-0 z-40 pointer-events-none transition-all duration-300">
         
-        {/* Luxury Top Announcement Ticker */}
+        {/* Luxury Minimalist Single-Line Announcement Ticker */}
         <div 
-          className={`pointer-events-auto px-3 sm:px-6 text-xs transition-all duration-300 overflow-hidden ${
+          className={`pointer-events-auto px-4 text-xs transition-all duration-300 overflow-hidden ${
             isScrolled 
               ? 'max-h-0 opacity-0 py-0 border-transparent' 
               : isTransparent
-                ? 'max-h-12 opacity-100 py-1.5 sm:py-2 bg-black/45 backdrop-blur-md text-stone-200 border-b border-white/10'
-                : 'max-h-12 opacity-100 py-1.5 sm:py-2 bg-stone-950 text-stone-200 border-b border-stone-800/80'
+                ? 'max-h-10 opacity-100 py-1.5 sm:py-2 bg-black/60 backdrop-blur-md text-stone-200 border-b border-white/10'
+                : 'max-h-10 opacity-100 py-1.5 sm:py-2 bg-stone-950 text-stone-200 border-b border-stone-800/80'
           }`}
         >
-          <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
-            <div className="hidden lg:flex items-center gap-2 text-[11px] text-stone-300 font-medium tracking-wider uppercase">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            <div className="hidden lg:flex items-center gap-2 text-[10px] text-stone-400 font-medium tracking-widest uppercase">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
               <span>Jaipur Atelier</span>
-              <span className="text-stone-500">•</span>
-              <span>Worldwide Insured Shipping</span>
             </div>
 
             <div className="flex-1 text-center relative h-4 overflow-hidden px-2 flex items-center justify-center">
               <AnimatePresence mode="wait">
                 <motion.span
                   key={tickerIndex}
-                  initial={{ opacity: 0, y: 7 }}
+                  initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -7 }}
-                  transition={{ duration: 0.28 }}
-                  className="text-[11px] sm:text-xs text-amber-300 font-medium tracking-wide flex items-center justify-center gap-1.5"
+                  exit={{ opacity: 0, y: -5 }}
+                  transition={{ duration: 0.25 }}
+                  className="text-[11px] text-amber-300/95 font-medium tracking-wide flex items-center justify-center gap-1.5"
                 >
-                  <Sparkles size={11} className="text-amber-400 shrink-0 hidden sm:inline" />
+                  <Sparkles size={11} className="text-amber-400 shrink-0" />
                   <span>{announcements[tickerIndex]}</span>
                 </motion.span>
               </AnimatePresence>
             </div>
 
-            <div className="hidden sm:flex items-center gap-3.5 text-[11px] text-stone-300 font-medium">
-              <Link to="/track-order" className="hover:text-amber-200 transition-colors flex items-center gap-1">
-                <Truck size={12} className="text-stone-400" />
-                <span>Track Order</span>
+            <div className="hidden sm:flex items-center gap-3 text-[10px] text-stone-400 tracking-wider uppercase font-medium">
+              <Link to="/track-order" className="hover:text-stone-200 transition-colors">
+                Track Order
               </Link>
-              <span className="text-stone-600">•</span>
-              <a 
-                href="https://wa.me/919829012345" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="hover:text-amber-200 transition-colors flex items-center gap-1"
-              >
-                <Phone size={11} className="text-emerald-400" />
-                <span>Help & Support</span>
-              </a>
             </div>
           </div>
         </div>
 
         {/* Floating Transparent / Glassmorphism Capsule Island */}
-        <div className="w-full px-2.5 sm:px-6 lg:px-8 pt-2.5 sm:pt-3.5 transition-all duration-300">
+        <div className="w-full px-2.5 sm:px-6 lg:px-8 pt-2 sm:pt-3 transition-all duration-300">
           <header 
             className={`pointer-events-auto mx-auto max-w-7xl rounded-2xl lg:rounded-full transition-all duration-300 ${
               isTransparent
-                ? 'bg-black/25 backdrop-blur-xl border border-white/25 shadow-none py-2.5 sm:py-3.5 px-4 sm:px-7 text-white hover:bg-black/35 hover:border-white/35'
-                : 'bg-white/92 backdrop-blur-2xl border border-stone-200/90 shadow-[0_12px_40px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.04)] py-2 sm:py-2.5 px-3.5 sm:px-6 text-stone-900'
+                ? 'bg-black/35 backdrop-blur-2xl border border-white/20 shadow-none py-2 sm:py-2.5 px-4 sm:px-6 text-white hover:bg-black/45 hover:border-white/30'
+                : 'bg-white/92 backdrop-blur-2xl border border-stone-200/90 shadow-[0_12px_40px_rgba(0,0,0,0.1),0_2px_8px_rgba(0,0,0,0.03)] py-2 sm:py-2 px-3.5 sm:px-6 text-stone-900'
             }`}
           >
             <div className="flex items-center justify-between gap-2 sm:gap-6">
               
               {/* Left: Mobile Menu Trigger + Brand Logo */}
-              <div className="flex items-center gap-2 sm:gap-3.5">
+              <div className="flex items-center gap-2 sm:gap-4 shrink-0">
                 <button
                   onClick={() => setIsMenuOpen(true)}
-                  className={`lg:hidden p-2 -ml-1 rounded-xl transition-colors active:scale-95 ${
+                  className={`lg:hidden p-2 -ml-1 rounded-full transition-colors active:scale-95 ${
                     isTransparent 
                       ? 'text-white hover:bg-white/15' 
                       : 'text-stone-700 hover:text-stone-950 hover:bg-stone-100/80'
@@ -319,25 +304,18 @@ export const Navbar = () => {
                   <Menu size={20} />
                 </button>
 
-                {/* Brand Logo */}
-                <Link to="/" className="flex items-center gap-2 group focus:outline-none select-none">
-                  <div className="relative flex items-center">
-                    <span className={`font-sans text-xl sm:text-2xl font-black tracking-[0.2em] transition-colors leading-none ${
-                      isTransparent ? 'text-white group-hover:text-amber-200' : 'text-stone-950 group-hover:text-stone-700'
-                    }`}>
-                      SAKSHI
-                    </span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 ml-1.5 mb-1 group-hover:scale-125 transition-transform" />
-                  </div>
-                  <span className={`hidden xl:inline-block text-[9px] uppercase tracking-[0.22em] font-semibold pl-2.5 border-l ${
-                    isTransparent ? 'text-white/70 border-white/20' : 'text-stone-400 border-stone-200'
+                {/* Brand Logo - Pure, Iconic & Uncluttered */}
+                <Link to="/" className="flex items-center gap-1.5 group focus:outline-none select-none">
+                  <span className={`font-sans text-xl sm:text-2xl font-black tracking-[0.24em] transition-colors leading-none ${
+                    isTransparent ? 'text-white group-hover:text-amber-200' : 'text-stone-950 group-hover:text-stone-700'
                   }`}>
-                    Couture
+                    SAKSHI
                   </span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 group-hover:scale-125 transition-transform" />
                 </Link>
               </div>
 
-              {/* Center: Desktop Nav Links with Transparent / Frosted Pills */}
+              {/* Center: Desktop Nav Links */}
               <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
                 {navLinks.map((link) => {
                   const isHovered = hoveredNav === link.name;
@@ -350,35 +328,23 @@ export const Navbar = () => {
                     >
                       <Link
                         to={link.path}
-                        className={`px-3.5 py-1.5 rounded-full text-xs xl:text-sm font-semibold tracking-wide transition-all duration-200 flex items-center gap-1.5 ${
+                        className={`px-3.5 py-1.5 rounded-full text-xs xl:text-sm font-medium tracking-wide transition-all duration-200 flex items-center gap-1 ${
                           isTransparent
                             ? isHovered
-                              ? 'bg-white/20 text-white shadow-2xs'
-                              : 'text-white/90 hover:text-white hover:bg-white/10'
+                              ? 'bg-white/20 text-white'
+                              : 'text-white/85 hover:text-white hover:bg-white/10'
                             : isHovered
-                              ? 'bg-stone-100 text-stone-950 shadow-2xs'
+                              ? 'bg-stone-100 text-stone-950'
                               : 'text-stone-700 hover:text-stone-950 hover:bg-stone-100/70'
                         }`}
                       >
                         <span>{link.name}</span>
-                        {link.badge && (
-                          <span className={`px-1.5 py-0.2 text-[9px] font-bold uppercase tracking-wider rounded-full border ${
-                            isTransparent 
-                              ? 'bg-amber-400/20 text-amber-200 border-amber-400/30' 
-                              : 'bg-amber-100 text-amber-800 border-amber-200'
-                          }`}>
-                            {link.badge}
-                          </span>
-                        )}
-                        {link.isNew && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                        )}
                         {link.dropdown && (
                           <ChevronDown 
                             size={12} 
-                            className={`transition-transform duration-200 ${
-                              isTransparent ? 'text-white/70' : 'text-stone-400'
-                            } ${isHovered ? 'rotate-180 text-amber-400' : ''}`} 
+                            className={`transition-transform duration-200 opacity-60 ${
+                              isHovered ? 'rotate-180 opacity-100 text-amber-400' : ''
+                            }`} 
                           />
                         )}
                       </Link>
@@ -421,52 +387,36 @@ export const Navbar = () => {
               </nav>
 
               {/* Right: Search, Wishlist, Cart, Sign In */}
-              <div className="flex items-center gap-1.5 sm:gap-2.5">
+              <div className="flex items-center gap-1 sm:gap-2">
                 
-                {/* Search Pill Trigger (Desktop) */}
+                {/* Minimal Icon Search Button (Opens ⌘K Palette) */}
                 <button
                   onClick={() => setIsSearchOpen(true)}
-                  className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all shadow-2xs group focus:outline-none ${
+                  className={`p-2 sm:p-2.5 rounded-full transition-all duration-200 flex items-center justify-center relative focus:outline-none ${
                     isTransparent
-                      ? 'bg-white/15 hover:bg-white/25 text-white/90 border border-white/25'
-                      : 'bg-stone-100/80 hover:bg-stone-100 text-stone-600 hover:text-stone-900 border border-stone-200/60'
+                      ? 'text-white/85 hover:text-white hover:bg-white/15'
+                      : 'text-stone-700 hover:text-stone-950 hover:bg-stone-100/80'
                   }`}
                   aria-label="Search Collection"
-                  title="Search collection (⌘K)"
+                  title="Search (⌘K)"
                 >
-                  <Search size={14} className={isTransparent ? 'text-white/80 group-hover:text-white' : 'text-stone-400 group-hover:text-stone-900'} />
-                  <span>Search...</span>
-                  <span className={`flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md border shadow-2xs ${
-                    isTransparent ? 'bg-white/20 text-white border-white/30' : 'bg-white text-stone-500 border-stone-200'
-                  }`}>
-                    <Command size={10} /> K
-                  </span>
-                </button>
-
-                {/* Mobile Search Icon Button */}
-                <button
-                  onClick={() => setIsSearchOpen(true)}
-                  className={`md:hidden p-2 rounded-full transition-colors ${
-                    isTransparent ? 'text-white hover:bg-white/15' : 'text-stone-700 hover:text-stone-950 hover:bg-stone-100/80'
-                  }`}
-                  aria-label="Search"
-                  title="Search collection"
-                >
-                  <Search size={18} />
+                  <Search size={18} strokeWidth={1.8} />
                 </button>
 
                 {/* Wishlist Link */}
                 <Link
                   to="/wishlist"
-                  className={`p-2 rounded-full transition-colors relative ${
-                    isTransparent ? 'text-white hover:bg-white/15' : 'text-stone-700 hover:text-stone-950 hover:bg-stone-100/80'
+                  className={`p-2 sm:p-2.5 rounded-full transition-all duration-200 relative ${
+                    isTransparent 
+                      ? 'text-white/85 hover:text-white hover:bg-white/15' 
+                      : 'text-stone-700 hover:text-stone-950 hover:bg-stone-100/80'
                   }`}
                   aria-label="Wishlist"
                   title="Saved items"
                 >
-                  <Heart size={18} strokeWidth={2} />
+                  <Heart size={18} strokeWidth={1.8} />
                   {wishlist.length > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 bg-rose-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                    <span className="absolute top-1 right-1 bg-rose-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
                       {wishlist.length}
                     </span>
                   )}
@@ -475,25 +425,27 @@ export const Navbar = () => {
                 {/* Cart Trigger */}
                 <button
                   onClick={() => setIsCartOpen(true)}
-                  className={`p-2 rounded-full transition-colors relative ${
-                    isTransparent ? 'text-white hover:bg-white/15' : 'text-stone-700 hover:text-stone-950 hover:bg-stone-100/80'
+                  className={`p-2 sm:p-2.5 rounded-full transition-all duration-200 relative ${
+                    isTransparent 
+                      ? 'text-white/85 hover:text-white hover:bg-white/15' 
+                      : 'text-stone-700 hover:text-stone-950 hover:bg-stone-100/80'
                   }`}
                   aria-label="Shopping Bag"
                   title="Shopping bag"
                 >
-                  <ShoppingBag size={18} strokeWidth={2} />
+                  <ShoppingBag size={18} strokeWidth={1.8} />
                   {cartCount > 0 && (
-                    <span className={`absolute -top-0.5 -right-0.5 text-[10px] font-bold px-1.5 py-0.2 rounded-full min-w-[18px] text-center shadow-xs border ${
+                    <span className={`absolute top-1 right-1 text-[9px] font-bold px-1.5 py-0.2 rounded-full min-w-[16px] text-center shadow-xs border ${
                       isTransparent 
-                        ? 'bg-amber-400 text-stone-950 border-white/50 font-black' 
-                        : 'bg-stone-950 text-amber-300 border-white/40 font-bold'
+                        ? 'bg-amber-400 text-stone-950 border-stone-900 font-black' 
+                        : 'bg-stone-950 text-amber-300 border-white font-bold'
                     }`}>
                       {cartCount}
                     </span>
                   )}
                 </button>
 
-                <div className={`h-4 w-px hidden sm:block mx-0.5 ${
+                <div className={`h-4 w-px mx-0.5 ${
                   isTransparent ? 'bg-white/20' : 'bg-stone-200'
                 }`} />
 
@@ -503,14 +455,15 @@ export const Navbar = () => {
                 ) : (
                   <Link
                     to="/login"
-                    className={`hidden sm:inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all shadow-xs hover:shadow-md active:scale-95 ${
+                    className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all active:scale-95 ${
                       isTransparent
-                        ? 'bg-white text-stone-950 hover:bg-stone-100 font-bold'
-                        : 'bg-stone-950 hover:bg-stone-800 text-white'
+                        ? 'bg-white/15 hover:bg-white text-white hover:text-stone-950 border border-white/30 hover:border-transparent'
+                        : 'bg-stone-900 hover:bg-stone-800 text-white'
                     }`}
+                    aria-label="Sign In"
                   >
-                    <User size={13} />
-                    <span>Sign In</span>
+                    <User size={14} />
+                    <span className="hidden sm:inline">Sign In</span>
                   </Link>
                 )}
               </div>

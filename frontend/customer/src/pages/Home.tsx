@@ -36,7 +36,6 @@ import { CounterBadge } from '../components/watermelon/CounterBadge';
 import { FloatingActionDock } from '../components/watermelon/FloatingActionDock';
 import { ScrollRibbon } from '../components/watermelon/ScrollRibbon';
 import { ScrollMetricBar } from '../components/watermelon/ScrollMetricBar';
-import { ScrollSectionBridge } from '../components/watermelon/ScrollSectionBridge';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -500,57 +499,63 @@ export const Home: React.FC = () => {
         ]}
       />
 
-      {/* Fluid In-Between Scroll Animation Bridge: Section 02 */}
-      <ScrollSectionBridge
-        sectionNumber="02"
-        sectionTitle="The Atelier Philosophy"
-        watermarkText="HAUTE COUTURE • RADICAL CRAFT"
-        badgeText="AHIMSA SILK"
-        theme="light"
-      />
-
-      {/* 2. BRAND PHILOSOPHY MANIFESTO WITH SCROLL REVEAL */}
+      {/* 2. BRAND PHILOSOPHY MANIFESTO WITH LUXURY SCROLL REVEAL */}
       <motion.section 
         id="manifesto-section"
-        initial={{ opacity: 0, y: 45 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-60px' }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="py-16 sm:py-24 px-6 max-w-7xl mx-auto border-b border-stone-200/80"
+        initial={{ opacity: 0, y: 60, scale: 0.98 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        viewport={{ once: true, amount: 0.25, margin: "0px 0px -50px 0px" }}
+        transition={{ duration: 0.85, ease: [0.19, 1, 0.22, 1] }}
+        className="py-20 sm:py-28 px-6 max-w-7xl mx-auto border-b border-stone-200/80"
       >
         <div className="max-w-4xl mx-auto text-center space-y-4 sm:space-y-6">
-          <span className="text-xs font-semibold uppercase tracking-wider text-amber-900 block">
+          <motion.span 
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.12 }}
+            className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-900 block"
+          >
             The Atelier Philosophy
-          </span>
-          <h2 className="text-2xl sm:text-4xl md:text-5xl font-sans font-bold text-stone-900 leading-tight">
+          </motion.span>
+          <motion.h2 
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.2, ease: [0.19, 1, 0.22, 1] }}
+            className="text-2xl sm:text-4xl md:text-5xl font-sans font-bold text-stone-900 leading-tight"
+          >
             We do not produce seasonal fashion. <br className="hidden sm:inline" />
             <span className="font-extrabold text-amber-950">We sculpt wearable heirlooms.</span>
-          </h2>
-          <p className="text-stone-600 text-xs sm:text-sm md:text-base font-normal max-w-2xl mx-auto leading-relaxed">
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.28 }}
+            className="text-stone-600 text-xs sm:text-sm md:text-base font-normal max-w-2xl mx-auto leading-relaxed"
+          >
             In an age of industrial haste, Sakshi stands at the nexus of radical craft, certified 100% Ahimsa mulberry silks, and royal Rajputana zardozi needlework.
-          </p>
+          </motion.p>
         </div>
       </motion.section>
-
-      {/* Fluid In-Between Scroll Animation Bridge: Section 03 */}
-      <ScrollSectionBridge
-        sectionNumber="03"
-        sectionTitle="The Living Runway Archive"
-        watermarkText="SPRING / SUMMER 2026 RUNWAY"
-        badgeText="NEW EDITIONS"
-        theme="light"
-      />
 
       {/* 3. THE LIVING RUNWAY ARCHIVE (TOUCH CAROUSEL WITH SCROLL REVEAL) */}
       <motion.section 
         id="runway-section" 
-        initial={{ opacity: 0, y: 45 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-60px' }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="py-16 sm:py-24 px-5 sm:px-8 max-w-7xl mx-auto"
+        initial={{ opacity: 0, y: 65, scale: 0.98 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        viewport={{ once: true, amount: 0.12, margin: "0px 0px -60px 0px" }}
+        transition={{ duration: 0.85, ease: [0.19, 1, 0.22, 1] }}
+        className="py-18 sm:py-28 px-5 sm:px-8 max-w-7xl mx-auto"
       >
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-12 gap-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 25 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, delay: 0.1, ease: [0.19, 1, 0.22, 1] }}
+          className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-12 gap-4"
+        >
           <div>
             <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-900 mb-2">
               <Sparkles size={13} className="text-amber-800" />
@@ -597,7 +602,7 @@ export const Home: React.FC = () => {
               <ArrowRight size={16} />
             </button>
           </div>
-        </div>
+        </motion.div>
 
         {/* Scroll Progress Bar */}
         <div className="w-full h-1 bg-stone-200 rounded-full mb-6 overflow-hidden">
@@ -715,27 +720,24 @@ export const Home: React.FC = () => {
         ]}
       />
 
-      {/* Fluid In-Between Scroll Animation Bridge: Section 04 */}
-      <ScrollSectionBridge
-        sectionNumber="04"
-        sectionTitle="Curated Fashion Universes"
-        watermarkText="SIX ATELIER UNIVERSES"
-        badgeText="JAIPUR & VARANASI"
-        theme="light"
-      />
-
       {/* 4. SHOP BY UNIVERSE - 6 HIGH-FASHION ARCHED CARDS (STAGGERED SCROLL REVEAL) */}
       <motion.section 
         id="universes-section"
-        initial={{ opacity: 0, y: 45 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-60px' }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="py-16 sm:py-24 px-5 sm:px-8 max-w-7xl mx-auto border-t border-stone-200/80"
+        initial={{ opacity: 0, y: 65, scale: 0.98 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        viewport={{ once: true, amount: 0.15, margin: "0px 0px -50px 0px" }}
+        transition={{ duration: 0.85, ease: [0.19, 1, 0.22, 1] }}
+        className="py-18 sm:py-28 px-5 sm:px-8 max-w-7xl mx-auto border-t border-stone-200/80"
       >
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-12 gap-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 25 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, delay: 0.1, ease: [0.19, 1, 0.22, 1] }}
+          className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-12 gap-4"
+        >
           <div>
-            <span className="text-xs font-semibold uppercase tracking-wider text-amber-900 block mb-2">
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-900 block mb-2">
               Curated Ateliers
             </span>
             <h2 className="text-2xl sm:text-4xl md:text-5xl font-sans font-bold text-stone-900 tracking-tight">
@@ -752,7 +754,7 @@ export const Home: React.FC = () => {
             <span>Explore All Universes</span>
             <ChevronRight size={14} />
           </Link>
-        </div>
+        </motion.div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5 sm:gap-5">
           {categories.map((cat, idx) => (
@@ -793,27 +795,24 @@ export const Home: React.FC = () => {
       {/* Animated Metrics Strip Between Universes and Catalog */}
       <ScrollMetricBar />
 
-      {/* Fluid In-Between Scroll Animation Bridge: Section 05 */}
-      <ScrollSectionBridge
-        sectionNumber="05"
-        sectionTitle="The Curated Catalog"
-        watermarkText="ROYAL HEIRLOOM SILKS"
-        badgeText="100% SILK MARK"
-        theme="light"
-      />
-
       {/* 5. ELEVATED EDITORIAL CATALOG (SCROLL REVEAL) */}
       <motion.section 
         id="catalog-section"
-        initial={{ opacity: 0, y: 45 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-60px' }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="py-16 sm:py-24 px-5 sm:px-8 max-w-7xl mx-auto bg-stone-100/70 rounded-3xl border border-stone-200/80 my-8"
+        initial={{ opacity: 0, y: 70, scale: 0.98 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        viewport={{ once: true, amount: 0.1, margin: "0px 0px -50px 0px" }}
+        transition={{ duration: 0.85, ease: [0.19, 1, 0.22, 1] }}
+        className="py-18 sm:py-28 px-5 sm:px-8 max-w-7xl mx-auto bg-stone-100/70 rounded-3xl border border-stone-200/80 my-8"
       >
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-8 sm:mb-12 gap-6">
+        <motion.div 
+          initial={{ opacity: 0, y: 25 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, delay: 0.1, ease: [0.19, 1, 0.22, 1] }}
+          className="flex flex-col lg:flex-row lg:items-end justify-between mb-8 sm:mb-12 gap-6"
+        >
           <div>
-            <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-900 mb-2">
+            <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-amber-900 mb-2">
               <Crown size={13} className="text-amber-800" />
               <span>The Salon Archive · 2026 Editions</span>
             </div>
@@ -841,7 +840,7 @@ export const Home: React.FC = () => {
               size="md"
             />
           </div>
-        </div>
+        </motion.div>
 
         {/* Editorial Asymmetric Layout: Spotlight Feature + Garment Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
@@ -941,27 +940,24 @@ export const Home: React.FC = () => {
         </div>
       </motion.section>
 
-      {/* Fluid In-Between Scroll Animation Bridge: Section 06 */}
-      <ScrollSectionBridge
-        sectionNumber="06"
-        sectionTitle="Behind The Craft of Royal Couture"
-        watermarkText="PRECISION & ARTISANSHIP"
-        badgeText="240 KARIGAR HOURS"
-        theme="transition-to-dark"
-      />
-
       {/* 6. CRAFT ANATOMY HOTSPOT SHOWCASE (SCROLL REVEAL) */}
       <motion.section 
         id="anatomy-section"
-        initial={{ opacity: 0, y: 45 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-60px' }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="py-16 sm:py-24 bg-[#141210] text-[#f5efe6] px-5 sm:px-8 relative overflow-hidden"
+        initial={{ opacity: 0, y: 70, scale: 0.98 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        viewport={{ once: true, amount: 0.12, margin: "0px 0px -50px 0px" }}
+        transition={{ duration: 0.85, ease: [0.19, 1, 0.22, 1] }}
+        className="py-20 sm:py-28 bg-[#141210] text-[#f5efe6] px-5 sm:px-8 relative overflow-hidden my-6 rounded-3xl"
       >
         <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16 space-y-3">
-            <span className="text-xs font-semibold uppercase tracking-wider text-amber-400 block">
+          <motion.div 
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.1, ease: [0.19, 1, 0.22, 1] }}
+            className="text-center max-w-2xl mx-auto mb-12 sm:mb-16 space-y-3"
+          >
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400 block">
               Precision & Artisanship
             </span>
             <h2 className="text-2xl sm:text-4xl md:text-5xl font-sans font-bold text-white leading-tight">
@@ -970,7 +966,7 @@ export const Home: React.FC = () => {
             <p className="text-stone-400 text-xs sm:text-sm font-normal leading-relaxed">
               Every Sakshi piece is brought to life through centuries-old Indian handloom and metalsmithing embroidery techniques.
             </p>
-          </div>
+          </motion.div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 items-center">
             {/* Interactive Image Frame with Hotspots */}
@@ -1053,23 +1049,14 @@ export const Home: React.FC = () => {
         </div>
       </motion.section>
 
-      {/* Fluid In-Between Scroll Animation Bridge: Section 07 */}
-      <ScrollSectionBridge
-        sectionNumber="07"
-        sectionTitle="Atelier Privilege Code"
-        watermarkText="SAKSHI20 • 20% PRIVILEGE CREDIT"
-        badgeText="LIMITED ACCESS"
-        theme="dark"
-      />
-
       {/* 7. PROMOTIONAL PRIVILEGE CODE BANNER (SCROLL REVEAL) */}
       <motion.section 
         id="privilege-section"
-        initial={{ opacity: 0, scale: 0.97, y: 35 }}
+        initial={{ opacity: 0, scale: 0.96, y: 50 }}
         whileInView={{ opacity: 1, scale: 1, y: 0 }}
-        viewport={{ once: true, margin: '-60px' }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="px-5 sm:px-8 max-w-7xl mx-auto my-14 sm:my-20"
+        viewport={{ once: true, amount: 0.2, margin: "0px 0px -50px 0px" }}
+        transition={{ duration: 0.85, ease: [0.19, 1, 0.22, 1] }}
+        className="px-5 sm:px-8 max-w-7xl mx-auto my-16 sm:my-24"
       >
         <div className="bg-gradient-to-r from-amber-950 via-stone-900 to-stone-950 text-white rounded-3xl p-6 sm:p-12 relative overflow-hidden shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8">
           <div className="space-y-3 sm:space-y-4 max-w-xl text-center lg:text-left">
@@ -1102,27 +1089,24 @@ export const Home: React.FC = () => {
         </div>
       </motion.section>
 
-      {/* Fluid In-Between Scroll Animation Bridge: Section 08 */}
-      <ScrollSectionBridge
-        sectionNumber="08"
-        sectionTitle="Four Pillars of Authentic Craft"
-        watermarkText="JAIPUR & VARANASI TRADITIONS"
-        badgeText="HERITAGE ARCHIVE"
-        theme="dark"
-      />
-
       {/* 8. FOUR PILLARS OF ARTISANSHIP (SCROLL REVEAL) */}
       <motion.section 
         id="pillars-section"
-        initial={{ opacity: 0, y: 45 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-60px' }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="py-16 sm:py-24 bg-[#161412] text-[#f7f3ec] px-5 sm:px-8 relative overflow-hidden"
+        initial={{ opacity: 0, y: 70, scale: 0.98 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        viewport={{ once: true, amount: 0.12, margin: "0px 0px -50px 0px" }}
+        transition={{ duration: 0.85, ease: [0.19, 1, 0.22, 1] }}
+        className="py-20 sm:py-28 bg-[#161412] text-[#f7f3ec] px-5 sm:px-8 relative overflow-hidden my-6 rounded-3xl"
       >
         <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16 space-y-3">
-            <span className="text-xs font-semibold uppercase tracking-wider text-amber-400 block">
+          <motion.div 
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.1, ease: [0.19, 1, 0.22, 1] }}
+            className="text-center max-w-2xl mx-auto mb-12 sm:mb-16 space-y-3"
+          >
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400 block">
               Heritage Archive
             </span>
             <h2 className="text-2xl sm:text-4xl md:text-5xl font-sans font-bold text-white leading-tight">
@@ -1131,7 +1115,7 @@ export const Home: React.FC = () => {
             <p className="text-stone-400 text-xs sm:text-sm font-normal leading-relaxed">
               How our generational karigars in Jaipur and Varanasi preserve India's most celebrated textile traditions.
             </p>
-          </div>
+          </motion.div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-12">
             {atelierSteps.map((step, idx) => (
@@ -1188,26 +1172,23 @@ export const Home: React.FC = () => {
         </div>
       </motion.section>
 
-      {/* Fluid In-Between Scroll Animation Bridge: Section 09 */}
-      <ScrollSectionBridge
-        sectionNumber="09"
-        sectionTitle="Words from Our Valued Patrons"
-        watermarkText="VALUED PATRONS WORLDWIDE"
-        badgeText="5.0 ★ VERIFIED"
-        theme="transition-to-light"
-      />
-
       {/* 9. REAL PATRON & CRITIC TESTIMONIALS (SCROLL REVEAL) */}
       <motion.section 
         id="testimonials-section"
-        initial={{ opacity: 0, y: 45 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-60px' }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="py-16 sm:py-24 px-5 sm:px-8 max-w-7xl mx-auto"
+        initial={{ opacity: 0, y: 65, scale: 0.98 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        viewport={{ once: true, amount: 0.15, margin: "0px 0px -50px 0px" }}
+        transition={{ duration: 0.85, ease: [0.19, 1, 0.22, 1] }}
+        className="py-20 sm:py-28 px-5 sm:px-8 max-w-7xl mx-auto"
       >
-        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14 space-y-3">
-          <span className="text-xs font-semibold uppercase tracking-wider text-amber-900 block">
+        <motion.div 
+          initial={{ opacity: 0, y: 25 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, delay: 0.1, ease: [0.19, 1, 0.22, 1] }}
+          className="text-center max-w-2xl mx-auto mb-10 sm:mb-14 space-y-3"
+        >
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-900 block">
             Customer Reviews
           </span>
           <h2 className="text-2xl sm:text-4xl md:text-5xl font-sans font-bold text-stone-900 tracking-tight">
@@ -1216,7 +1197,7 @@ export const Home: React.FC = () => {
           <p className="text-stone-600 text-xs sm:text-sm font-normal">
             Reflections from clients and bridal couples worldwide.
           </p>
-        </div>
+        </motion.div>
 
         <div className="max-w-3xl mx-auto bg-white rounded-3xl p-6 sm:p-12 border border-stone-200/90 shadow-xl text-center space-y-6 relative">
           <div className="flex justify-center gap-1 text-amber-500">
