@@ -196,7 +196,7 @@ const TrackOrder = () => {
         {/* Editorial Title */}
         <div className="text-center space-y-4">
           <span className="text-[10px] font-sans font-bold uppercase tracking-[0.3em] text-amber-800 flex items-center justify-center gap-2">
-            <Sparkles size={12} /> Maison Concierge & Live Dispatch
+            <Sparkles size={12} /> Live Fulfillment & Order Dispatch
           </span>
           <h1 className="text-4xl md:text-6xl font-sans font-medium text-stone-900 tracking-tight">
             Track Your Order

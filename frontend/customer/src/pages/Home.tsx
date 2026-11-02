@@ -37,7 +37,6 @@ import { FloatingActionDock } from '../components/watermelon/FloatingActionDock'
 import { ScrollRibbon } from '../components/watermelon/ScrollRibbon';
 import { ScrollMetricBar } from '../components/watermelon/ScrollMetricBar';
 import { ScrollSectionBridge } from '../components/watermelon/ScrollSectionBridge';
-import { ScrollSectionTracker } from '../components/watermelon/ScrollSectionTracker';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -71,20 +70,20 @@ export const Home: React.FC = () => {
       image: "https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=2000&auto=format&fit=crop",
       ctaPrimary: "Shop Bridal Collection",
       linkPrimary: "/shop?category=Women&sub=Bridal Lehengas",
-      ctaSecondary: "Book Styling Session",
-      linkSecondary: "/stores",
+      ctaSecondary: "Explore Lehengas",
+      linkSecondary: "/shop?category=Women&sub=Bridal Lehengas",
       badge: "Silk Mark India Certified"
     },
     {
       id: 2,
       tag: "Royal Menswear Edit",
-      title: "Bespoke Royal Sherwanis & Tailored Bandhgalas",
+      title: "Royal Sherwanis & Tailored Bandhgalas",
       subtitle: "Ivory and midnight silk brocades with structured canvas, clean royal lines, and hand-engraved metal crest buttons.",
       image: "https://images.unsplash.com/photo-1783188223691-8a233ee51cd8?q=80&w=2000&auto=format&fit=crop",
       ctaPrimary: "Shop Menswear",
       linkPrimary: "/shop?category=Men",
-      ctaSecondary: "Groom Styling Service",
-      linkSecondary: "/stores",
+      ctaSecondary: "View Sherwanis",
+      linkSecondary: "/shop?category=Men&sub=Heritage Sherwanis",
       badge: "Hand-Tailored in Jaipur"
     },
     {
@@ -96,7 +95,7 @@ export const Home: React.FC = () => {
       ctaPrimary: "Shop Pure Silks",
       linkPrimary: "/shop?category=Women&sub=Heritage Sarees",
       ctaSecondary: "View Saree Catalog",
-      linkSecondary: "/shop",
+      linkSecondary: "/shop?category=Women&sub=Heritage Sarees",
       badge: "100% Pure Mulberry Silk"
     }
   ];
@@ -1078,10 +1077,10 @@ export const Home: React.FC = () => {
               <Clock size={13} /> Exclusive Atelier Privilege
             </div>
             <h3 className="text-2xl sm:text-4xl md:text-5xl font-sans font-light leading-tight">
-              Enjoy Flat <span className="font-bold text-amber-300">20% Credit</span> on Your Bespoke Order
+              Enjoy Flat <span className="font-bold text-amber-300">20% Discount</span> on Your Order
             </h3>
             <p className="text-stone-300 text-xs sm:text-sm md:text-base font-light leading-relaxed">
-              Apply code <span className="font-sans font-bold text-amber-300 bg-black/40 px-2 py-0.5 rounded">SAKSHI20</span> at checkout for instant privilege credit across all Couture Silks, Sherwanis, and Lehengas.
+              Apply code <span className="font-sans font-bold text-amber-300 bg-black/40 px-2 py-0.5 rounded">SAKSHI20</span> at checkout for instant 20% savings across all Silks, Sherwanis, Lehengas, and Jewellery.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 shrink-0 w-full sm:w-auto">
@@ -1263,10 +1262,7 @@ export const Home: React.FC = () => {
         </div>
       </motion.section>
 
-      {/* Floating Section Progress Tracker Rail */}
-      <ScrollSectionTracker />
-
-      {/* Watermelon UI Signature Floating Action Concierge & Scroll Progress */}
+      {/* Floating Scroll to Top Action Button */}
       <FloatingActionDock />
     </div>
   );

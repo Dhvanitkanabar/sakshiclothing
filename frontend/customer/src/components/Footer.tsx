@@ -65,10 +65,10 @@ export const Footer: React.FC = () => {
                 <span>THE SAKSHI ATELIER CIRCLE</span>
               </div>
               <h3 className="text-2xl sm:text-4xl font-sans font-light text-white leading-tight">
-                Unlock <span className="italic font-normal text-amber-300">20% Privilege Credit</span>
+                Unlock <span className="italic font-normal text-amber-300">20% Discount</span>
               </h3>
               <p className="text-stone-400 text-xs sm:text-sm font-light leading-relaxed">
-                Join our patron register for private salon previews, seasonal bridal lookbooks, and priority atelier fittings.
+                Subscribe to receive seasonal sale alerts, festive discount codes, and new arrival drops.
               </p>
             </div>
 
@@ -139,7 +139,7 @@ export const Footer: React.FC = () => {
               </p>
               <p className="flex items-center gap-2 text-stone-300">
                 <Mail size={13} className="text-amber-400 shrink-0" /> 
-                <span>concierge@sakshiclothing.com</span>
+                <span>care@sakshiclothing.com</span>
               </p>
             </div>
             <div>
@@ -150,7 +150,7 @@ export const Footer: React.FC = () => {
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-amber-400 hover:text-black border border-white/15 rounded-xl text-[10px] font-sans uppercase tracking-widest text-amber-300 transition-all duration-300"
               >
                 <MessageCircle size={13} />
-                <span>WhatsApp Bridal Concierge</span>
+                <span>WhatsApp Customer Support</span>
               </a>
             </div>
           </div>
@@ -233,35 +233,35 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Column 4: Client Concierge */}
+          {/* Column 4: Customer Help & Services */}
           <div className="space-y-3.5">
             <h4 className="text-[10px] font-sans font-bold uppercase tracking-[0.25em] text-amber-400">
-              Patron Services
+              Customer Care
             </h4>
             <ul className="space-y-2 text-xs text-stone-400 font-light">
               <li>
                 <Link to="/track-order" className="hover:text-white transition-colors">
-                  Track Live Consignment
+                  Track Your Order
                 </Link>
               </li>
               <li>
                 <Link to="/shop" className="hover:text-white transition-colors">
-                  White-Glove Express Courier
+                  Free Express Shipping
                 </Link>
               </li>
               <li>
                 <Link to="/shop" className="hover:text-white transition-colors">
-                  7-Day Doorstep Size Exchange
+                  7-Day Easy Exchange Policy
                 </Link>
               </li>
               <li>
                 <Link to="/shop" className="hover:text-white transition-colors">
-                  Bespoke Sizing Consultation
+                  Size Guide & Measurements
                 </Link>
               </li>
               <li>
-                <Link to="/stores" className="hover:text-white transition-colors">
-                  Private Salon Appointments
+                <Link to="/shop" className="hover:text-white transition-colors">
+                  Help Center & FAQs
                 </Link>
               </li>
             </ul>

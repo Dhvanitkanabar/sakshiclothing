@@ -124,7 +124,7 @@ export const Navbar = () => {
     "Free Express Delivery Across India on All Orders",
     "Handcrafted by Master Artisans in Jaipur & Varanasi",
     "100% Pure Silk Mark Certified Authentic Weaves",
-    "Complimentary Bespoke Sizing & Alteration Service"
+    "Easy 7-Day Exchange & 100% Authentic Quality Guarantee"
   ];
   const [tickerIndex, setTickerIndex] = useState(0);
 
@@ -288,7 +288,7 @@ export const Navbar = () => {
                 className="hover:text-amber-200 transition-colors flex items-center gap-1"
               >
                 <Phone size={11} className="text-emerald-400" />
-                <span>Concierge</span>
+                <span>Help & Support</span>
               </a>
             </div>
           </div>
@@ -726,7 +726,7 @@ export const Navbar = () => {
                     rel="noopener noreferrer"
                     className="flex items-center gap-2.5 px-3 py-2 text-stone-600 hover:text-stone-900 hover:bg-stone-50 rounded-xl transition-colors font-medium"
                   >
-                    <Phone size={14} className="text-emerald-500" /> WhatsApp Concierge
+                    <Phone size={14} className="text-emerald-500" /> WhatsApp Support
                   </a>
                 </div>
               </div>
