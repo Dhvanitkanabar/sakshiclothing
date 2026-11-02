@@ -629,7 +629,7 @@ const OrderDetails = () => {
                   <MapPin size={14} className="text-emerald-600" /> Address Geocode Verification
                 </div>
                 <p className="text-xs text-gray-600">
-                  Location: <span className="font-bold text-gray-900">{order.shippingAddress?.city || 'Mumbai'}, {order.shippingAddress?.pincode}</span>
+                  Location: <span className="font-bold text-gray-900">{order.shippingAddress?.city || 'Surat'}, {order.shippingAddress?.pincode}</span>
                 </p>
                 <p className="text-xs text-gray-500">
                   Postal validation: Valid Postal District Detected
@@ -769,7 +769,7 @@ const OrderDetails = () => {
                     type="text"
                     value={checkpointLocation}
                     onChange={e => setCheckpointLocation(e.target.value)}
-                    placeholder="e.g. Mumbai Atelier Packing Desk, or Ahmedabad Transit Hub"
+                    placeholder="e.g. Surat Atelier Dispatch Hub, or Ahmedabad Transit Center"
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 text-xs font-semibold focus:outline-none focus:border-black"
                   />
                 </div>

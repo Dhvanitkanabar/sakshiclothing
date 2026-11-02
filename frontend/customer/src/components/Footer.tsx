@@ -70,63 +70,67 @@ export const Footer: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-5 sm:px-8 relative z-10">
         {/* 1. VIP CIRCLE CONCIERGE BANNER */}
-        <div className="bg-gradient-to-r from-[#1a1714] via-[#1f1b17] to-[#171411] border border-amber-900/30 rounded-3xl p-6 sm:p-12 mb-16 sm:mb-20 shadow-2xl relative overflow-hidden">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-8 sm:gap-10">
-            <div className="space-y-3 text-center lg:text-left max-w-xl">
+        <div className="bg-gradient-to-r from-[#1a1714] via-[#1f1b17] to-[#171411] border border-amber-900/30 rounded-3xl p-6 sm:p-10 lg:p-12 mb-16 sm:mb-20 shadow-2xl relative overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div className="lg:col-span-6 space-y-3 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/15 border border-amber-400/25 text-amber-300 text-[9.5px] font-sans uppercase tracking-[0.28em]">
                 <Sparkles size={11} className="text-amber-400" />
                 <span>THE SAKSHI ATELIER CIRCLE</span>
               </div>
-              <h3 className="text-2xl sm:text-4xl font-sans font-light text-white leading-tight">
+              <h3 className="text-2xl sm:text-3xl md:text-4xl font-sans font-light text-white leading-tight">
                 Private Previews & <span className="italic font-normal text-amber-300">Exclusive Drops</span>
               </h3>
-              <p className="text-stone-400 text-xs sm:text-sm font-light leading-relaxed">
+              <p className="text-stone-400 text-xs sm:text-sm font-light leading-relaxed max-w-lg mx-auto lg:mx-0">
                 Join our private patron circle to receive early access to new collection drops, limited jewellery suites, and invitations to seasonal exhibitions.
               </p>
             </div>
 
             {/* Newsletter Subscription */}
-            {!subscribed ? (
-              <form onSubmit={handleSubscribe} className="w-full lg:w-auto flex flex-col sm:flex-row gap-2.5 min-w-full sm:min-w-[460px]">
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your Name (Optional)"
-                  className="px-4 py-3.5 bg-black/60 border border-stone-800 rounded-2xl text-xs sm:text-sm text-white placeholder-stone-500 focus:outline-none focus:border-amber-400 transition-colors font-light sm:w-44"
-                />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email address"
-                  required
-                  className="flex-1 px-4 py-3.5 bg-black/60 border border-stone-800 rounded-2xl text-xs sm:text-sm text-white placeholder-stone-500 focus:outline-none focus:border-amber-400 transition-colors font-light"
-                />
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-6 py-3.5 bg-amber-400 hover:bg-white text-stone-950 rounded-2xl text-xs font-sans uppercase tracking-widest font-bold transition-all duration-300 shadow-xl flex items-center justify-center gap-2 shrink-0 disabled:opacity-75"
-                >
-                  <span>{isSubmitting ? 'Joining...' : 'Join Patron Circle'}</span>
-                  <ArrowRight size={14} />
-                </button>
-              </form>
-            ) : (
-              <div className="bg-black/60 border border-amber-400/40 rounded-2xl p-4 sm:p-6 flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-amber-400/20 text-amber-300 flex items-center justify-center shrink-0">
-                  <Check size={20} />
+            <div className="lg:col-span-6 w-full">
+              {!subscribed ? (
+                <form onSubmit={handleSubscribe} className="space-y-3 w-full">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Your Name (Optional)"
+                      className="w-full px-4 py-3 bg-black/60 border border-stone-800 rounded-2xl text-xs sm:text-sm text-white placeholder-stone-500 focus:outline-none focus:border-amber-400 transition-colors font-light"
+                    />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter your email address"
+                      required
+                      className="w-full px-4 py-3 bg-black/60 border border-stone-800 rounded-2xl text-xs sm:text-sm text-white placeholder-stone-500 focus:outline-none focus:border-amber-400 transition-colors font-light"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full py-3.5 px-6 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-white hover:to-white text-stone-950 rounded-2xl text-xs font-sans uppercase tracking-widest font-bold transition-all duration-300 shadow-xl flex items-center justify-center gap-2 disabled:opacity-75"
+                  >
+                    <span>{isSubmitting ? 'Joining Circle...' : 'Join Patron Circle'}</span>
+                    <ArrowRight size={14} />
+                  </button>
+                </form>
+              ) : (
+                <div className="bg-black/60 border border-amber-400/40 rounded-2xl p-4 sm:p-6 flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-amber-400/20 text-amber-300 flex items-center justify-center shrink-0">
+                    <Check size={20} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-sans uppercase tracking-widest text-amber-300 font-bold">
+                      Invitation Confirmed
+                    </p>
+                    <p className="text-xs sm:text-sm text-stone-300 font-light mt-0.5">
+                      Welcome to the Atelier Circle. You will receive private previews of our newest collections.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs font-sans uppercase tracking-widest text-amber-300 font-bold">
-                    Invitation Confirmed
-                  </p>
-                  <p className="text-xs sm:text-sm text-stone-300 font-light mt-0.5">
-                    Welcome to the Atelier Circle. You will receive private previews of our newest collections.
-                  </p>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
 
@@ -285,27 +289,24 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Column 5: Flagship Boutiques */}
+          {/* Column 5: Atelier Flagship */}
           <div className="space-y-3.5">
             <h4 className="text-[10px] font-sans font-bold uppercase tracking-[0.25em] text-amber-400">
-              Atelier Salons
+              Atelier Flagship
             </h4>
-            <div className="space-y-3 text-xs font-light">
-              <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 space-y-1">
-                <p className="font-sans font-bold text-white">Surat Flagship & Atelier</p>
-                <p className="text-[11px] text-stone-400 font-sans">G-903 Sentosa Heights, Utran, Surat</p>
-                <p className="text-[10px] text-amber-300/80 font-sans flex items-center gap-1 mt-1">
-                  <Clock size={11} /> 10:30 AM – 8:30 PM (Daily)
-                </p>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 space-y-1">
-                <p className="font-sans font-bold text-white">Mumbai Salon</p>
-                <p className="text-[11px] text-stone-400 font-sans">Kala Ghoda, Fort</p>
-                <p className="text-[10px] text-amber-300/80 font-sans flex items-center gap-1 mt-1">
-                  <Clock size={11} /> By Prior Appointment
-                </p>
-              </div>
+            <div className="p-4 rounded-2xl bg-white/[0.04] border border-amber-900/30 space-y-2">
+              <p className="font-sans font-bold text-white text-xs">Surat Flagship & Atelier</p>
+              <p className="text-[11px] text-stone-300 font-sans leading-relaxed">
+                G-903 Sentosa Heights, Utran, Surat, Gujarat - 394105
+              </p>
+              <p className="text-[10px] text-amber-300 font-sans flex items-center gap-1.5 pt-0.5">
+                <Clock size={11} className="text-amber-400 shrink-0" />
+                <span>10:30 AM – 8:30 PM (Daily)</span>
+              </p>
+              <p className="text-[10px] text-stone-300 font-sans flex items-center gap-1.5">
+                <Phone size={11} className="text-amber-400 shrink-0" />
+                <span>+91 9316533660</span>
+              </p>
             </div>
           </div>
         </div>
