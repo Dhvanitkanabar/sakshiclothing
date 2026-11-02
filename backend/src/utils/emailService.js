@@ -1,21 +1,86 @@
 import nodemailer from 'nodemailer';
+import StoreSettings from '../models/StoreSettings.model.js';
 
-const createTransporter = () => {
+export const getTransporter = async (customConfig = null) => {
+  // 1. If explicit config passed (e.g. testing credentials)
+  if (customConfig && customConfig.user && customConfig.password) {
+    const isGmail = customConfig.provider === 'gmail' || (customConfig.host && customConfig.host.includes('gmail'));
+    if (isGmail) {
+      return nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: customConfig.user.trim(),
+          pass: customConfig.password.replace(/\s+/g, '')
+        }
+      });
+    }
+    return nodemailer.createTransport({
+      host: customConfig.host || 'smtp.gmail.com',
+      port: Number(customConfig.port) || 465,
+      secure: Number(customConfig.port) === 465,
+      auth: {
+        user: customConfig.user.trim(),
+        pass: customConfig.password.replace(/\s+/g, '')
+      }
+    });
+  }
+
+  // 2. Try StoreSettings from MongoDB
+  try {
+    const settings = await StoreSettings.findOne().lean();
+    if (settings?.smtp?.user && settings?.smtp?.password) {
+      const isGmail = settings.smtp.provider === 'gmail' || (settings.smtp.host && settings.smtp.host.includes('gmail'));
+      if (isGmail) {
+        return nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: settings.smtp.user.trim(),
+            pass: settings.smtp.password.replace(/\s+/g, '')
+          }
+        });
+      }
+      return nodemailer.createTransport({
+        host: settings.smtp.host || 'smtp.gmail.com',
+        port: Number(settings.smtp.port) || 465,
+        secure: Number(settings.smtp.port) === 465,
+        auth: {
+          user: settings.smtp.user.trim(),
+          pass: settings.smtp.password.replace(/\s+/g, '')
+        }
+      });
+    }
+  } catch (err) {
+    console.warn('[Email Warning] Could not load SMTP from StoreSettings:', err.message);
+  }
+
+  // 3. Fallback to process.env
   const host = process.env.SMTP_HOST || process.env.EMAIL_HOST;
-  const port = process.env.SMTP_PORT || process.env.EMAIL_PORT || 587;
+  const port = process.env.SMTP_PORT || process.env.EMAIL_PORT || 465;
   const user = process.env.SMTP_USER || process.env.EMAIL_USER;
   const pass = process.env.SMTP_PASSWORD || process.env.EMAIL_PASSWORD;
 
-  if (!host || !user || !pass) {
-    return null;
+  if (user && pass) {
+    if (!host || host.includes('gmail')) {
+      return nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: user.trim(),
+          pass: pass.replace(/\s+/g, '')
+        }
+      });
+    }
+    return nodemailer.createTransport({
+      host,
+      port: Number(port),
+      secure: Number(port) === 465,
+      auth: {
+        user: user.trim(),
+        pass: pass.replace(/\s+/g, '')
+      }
+    });
   }
 
-  return nodemailer.createTransport({
-    host,
-    port: Number(port),
-    secure: Number(port) === 465,
-    auth: { user, pass }
-  });
+  return null;
 };
 
 const DEFAULT_SENDER = process.env.EMAIL_FROM || 'sakshiclothing2025@gmail.com';
@@ -23,21 +88,69 @@ const COMPANY_ADDRESS = 'G-903 Sentosa Heights, Utran, Surat, Gujarat, India';
 const COMPANY_PHONE = '+91 9316533660';
 const COMPANY_EMAIL = 'sakshiclothing2025@gmail.com';
 
+export const getSenderEmail = async () => {
+  try {
+    const settings = await StoreSettings.findOne().lean();
+    if (settings?.smtp?.fromEmail) return settings.smtp.fromEmail;
+    if (settings?.smtp?.user) return settings.smtp.user;
+  } catch {}
+  return process.env.EMAIL_FROM || DEFAULT_SENDER;
+};
+
+export const sendTestEmail = async ({ toEmail, config = null }) => {
+  const transporter = await getTransporter(config);
+  if (!transporter) {
+    throw new Error('SMTP credentials are missing. Please enter your Gmail address and 16-character App Password.');
+  }
+
+  // Verify connection
+  await transporter.verify();
+
+  const senderEmail = config?.fromEmail || config?.user || await getSenderEmail();
+  const mailOptions = {
+    from: `"Sakshi Clothing Atelier" <${senderEmail}>`,
+    to: toEmail,
+    subject: `Sakshi Clothing Atelier — Live Email Test`,
+    text: `Hello,\n\nThis is a real live test email from the Sakshi Clothing Atelier admin system.\n\nYour SMTP gateway is successfully connected and verified.\n\nAtelier Address: ${COMPANY_ADDRESS}\nContact: ${COMPANY_PHONE} | ${COMPANY_EMAIL}`,
+    html: `
+      <div style="background-color:#12100e;padding:40px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#f5f2eb;">
+        <div style="max-width:560px;margin:0 auto;background:#1a1714;border:1px solid #3d342a;border-radius:20px;padding:36px;text-align:center;">
+          <div style="font-size:26px;letter-spacing:0.3em;color:#ffffff;font-weight:300;">SAKSHI</div>
+          <div style="font-size:9px;letter-spacing:0.35em;color:#e5a93c;text-transform:uppercase;margin:6px 0 24px 0;">ATELIER LIVE EMAIL VERIFICATION</div>
+          <div style="background:#142318;border:1px solid #234c2e;color:#52c41a;padding:12px;border-radius:12px;font-size:13px;font-weight:600;margin-bottom:20px;">
+            ✓ Real Email Dispatch Successful!
+          </div>
+          <p style="color:#b8b0a5;font-size:13px;line-height:1.7;margin-bottom:16px;">
+            Your SMTP email delivery system is 100% active and connected to <strong>${senderEmail}</strong>. All subscriber updates and customer order notifications will now be delivered directly to inboxes.
+          </p>
+          <div style="border-top:1px solid #29241e;padding-top:16px;font-size:11px;color:#78716c;">
+            ${COMPANY_ADDRESS} &bull; ${COMPANY_PHONE} &bull; ${COMPANY_EMAIL}
+          </div>
+        </div>
+      </div>
+    `
+  };
+
+  const info = await transporter.sendMail(mailOptions);
+  return info;
+};
+
 export const sendOrderConfirmationEmail = async (order, customerUser) => {
   try {
-    const transporter = createTransporter();
+    const transporter = await getTransporter();
     const recipientEmail = customerUser?.email || order.shippingAddress?.email;
     if (!transporter || !recipientEmail) {
       console.log(`[Email Notice] SMTP not configured. Skipping confirmation email for ${order.orderNumber}`);
       return false;
     }
 
+    const senderEmail = await getSenderEmail();
     const itemsList = order.products
       .map(item => `• ${item.name} (${item.size ? 'Size: ' + item.size : ''}) x ${item.quantity} - ₹${item.subtotal}`)
       .join('\n');
 
     const mailOptions = {
-      from: `"Sakshi Clothing" <${DEFAULT_SENDER}>`,
+      from: `"Sakshi Clothing" <${senderEmail}>`,
       to: recipientEmail,
       subject: `Order ${order.orderNumber} Confirmed — Sakshi Clothing`,
       text: `Hello ${customerUser?.fullName || order.shippingAddress?.fullName || 'Customer'},\n\nGreat news! Your order ${order.orderNumber} has been ACCEPTED & CONFIRMED by Sakshi Clothing.\n\nOrder Details:\n${itemsList}\n\nTotal Amount: ₹${order.totals?.grandTotal || 0}\nShipping Address: ${order.shippingAddress?.houseNumber || ''} ${order.shippingAddress?.street || ''}, ${order.shippingAddress?.city || ''}\n\nNote: All bespoke handcrafted couture orders follow our strict No Return Policy.\n\nTrack your order anytime at: ${process.env.CLIENT_URL || 'https://sakshiclothing.store'}/track-order\n\nAtelier Address: ${COMPANY_ADDRESS}\nContact: ${COMPANY_PHONE} | ${COMPANY_EMAIL}\n\nThank you for shopping with us!\nSakshi Clothing Atelier`
@@ -54,15 +167,16 @@ export const sendOrderConfirmationEmail = async (order, customerUser) => {
 
 export const sendOrderRejectionEmail = async (order, customerUser, reason) => {
   try {
-    const transporter = createTransporter();
+    const transporter = await getTransporter();
     const recipientEmail = customerUser?.email || order.shippingAddress?.email;
     if (!transporter || !recipientEmail) {
       console.log(`[Email Notice] SMTP not configured. Skipping rejection email for ${order.orderNumber}`);
       return false;
     }
 
+    const senderEmail = await getSenderEmail();
     const mailOptions = {
-      from: `"Sakshi Clothing" <${DEFAULT_SENDER}>`,
+      from: `"Sakshi Clothing" <${senderEmail}>`,
       to: recipientEmail,
       subject: `Order ${order.orderNumber} Cancelled — Sakshi Clothing`,
       text: `Hello ${customerUser?.fullName || order.shippingAddress?.fullName || 'Customer'},\n\nWe regret to inform you that your order ${order.orderNumber} has been CANCELLED.\n\nReason for Cancellation:\n${reason}\n\nIf any payment was debited, a full refund will be processed back to your original payment method.\n\nSupport Contact: ${COMPANY_PHONE} | ${COMPANY_EMAIL}\nSakshi Clothing Atelier, ${COMPANY_ADDRESS}\n\nSakshi Clothing Team`
@@ -79,12 +193,13 @@ export const sendOrderRejectionEmail = async (order, customerUser, reason) => {
 
 export const sendSubscriberWelcomeEmail = async (subscriber) => {
   try {
-    const transporter = createTransporter();
+    const transporter = await getTransporter();
     if (!transporter) {
-      console.log(`[Email Notice] SMTP not configured. Welcome email logged for subscriber: ${subscriber.email}`);
-      return true;
+      console.log(`[Email Notice] SMTP not configured. Skipping welcome email for subscriber: ${subscriber.email}`);
+      return false;
     }
 
+    const senderEmail = await getSenderEmail();
     const clientUrl = process.env.CLIENT_URL || 'https://sakshiclothing.store';
     const recipientName = subscriber.name && subscriber.name !== 'Patron' ? subscriber.name : 'Valued Patron';
 
@@ -103,16 +218,16 @@ export const sendSubscriberWelcomeEmail = async (subscriber) => {
               Welcome to the Sakshi Atelier Circle, ${recipientName}
             </h2>
             <p style="color:#b8b0a5;font-size:14px;margin-bottom:24px;">
-              You now have private circle privileges. As a distinguished member, you will receive first notifications regarding new handcrafted bridal trousseau drops, limited heirloom jewellery suites, and seasonal atelier updates.
+              You now have private circle privileges. As a distinguished member, you will receive first notifications regarding new collection drops, limited jewellery suites, and seasonal atelier updates.
             </p>
             <div style="background:#141210;border-left:3px solid #e5a93c;padding:16px 20px;border-radius:0 12px 12px 0;margin-bottom:28px;">
               <p style="margin:0;font-size:12px;color:#d4ccbe;">
-                <strong>Maison Craftsmanship & Policy:</strong> Each creation is handwoven by master artisans with Silk Mark certification. All orders are bespoke and subject to our strict No Return Policy.
+                <strong>Maison Craftsmanship & Policy:</strong> Each creation is handcrafted by master artisans with pure fabrics. All orders are bespoke and subject to our strict No Return Policy.
               </p>
             </div>
             <div style="text-align:center;margin:32px 0 16px 0;">
               <a href="${clientUrl}/shop" style="display:inline-block;background:#e5a93c;color:#12100e;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.2em;padding:14px 32px;border-radius:14px;text-decoration:none;">
-                Explore Private Archive
+                Explore Collections
               </a>
             </div>
           </div>
@@ -127,7 +242,7 @@ export const sendSubscriberWelcomeEmail = async (subscriber) => {
     `;
 
     const mailOptions = {
-      from: `"Sakshi Clothing Atelier" <${DEFAULT_SENDER}>`,
+      from: `"Sakshi Clothing Atelier" <${senderEmail}>`,
       to: subscriber.email,
       subject: `Welcome to The Sakshi Atelier Circle — Private Previews & Drops`,
       text: `Hello ${recipientName},\n\nWelcome to the Sakshi Atelier Circle! You are now subscribed to receive private previews of our newest collections and exclusive atelier announcements.\n\nAtelier Address: ${COMPANY_ADDRESS}\nContact: ${COMPANY_PHONE} | ${COMPANY_EMAIL}\nStrict No Return Policy on all bespoke handcrafted garments.\n\nExplore our collections: ${clientUrl}/shop\n\nWarm regards,\nSakshi Clothing Atelier`,
@@ -135,7 +250,7 @@ export const sendSubscriberWelcomeEmail = async (subscriber) => {
     };
 
     await transporter.sendMail(mailOptions);
-    console.log(`[Email Success] Welcome email sent to subscriber: ${subscriber.email}`);
+    console.log(`[Email Success] Real welcome email sent to subscriber: ${subscriber.email}`);
     return true;
   } catch (error) {
     console.error(`[Email Error] Failed to send subscriber welcome email:`, error.message);
@@ -144,71 +259,67 @@ export const sendSubscriberWelcomeEmail = async (subscriber) => {
 };
 
 export const sendSubscriberBroadcastEmail = async ({ to, name, heading, description, ctaLink, ctaText }) => {
-  try {
-    const transporter = createTransporter();
-    const recipientName = name && name !== 'Patron' ? name : 'Valued Patron';
-    const clientUrl = process.env.CLIENT_URL || 'https://sakshiclothing.store';
-    const finalCtaLink = ctaLink ? (ctaLink.startsWith('http') ? ctaLink : `${clientUrl}${ctaLink.startsWith('/') ? '' : '/'}${ctaLink}`) : `${clientUrl}/shop`;
-    const finalCtaText = ctaText || 'View Collection Drop';
+  const transporter = await getTransporter();
+  if (!transporter) {
+    throw new Error('SMTP Email Service is not configured. Please enter your Gmail address and App Password in SMTP Settings.');
+  }
 
-    if (!transporter) {
-      console.log(`[Broadcast Simulated] Email to ${to} (${recipientName}): [${heading}] -> ${description}`);
-      return true;
-    }
+  const recipientName = name && name !== 'Patron' ? name : 'Valued Patron';
+  const clientUrl = process.env.CLIENT_URL || 'https://sakshiclothing.store';
+  const finalCtaLink = ctaLink ? (ctaLink.startsWith('http') ? ctaLink : `${clientUrl}${ctaLink.startsWith('/') ? '' : '/'}${ctaLink}`) : `${clientUrl}/shop`;
+  const finalCtaText = ctaText || 'View Collection Drop';
+  const senderEmail = await getSenderEmail();
 
-    const htmlContent = `
-      <div style="background-color:#12100e;padding:40px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#f5f2eb;line-height:1.6;">
-        <div style="max-width:600px;margin:0 auto;background:#1a1714;border:1px solid #3d342a;border-radius:24px;overflow:hidden;box-shadow:0 20px 40px rgba(0,0,0,0.5);">
-          <div style="background:linear-gradient(135deg,#2b2319,#1a1714);padding:36px 30px;text-align:center;border-bottom:1px solid #3d342a;">
-            <div style="font-size:26px;letter-spacing:0.3em;color:#ffffff;font-weight:300;">SAKSHI</div>
-            <div style="font-size:9px;letter-spacing:0.4em;color:#e5a93c;text-transform:uppercase;margin-top:6px;">ATELIER PRIVATE CIRCLE ANNOUNCEMENT</div>
+  const htmlContent = `
+    <div style="background-color:#12100e;padding:40px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#f5f2eb;line-height:1.6;">
+      <div style="max-width:600px;margin:0 auto;background:#1a1714;border:1px solid #3d342a;border-radius:24px;overflow:hidden;box-shadow:0 20px 40px rgba(0,0,0,0.5);">
+        <div style="background:linear-gradient(135deg,#2b2319,#1a1714);padding:36px 30px;text-align:center;border-bottom:1px solid #3d342a;">
+          <div style="font-size:26px;letter-spacing:0.3em;color:#ffffff;font-weight:300;">SAKSHI</div>
+          <div style="font-size:9px;letter-spacing:0.4em;color:#e5a93c;text-transform:uppercase;margin-top:6px;">ATELIER PRIVATE CIRCLE ANNOUNCEMENT</div>
+        </div>
+        <div style="padding:40px 30px;">
+          <div style="display:inline-block;padding:5px 14px;background:rgba(229,169,60,0.15);border:1px solid rgba(229,169,60,0.3);color:#f7c86a;font-size:10px;text-transform:uppercase;letter-spacing:0.2em;border-radius:100px;margin-bottom:20px;">
+            PATRON CIRCLE UPDATE
           </div>
-          <div style="padding:40px 30px;">
-            <div style="display:inline-block;padding:5px 14px;background:rgba(229,169,60,0.15);border:1px solid rgba(229,169,60,0.3);color:#f7c86a;font-size:10px;text-transform:uppercase;letter-spacing:0.2em;border-radius:100px;margin-bottom:20px;">
-              PATRON CIRCLE UPDATE
-            </div>
-            <h2 style="font-size:24px;color:#ffffff;font-weight:400;margin:0 0 16px 0;line-height:1.3;">
-              ${heading}
-            </h2>
-            <p style="color:#b8b0a5;font-size:14px;margin-bottom:16px;">
-              Dear ${recipientName},
+          <h2 style="font-size:24px;color:#ffffff;font-weight:400;margin:0 0 16px 0;line-height:1.3;">
+            ${heading}
+          </h2>
+          <p style="color:#b8b0a5;font-size:14px;margin-bottom:16px;">
+            Dear ${recipientName},
+          </p>
+          <div style="color:#e2ded7;font-size:14px;line-height:1.8;white-space:pre-line;margin-bottom:30px;">
+            ${description}
+          </div>
+          <div style="text-align:center;margin:32px 0 20px 0;">
+            <a href="${finalCtaLink}" style="display:inline-block;background:#e5a93c;color:#12100e;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.2em;padding:15px 36px;border-radius:14px;text-decoration:none;box-shadow:0 8px 24px rgba(229,169,60,0.35);">
+              ${finalCtaText} &rarr;
+            </a>
+          </div>
+          <div style="background:#141210;border:1px solid #29241e;padding:14px 18px;border-radius:12px;margin-top:28px;">
+            <p style="margin:0;font-size:11px;color:#a8a29e;text-align:center;">
+              ✦ Handcrafted in Surat &bull; Quality Certified Apparel &bull; Strict No Return Policy on Bespoke Orders
             </p>
-            <div style="color:#e2ded7;font-size:14px;line-height:1.8;white-space:pre-line;margin-bottom:30px;">
-              ${description}
-            </div>
-            <div style="text-align:center;margin:32px 0 20px 0;">
-              <a href="${finalCtaLink}" style="display:inline-block;background:#e5a93c;color:#12100e;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.2em;padding:15px 36px;border-radius:14px;text-decoration:none;box-shadow:0 8px 24px rgba(229,169,60,0.35);">
-                ${finalCtaText} &rarr;
-              </a>
-            </div>
-            <div style="background:#141210;border:1px solid #29241e;padding:14px 18px;border-radius:12px;margin-top:28px;">
-              <p style="margin:0;font-size:11px;color:#a8a29e;text-align:center;">
-                ✦ Handcrafted in Surat &bull; 100% Certified Mulberry Silks &bull; Strict No Return Policy on Bespoke Orders
-              </p>
-            </div>
-          </div>
-          <div style="background:#12100e;padding:24px 30px;border-top:1px solid #29241e;font-size:11px;color:#78716c;text-align:center;line-height:1.7;">
-            <strong>Sakshi Clothing Atelier</strong><br>
-            ${COMPANY_ADDRESS}<br>
-            Helpline: ${COMPANY_PHONE} &bull; Email: ${COMPANY_EMAIL}<br>
-            &copy; 2026 Sakshi Clothing Private Limited. All Rights Reserved.
           </div>
         </div>
+        <div style="background:#12100e;padding:24px 30px;border-top:1px solid #29241e;font-size:11px;color:#78716c;text-align:center;line-height:1.7;">
+          <strong>Sakshi Clothing Atelier</strong><br>
+          ${COMPANY_ADDRESS}<br>
+          Helpline: ${COMPANY_PHONE} &bull; Email: ${COMPANY_EMAIL}<br>
+          &copy; 2026 Sakshi Clothing Private Limited. All Rights Reserved.
+        </div>
       </div>
-    `;
+    </div>
+  `;
 
-    const mailOptions = {
-      from: `"Sakshi Clothing Atelier" <${DEFAULT_SENDER}>`,
-      to,
-      subject: `${heading} — Sakshi Clothing Atelier`,
-      text: `Hello ${recipientName},\n\n${heading}\n\n${description}\n\nView details: ${finalCtaLink}\n\nAtelier Address: ${COMPANY_ADDRESS}\nHelpline: ${COMPANY_PHONE} | Email: ${COMPANY_EMAIL}\nStrict No Return Policy on bespoke couture.\n\nWarm regards,\nSakshi Clothing Atelier`,
-      html: htmlContent
-    };
+  const mailOptions = {
+    from: `"Sakshi Clothing Atelier" <${senderEmail}>`,
+    to,
+    subject: `${heading} — Sakshi Clothing Atelier`,
+    text: `Hello ${recipientName},\n\n${heading}\n\n${description}\n\nView details: ${finalCtaLink}\n\nAtelier Address: ${COMPANY_ADDRESS}\nHelpline: ${COMPANY_PHONE} | Email: ${COMPANY_EMAIL}\nStrict No Return Policy on bespoke couture.\n\nWarm regards,\nSakshi Clothing Atelier`,
+    html: htmlContent
+  };
 
-    await transporter.sendMail(mailOptions);
-    return true;
-  } catch (error) {
-    console.error(`[Email Error] Failed to send broadcast email to ${to}:`, error.message);
-    return false;
-  }
+  const result = await transporter.sendMail(mailOptions);
+  console.log(`[Email Success] Real broadcast email dispatched to ${to} (MessageId: ${result.messageId})`);
+  return true;
 };

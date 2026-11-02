@@ -12,7 +12,15 @@ import {
   ExternalLink,
   Eye,
   Calendar,
-  Check
+  Check,
+  Settings,
+  Key,
+  ShieldCheck,
+  HelpCircle,
+  X,
+  Lock,
+  ChevronRight,
+  Server
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminFetch } from '../../lib/api';
@@ -28,10 +36,41 @@ interface Subscriber {
   createdAt: string;
 }
 
+interface SmtpConfig {
+  isConfigured: boolean;
+  provider: string;
+  host: string;
+  port: number;
+  user: string;
+  fromEmail: string;
+  fromName: string;
+  hasPassword: boolean;
+  maskedPassword?: string;
+}
+
 export default function SubscribersBroadcast() {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // SMTP Gateway State
+  const [smtpConfig, setSmtpConfig] = useState<SmtpConfig | null>(null);
+  const [loadingSmtp, setLoadingSmtp] = useState(true);
+  const [showSmtpModal, setShowSmtpModal] = useState(false);
+
+  // SMTP Settings Form
+  const [smtpProvider, setSmtpProvider] = useState<'gmail' | 'custom'>('gmail');
+  const [smtpUser, setSmtpUser] = useState('sakshiclothing2025@gmail.com');
+  const [smtpPassword, setSmtpPassword] = useState('');
+  const [smtpFromName, setSmtpFromName] = useState('Sakshi Clothing Atelier');
+  const [smtpFromEmail, setSmtpFromEmail] = useState('sakshiclothing2025@gmail.com');
+  const [smtpHost, setSmtpHost] = useState('smtp.gmail.com');
+  const [smtpPort, setSmtpPort] = useState(465);
+  const [savingSmtp, setSavingSmtp] = useState(false);
+
+  // Direct Test Email State
+  const [testRecipient, setTestRecipient] = useState('sakshiclothing2025@gmail.com');
+  const [testingEmail, setTestingEmail] = useState(false);
 
   // Broadcast Composer State
   const [heading, setHeading] = useState('');
@@ -59,8 +98,33 @@ export default function SubscribersBroadcast() {
     }
   };
 
+  const fetchSmtpConfig = async () => {
+    setLoadingSmtp(true);
+    try {
+      const res = await adminFetch(`${API_URL}/subscribers/smtp`);
+      const data = await res.json();
+      if (res.ok && data.data) {
+        setSmtpConfig(data.data);
+        if (data.data.user) {
+          setSmtpUser(data.data.user);
+          setTestRecipient(data.data.user);
+        }
+        if (data.data.fromEmail) setSmtpFromEmail(data.data.fromEmail);
+        if (data.data.fromName) setSmtpFromName(data.data.fromName);
+        if (data.data.provider) setSmtpProvider(data.data.provider as any);
+        if (data.data.host) setSmtpHost(data.data.host);
+        if (data.data.port) setSmtpPort(data.data.port);
+      }
+    } catch (err) {
+      console.warn('Could not fetch SMTP configuration', err);
+    } finally {
+      setLoadingSmtp(false);
+    }
+  };
+
   useEffect(() => {
     fetchSubscribers();
+    fetchSmtpConfig();
   }, []);
 
   const handleDeleteSubscriber = async (id: string, email: string) => {
@@ -82,6 +146,84 @@ export default function SubscribersBroadcast() {
     }
   };
 
+  const handleSaveSmtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!smtpUser.trim() || !smtpUser.includes('@')) {
+      toast.error('Please enter a valid Gmail / sender email');
+      return;
+    }
+    if (!smtpPassword.trim() && !smtpConfig?.hasPassword) {
+      toast.error('Please enter your 16-character Google App Password');
+      return;
+    }
+
+    setSavingSmtp(true);
+    try {
+      const res = await adminFetch(`${API_URL}/subscribers/smtp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider: smtpProvider,
+          host: smtpHost,
+          port: Number(smtpPort),
+          user: smtpUser.trim(),
+          password: smtpPassword.trim(),
+          fromEmail: smtpFromEmail.trim() || smtpUser.trim(),
+          fromName: smtpFromName.trim() || 'Sakshi Clothing Atelier'
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(data.message || 'SMTP Gateway verified & connected successfully!');
+        setShowSmtpModal(false);
+        setSmtpPassword('');
+        fetchSmtpConfig();
+      } else {
+        toast.error(data.message || 'Failed to verify SMTP credentials');
+      }
+    } catch (err: any) {
+      toast.error('Failed to save SMTP configuration');
+    } finally {
+      setSavingSmtp(false);
+    }
+  };
+
+  const handleSendTestEmail = async (overrideEmail?: string) => {
+    const target = overrideEmail || testRecipient || smtpUser;
+    if (!target || !target.includes('@')) {
+      toast.error('Please enter a valid email address to receive the test email');
+      return;
+    }
+
+    setTestingEmail(true);
+    try {
+      const res = await adminFetch(`${API_URL}/subscribers/test-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          toEmail: target.trim(),
+          user: smtpUser.trim(),
+          password: smtpPassword.trim(),
+          provider: smtpProvider,
+          host: smtpHost,
+          port: Number(smtpPort),
+          fromEmail: smtpFromEmail.trim() || smtpUser.trim(),
+          fromName: smtpFromName.trim() || 'Sakshi Clothing Atelier'
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(data.message || `Test email dispatched to ${target}!`);
+      } else {
+        toast.error(data.message || 'Failed to dispatch test email');
+      }
+    } catch (err: any) {
+      toast.error('Error dispatching test email');
+    } finally {
+      setTestingEmail(false);
+    }
+  };
+
   const handleBroadcast = async () => {
     if (!heading.trim()) {
       toast.error('Please enter an update heading');
@@ -89,6 +231,13 @@ export default function SubscribersBroadcast() {
     }
     if (!description.trim()) {
       toast.error('Please enter an update description');
+      return;
+    }
+
+    if (!smtpConfig?.isConfigured) {
+      toast.error('Email Gateway is not configured. Please enter your Gmail App Password first.');
+      setShowConfirmModal(false);
+      setShowSmtpModal(true);
       return;
     }
 
@@ -115,6 +264,9 @@ export default function SubscribersBroadcast() {
         setDescription('');
       } else {
         toast.error(data.message || 'Failed to broadcast update');
+        if (data.message?.toLowerCase().includes('smtp') || data.message?.toLowerCase().includes('gateway')) {
+          setShowSmtpModal(true);
+        }
       }
     } catch (err) {
       toast.error('Failed to send broadcast email');
@@ -147,6 +299,14 @@ export default function SubscribersBroadcast() {
 
         <div className="flex items-center gap-3">
           <button
+            onClick={() => setShowSmtpModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white hover:bg-slate-800 rounded-xl text-xs font-semibold transition-all shadow-sm"
+          >
+            <Settings size={14} />
+            <span>Email Gateway Setup</span>
+          </button>
+
+          <button
             onClick={fetchSubscribers}
             disabled={loading}
             className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-semibold transition-all shadow-sm"
@@ -154,6 +314,68 @@ export default function SubscribersBroadcast() {
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
             <span>Refresh Roster</span>
           </button>
+        </div>
+      </div>
+
+      {/* SMTP GATEWAY STATUS BANNER */}
+      <div className={`p-4 sm:p-5 rounded-2xl border transition-all ${
+        smtpConfig?.isConfigured 
+          ? 'bg-emerald-500/5 border-emerald-500/30' 
+          : 'bg-amber-500/10 border-amber-500/40'
+      }`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start sm:items-center gap-3.5">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+              smtpConfig?.isConfigured ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'
+            }`}>
+              {smtpConfig?.isConfigured ? <ShieldCheck size={20} /> : <AlertCircle size={20} />}
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-bold text-slate-900">
+                  {smtpConfig?.isConfigured ? 'Live SMTP Email Gateway Connected' : 'Live Email Gateway Not Configured'}
+                </span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase ${
+                  smtpConfig?.isConfigured 
+                    ? 'bg-emerald-100 text-emerald-800' 
+                    : 'bg-amber-100 text-amber-800'
+                }`}>
+                  {smtpConfig?.isConfigured ? 'Active & Delivering' : 'Action Required'}
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 mt-0.5">
+                {smtpConfig?.isConfigured 
+                  ? `Authenticated through ${smtpConfig.user} (${smtpConfig.provider.toUpperCase()} SSL). Broadcasts will deliver directly to real patron inboxes.`
+                  : 'To send real emails to your subscribers, connect your Gmail 16-character App Password (takes 1 minute).'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {smtpConfig?.isConfigured && (
+              <button
+                type="button"
+                onClick={() => handleSendTestEmail()}
+                disabled={testingEmail}
+                className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5 disabled:opacity-50"
+              >
+                <Send size={13} className={testingEmail ? 'animate-spin' : ''} />
+                <span>{testingEmail ? 'Sending Test...' : 'Send Live Test Mail'}</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setShowSmtpModal(true)}
+              className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center gap-1.5 ${
+                smtpConfig?.isConfigured 
+                  ? 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50' 
+                  : 'bg-amber-600 hover:bg-amber-700 text-white'
+              }`}
+            >
+              <Key size={13} />
+              <span>{smtpConfig?.isConfigured ? 'Edit Credentials' : 'Connect Gmail Password Now'}</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -191,12 +413,12 @@ export default function SubscribersBroadcast() {
           <div className="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
             <Mail size={24} />
           </div>
-          <div>
+          <div className="min-w-0 flex-1">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 block">
               Broadcast Dispatch Channel
             </span>
             <span className="text-sm font-bold font-sans text-purple-700 truncate block">
-              sakshiclothing2025@gmail.com
+              {smtpConfig?.user || 'sakshiclothing2025@gmail.com'}
             </span>
           </div>
         </div>
@@ -230,7 +452,15 @@ export default function SubscribersBroadcast() {
           </button>
         </div>
 
-        <form onSubmit={(e) => { e.preventDefault(); setShowConfirmModal(true); }} className="space-y-5">
+        <form onSubmit={(e) => { 
+          e.preventDefault(); 
+          if (!smtpConfig?.isConfigured) {
+            toast.error('Email Gateway is not configured. Please connect your Gmail 16-character App Password first.');
+            setShowSmtpModal(true);
+            return;
+          }
+          setShowConfirmModal(true); 
+        }} className="space-y-5">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
               Update Heading / Subject <span className="text-red-500">*</span>
@@ -291,7 +521,7 @@ export default function SubscribersBroadcast() {
             <div className="text-xs text-slate-500 flex items-center gap-2">
               <AlertCircle size={14} className="text-amber-500 shrink-0" />
               <span>
-                Will be delivered to <strong>{subscribers.filter(s => s.isActive).length} patrons</strong> from <strong>sakshiclothing2025@gmail.com</strong>.
+                Will be delivered to <strong>{subscribers.filter(s => s.isActive).length} patrons</strong> from <strong>{smtpConfig?.user || 'sakshiclothing2025@gmail.com'}</strong>.
               </span>
             </div>
 
@@ -411,6 +641,204 @@ export default function SubscribersBroadcast() {
           </table>
         </div>
       </div>
+
+      {/* SMTP CONFIGURATION MODAL */}
+      {showSmtpModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-xl w-full shadow-2xl border border-slate-200 max-h-[92vh] overflow-y-auto space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
+                  <Key size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">
+                    Live Email Gateway Setup
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Configure real email delivery for subscribers, orders & announcements.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSmtpModal(false)}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Instruction Guide */}
+            <div className="bg-amber-50/70 border border-amber-200/70 rounded-2xl p-4 text-xs text-slate-700 space-y-2">
+              <div className="font-bold text-amber-800 flex items-center gap-1.5">
+                <HelpCircle size={14} />
+                <span>How to connect your Gmail in 1 Minute:</span>
+              </div>
+              <ol className="list-decimal list-inside space-y-1 text-slate-600 leading-relaxed pl-1">
+                <li>Log in to <strong>Google Account</strong> for <code>sakshiclothing2025@gmail.com</code></li>
+                <li>Ensure <strong>2-Step Verification</strong> is switched ON in Google Security settings</li>
+                <li>Go directly to: <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noreferrer" className="text-amber-700 underline font-semibold inline-flex items-center gap-1">myaccount.google.com/apppasswords <ExternalLink size={11} /></a></li>
+                <li>Create an App named <strong>"Sakshi Clothing"</strong> and click Generate</li>
+                <li>Copy the <strong>16-letter App Password</strong> (e.g. <code>abcd efgh ijkl mnop</code>) and paste it below:</li>
+              </ol>
+            </div>
+
+            <form onSubmit={handleSaveSmtp} className="space-y-4">
+              {/* Provider Selection */}
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSmtpProvider('gmail');
+                    setSmtpHost('smtp.gmail.com');
+                    setSmtpPort(465);
+                  }}
+                  className={`p-3 rounded-xl border text-left text-xs transition-all ${
+                    smtpProvider === 'gmail' 
+                      ? 'border-amber-500 bg-amber-500/10 text-slate-900 font-bold' 
+                      : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="block font-semibold">Gmail (Recommended)</span>
+                  <span className="text-[11px] text-slate-500">smtp.gmail.com:465</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSmtpProvider('custom')}
+                  className={`p-3 rounded-xl border text-left text-xs transition-all ${
+                    smtpProvider === 'custom' 
+                      ? 'border-amber-500 bg-amber-500/10 text-slate-900 font-bold' 
+                      : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="block font-semibold">Custom SMTP</span>
+                  <span className="text-[11px] text-slate-500">Hostinger, SES, Zoho</span>
+                </button>
+              </div>
+
+              {smtpProvider === 'custom' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                      SMTP Host
+                    </label>
+                    <input
+                      type="text"
+                      value={smtpHost}
+                      onChange={(e) => setSmtpHost(e.target.value)}
+                      placeholder="e.g. smtp.hostinger.com"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                      Port
+                    </label>
+                    <input
+                      type="number"
+                      value={smtpPort}
+                      onChange={(e) => setSmtpPort(Number(e.target.value))}
+                      placeholder="465 or 587"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                  Gmail / Sender Email Address <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  value={smtpUser}
+                  onChange={(e) => {
+                    setSmtpUser(e.target.value);
+                    setSmtpFromEmail(e.target.value);
+                  }}
+                  placeholder="sakshiclothing2025@gmail.com"
+                  required
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white font-medium"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                    Google 16-Character App Password <span className="text-red-500">*</span>
+                  </label>
+                  {smtpConfig?.hasPassword && (
+                    <span className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+                      <Check size={12} /> Currently Saved ({smtpConfig.maskedPassword})
+                    </span>
+                  )}
+                </div>
+                <input
+                  type="password"
+                  value={smtpPassword}
+                  onChange={(e) => setSmtpPassword(e.target.value)}
+                  placeholder={smtpConfig?.hasPassword ? "Leave blank to keep existing password, or enter new" : "e.g. abcd efgh ijkl mnop"}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white font-mono tracking-wider"
+                />
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Spaces are removed automatically. Use Google App Password, NOT your regular Gmail account login password.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                    Sender Display Name
+                  </label>
+                  <input
+                    type="text"
+                    value={smtpFromName}
+                    onChange={(e) => setSmtpFromName(e.target.value)}
+                    placeholder="Sakshi Clothing Atelier"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                    From Address
+                  </label>
+                  <input
+                    type="email"
+                    value={smtpFromEmail}
+                    onChange={(e) => setSmtpFromEmail(e.target.value)}
+                    placeholder="sakshiclothing2025@gmail.com"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              {/* Direct Verification & Test Strip */}
+              <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleSendTestEmail(smtpUser)}
+                  disabled={testingEmail || (!smtpPassword && !smtpConfig?.hasPassword)}
+                  className="w-full sm:w-auto px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-semibold transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+                >
+                  <Send size={13} className={testingEmail ? 'animate-spin' : ''} />
+                  <span>{testingEmail ? 'Dispatching Test Mail...' : 'Send Live Test Mail to ' + (smtpUser.split('@')[0] || 'User')}</span>
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={savingSmtp}
+                  className="w-full sm:w-auto px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-60"
+                >
+                  <Check size={14} />
+                  <span>{savingSmtp ? 'Verifying & Saving...' : 'Save & Activate Gateway'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* CONFIRMATION MODAL */}
       {showConfirmModal && (

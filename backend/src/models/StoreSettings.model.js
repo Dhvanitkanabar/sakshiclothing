@@ -60,7 +60,18 @@ const storeSettingsSchema = new Schema(
       text: String,
       link: String,
       isActive: { type: Boolean, default: true }
-    }]
+    }],
+    smtp: {
+      provider: { type: String, default: 'gmail' },
+      host: { type: String, default: 'smtp.gmail.com' },
+      port: { type: Number, default: 465 },
+      secure: { type: Boolean, default: true },
+      user: { type: String, default: 'sakshiclothing2025@gmail.com' },
+      password: { type: String, default: '' },
+      fromName: { type: String, default: 'Sakshi Clothing Atelier' },
+      fromEmail: { type: String, default: 'sakshiclothing2025@gmail.com' },
+      isActive: { type: Boolean, default: false }
+    }
   },
   {
     timestamps: true
