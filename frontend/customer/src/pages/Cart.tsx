@@ -168,8 +168,8 @@ const Cart = () => {
 
               <div className="bg-stone-50 rounded-2xl p-4 text-center border border-stone-100">
                 <p className="text-[10px] text-stone-500 font-sans leading-relaxed">
-                  ✦ 100% Insured Delivery across India<br />
-                  ✦ Complimentary 7-Day Exchange Window
+                  ✦ 100% Insured Express Delivery across India<br />
+                  ✦ Strict No Return Policy (Bespoke Handcrafted Orders)
                 </p>
               </div>
             </div>

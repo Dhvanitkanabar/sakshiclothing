@@ -38,6 +38,7 @@ import userRouter from './routes/user.routes.js';
 import searchRouter from './routes/search.routes.js';
 import couponRouter from './routes/coupon.routes.js';
 import notificationRouter from './routes/notification.routes.js';
+import subscriberRouter from './routes/subscriber.routes.js';
 
 import paymentRouter from './routes/payment.routes.js';
 import { createStandardOrder, verifyStandardPayment } from './controllers/payment.controller.js';
@@ -226,6 +227,8 @@ app.use('/api/v1/users', userRouter);
 app.use('/api/v1/search', searchRouter);
 app.use('/api/v1/coupons', couponRouter);
 app.use('/api/v1/notifications', notificationRouter);
+app.use('/api/v1/subscribers', subscriberRouter);
+app.use('/api/subscribers', subscriberRouter);
 
 app.use('/api/v1/payments', paymentRouter);
 app.post('/api/create-order', createStandardOrder);

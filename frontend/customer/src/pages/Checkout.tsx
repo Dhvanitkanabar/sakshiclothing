@@ -471,7 +471,7 @@ const Checkout = () => {
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-sans font-bold tracking-tight text-stone-900 mb-2">
             Secure Checkout
           </h1>
-          <p className="text-stone-500 font-sans text-xs sm:text-sm">Complete your bespoke order handcrafted in our Jaipur atelier.</p>
+          <p className="text-stone-500 font-sans text-xs sm:text-sm">Complete your bespoke order handcrafted in our Surat atelier &bull; Strict No Return Policy.</p>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">

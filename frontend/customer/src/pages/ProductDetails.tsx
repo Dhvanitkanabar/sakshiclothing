@@ -346,7 +346,7 @@ export const ProductDetails = () => {
                 )}
                 {activeTab === 'delivery' && (
                   <p>
-                    Complimentary insured white-glove express courier across India. Dispatched in our velvet-lined archival keepsake box with serialized authenticity card.
+                    Complimentary insured white-glove express courier across India. Dispatched in our velvet-lined archival keepsake box with serialized authenticity card. Please note: Due to bespoke made-to-measure craftsmanship, all orders follow our strict No Return Policy.
                   </p>
                 )}
                 {activeTab === 'care' && (
@@ -366,7 +366,7 @@ export const ProductDetails = () => {
             <ProductFilmstripCarousel
               products={relatedProducts}
               title="Atelier Styling Pairings"
-              subtitle="Recommendations from our Jaipur salon directors to complete your royal trousseau."
+              subtitle="Recommendations from our Surat salon directors to complete your royal trousseau."
               variant="clean"
             />
           </div>

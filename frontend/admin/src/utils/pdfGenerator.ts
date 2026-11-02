@@ -198,7 +198,7 @@ export const generateOrderHistoryPdf = (
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   doc.setTextColor(214, 211, 209);
-  doc.text('Haute Couture & Bespoke Artisanal Fashion | Jaipur Atelier', 40, 52);
+  doc.text('Haute Couture & Bespoke Artisanal Fashion | Surat Atelier', 40, 52);
 
   // Right-aligned report metadata
   doc.setFontSize(9);
@@ -426,7 +426,7 @@ export const generateInventoryPdf = (products: any[]) => {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   doc.setTextColor(214, 211, 209);
-  doc.text('Inventory Valuation & Stock Status Report | Jaipur Atelier', 40, 52);
+  doc.text('Inventory Valuation & Stock Status Report | Surat Atelier', 40, 52);
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
@@ -756,7 +756,7 @@ export const generateShippingInvoicePdf = (order: any, autoDownload = true) => {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(214, 211, 209);
-  doc.text('EXPRESS SURFACE LOGISTICS | JAIPUR ATELIER', labelX + 12, labelY + 32);
+  doc.text('EXPRESS SURFACE LOGISTICS | SURAT ATELIER', labelX + 12, labelY + 32);
 
   // Top-Right Payment Mode Badge (Very Prominent like Meesho/Delhivery)
   const payBadgeW = 210;
@@ -883,12 +883,12 @@ export const generateShippingInvoicePdf = (order: any, autoDownload = true) => {
 
   const sellerLines = [
     'Haute Couture & Artisanal Garments',
-    'Atelier: MI Road, C-Scheme',
-    'Jaipur, Rajasthan - 302001, India',
-    'GSTIN: 08AAACS1234F1Z8',
-    'CIN: U17111RJ2026PTC089765',
-    'Return Helpline: care@sakshiclothing.com',
-    'Support Contact: +91 91166 22001'
+    'G-903 Sentosa Heights, Utran',
+    'Surat, Gujarat - 394105, India',
+    'GSTIN: 24AAACS1234F1Z8',
+    'Support Email: sakshiclothing2025@gmail.com',
+    'Client Helpline: +91 9316533660',
+    'Policy: STRICT NO-RETURN POLICY'
   ];
 
   let curSellerY = addrY + 41;
@@ -906,13 +906,13 @@ export const generateShippingInvoicePdf = (order: any, autoDownload = true) => {
   doc.setTextColor(50, 50, 50);
   doc.text(`TOTAL PIECES: ${totalQty} Item(s)`, labelX + 12, labelY + 308);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Dimensions: 34 x 26 x 6 cm  |  Weight: 0.85 kg  |  Origin: Jaipur Atelier`, labelX + 130, labelY + 308);
+  doc.text(`Dimensions: 34 x 26 x 6 cm  |  Weight: 0.85 kg  |  Origin: Surat Atelier`, labelX + 130, labelY + 308);
 
   // Return Notice
   doc.setFontSize(7.5);
   doc.setTextColor(110, 110, 110);
   doc.text(
-    'If undelivered, please return to: Sakshi Clothing Atelier, MI Road, C-Scheme, Jaipur, Rajasthan - 302001',
+    'If undelivered, return to: Sakshi Clothing, G-903 Sentosa Heights, Utran, Surat, Gujarat - 394105, Mobile: 9316533660',
     labelX + 12,
     labelY + 320
   );
@@ -1061,8 +1061,9 @@ export const generateShippingInvoicePdf = (order: any, autoDownload = true) => {
   doc.text('Terms & Conditions:', wordsX, wordsY + 28);
   doc.text('1. Handcrafted bespoke couture. All taxes collected under Indian GST Act 2017.', wordsX, wordsY + 38);
   doc.text('2. Rate Breakdown: Jewellery items charged at 3% GST; Apparel/Clothing charged at 5% GST.', wordsX, wordsY + 48);
-  doc.text('3. Any legal disputes are subject to the exclusive jurisdiction of courts in Jaipur, Rajasthan.', wordsX, wordsY + 58);
+  doc.text('3. Any legal disputes are subject to the exclusive jurisdiction of courts in Surat, Gujarat.', wordsX, wordsY + 58);
   doc.text('4. This is an electronically generated and digitally authenticated tax invoice.', wordsX, wordsY + 68);
+  doc.text('5. Strict No-Return Policy: Bespoke made-to-measure couture & fine jewellery are strictly non-returnable.', wordsX, wordsY + 78);
 
   // Summary & Totals Block (Right)
   const sumW = 200;

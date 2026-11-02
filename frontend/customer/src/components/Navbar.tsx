@@ -122,9 +122,9 @@ export const Navbar = () => {
 
   const announcements = [
     "Free Express Delivery Across India on All Orders",
-    "Handcrafted by Master Artisans in Jaipur & Varanasi",
+    "Bespoke Handcrafted Orders · Strict No Return Policy",
     "100% Pure Silk Mark Certified Authentic Weaves",
-    "Easy 7-Day Exchange & 100% Authentic Quality Guarantee"
+    "Surat Atelier & Artisanal Quality Guarantee"
   ];
   const [tickerIndex, setTickerIndex] = useState(0);
 
@@ -252,7 +252,7 @@ export const Navbar = () => {
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
             <div className="hidden lg:flex items-center gap-2 text-[10px] text-stone-400 font-medium tracking-widest uppercase">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              <span>Jaipur Atelier</span>
+              <span>Surat Atelier</span>
             </div>
 
             <div className="flex-1 text-center relative h-4 overflow-hidden px-2 flex items-center justify-center">
@@ -674,7 +674,7 @@ export const Navbar = () => {
                     <Heart size={14} className="text-stone-500" /> Wishlist ({wishlist.length})
                   </Link>
                   <a
-                    href="https://wa.me/919829012345"
+                    href="https://wa.me/919316533660"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2.5 px-3 py-2 text-stone-600 hover:text-stone-900 hover:bg-stone-50 rounded-xl transition-colors font-medium"

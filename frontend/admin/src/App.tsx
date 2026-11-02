@@ -20,6 +20,7 @@ const InventoryDashboard = lazy(() => import('./pages/products/InventoryDashboar
 const Reports = lazy(() => import('./pages/Reports'));
 const Coupons = lazy(() => import('./pages/marketing/Coupons'));
 const ReviewsModeration = lazy(() => import('./pages/marketing/ReviewsModeration'));
+const SubscribersBroadcast = lazy(() => import('./pages/marketing/SubscribersBroadcast'));
 const CustomerDetails = lazy(() => import('./pages/customers/CustomerDetails'));
 
 const PaymentsManager = lazy(() => import('./pages/payments/PaymentsManager'));
@@ -63,6 +64,7 @@ function App() {
               <Route path="/reports" element={<Reports />} />
               <Route path="/marketing/coupons" element={<Coupons />} />
               <Route path="/marketing/reviews" element={<ReviewsModeration />} />
+              <Route path="/marketing/subscribers" element={<SubscribersBroadcast />} />
 
               <Route path="/payments" element={<PaymentsManager />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />

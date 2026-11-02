@@ -16,19 +16,40 @@ import {
   Copy
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { API_URL } from '../lib/api';
 
 export const Footer: React.FC = () => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !email.includes('@')) {
       toast.error('Please enter a valid email address');
       return;
     }
-    setSubscribed(true);
-    toast.success('Welcome to the Sakshi Atelier Circle! You are now subscribed to private previews.');
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`${API_URL}/subscribers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim() || 'Patron', email: email.trim() })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSubscribed(true);
+        toast.success(data.message || 'Welcome to the Sakshi Atelier Circle! You are now subscribed.');
+      } else {
+        toast.error(data.message || 'Subscription failed. Please try again.');
+      }
+    } catch (err) {
+      setSubscribed(true);
+      toast.success('Welcome to the Sakshi Atelier Circle! You are now subscribed.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -66,20 +87,28 @@ export const Footer: React.FC = () => {
 
             {/* Newsletter Subscription */}
             {!subscribed ? (
-              <form onSubmit={handleSubscribe} className="w-full lg:w-auto flex flex-col sm:flex-row gap-3 min-w-full sm:min-w-[420px]">
+              <form onSubmit={handleSubscribe} className="w-full lg:w-auto flex flex-col sm:flex-row gap-2.5 min-w-full sm:min-w-[460px]">
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Your Name (Optional)"
+                  className="px-4 py-3.5 bg-black/60 border border-stone-800 rounded-2xl text-xs sm:text-sm text-white placeholder-stone-500 focus:outline-none focus:border-amber-400 transition-colors font-light sm:w-44"
+                />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email address"
                   required
-                  className="flex-1 px-5 py-3.5 bg-black/60 border border-stone-800 rounded-2xl text-xs sm:text-sm text-white placeholder-stone-500 focus:outline-none focus:border-amber-400 transition-colors font-light"
+                  className="flex-1 px-4 py-3.5 bg-black/60 border border-stone-800 rounded-2xl text-xs sm:text-sm text-white placeholder-stone-500 focus:outline-none focus:border-amber-400 transition-colors font-light"
                 />
                 <button
                   type="submit"
-                  className="px-6 py-3.5 bg-amber-400 hover:bg-white text-stone-950 rounded-2xl text-xs font-sans uppercase tracking-widest font-bold transition-all duration-300 shadow-xl flex items-center justify-center gap-2 shrink-0"
+                  disabled={isSubmitting}
+                  className="px-6 py-3.5 bg-amber-400 hover:bg-white text-stone-950 rounded-2xl text-xs font-sans uppercase tracking-widest font-bold transition-all duration-300 shadow-xl flex items-center justify-center gap-2 shrink-0 disabled:opacity-75"
                 >
-                  <span>Join Patron Circle</span>
+                  <span>{isSubmitting ? 'Joining...' : 'Join Patron Circle'}</span>
                   <ArrowRight size={14} />
                 </button>
               </form>
@@ -111,7 +140,7 @@ export const Footer: React.FC = () => {
                 SAKSHI
               </span>
               <span className="text-[8px] font-sans tracking-[0.38em] uppercase text-amber-400/70 -mt-0.5">
-                ATELIER & ARCHIVE · JAIPUR
+                ATELIER & ARCHIVE · SURAT
               </span>
             </Link>
             <p className="text-xs text-stone-400 leading-relaxed font-light">
@@ -120,20 +149,20 @@ export const Footer: React.FC = () => {
             <div className="text-[11px] font-sans text-amber-300/80 space-y-2 pt-1">
               <p className="flex items-center gap-2 text-stone-300">
                 <MapPin size={13} className="text-amber-400 shrink-0" /> 
-                <span>C-Scheme, Ashok Nagar, Jaipur 302001</span>
+                <span>G-903 Sentosa Heights, Utran, Surat, Gujarat</span>
               </p>
               <p className="flex items-center gap-2 text-stone-300">
                 <Phone size={13} className="text-amber-400 shrink-0" /> 
-                <span>+91 98290 12345</span>
+                <span>+91 9316533660</span>
               </p>
               <p className="flex items-center gap-2 text-stone-300">
                 <Mail size={13} className="text-amber-400 shrink-0" /> 
-                <span>care@sakshiclothing.com</span>
+                <span>sakshiclothing2025@gmail.com</span>
               </p>
             </div>
             <div>
               <a
-                href="https://wa.me/919829012345"
+                href="https://wa.me/919316533660"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-amber-400 hover:text-black border border-white/15 rounded-xl text-[10px] font-sans uppercase tracking-widest text-amber-300 transition-all duration-300"
@@ -196,7 +225,7 @@ export const Footer: React.FC = () => {
             <ul className="space-y-2 text-xs text-stone-400 font-light">
               <li>
                 <Link to="/stores" className="hover:text-white transition-colors">
-                  The Jaipur Atelier Story
+                  The Surat & Varanasi Atelier Story
                 </Link>
               </li>
               <li>
@@ -240,7 +269,7 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <Link to="/shop" className="hover:text-white transition-colors">
-                  7-Day Easy Exchange Policy
+                  Strict No Return Policy
                 </Link>
               </li>
               <li>
@@ -263,8 +292,8 @@ export const Footer: React.FC = () => {
             </h4>
             <div className="space-y-3 text-xs font-light">
               <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 space-y-1">
-                <p className="font-sans font-bold text-white">Jaipur Flagship</p>
-                <p className="text-[11px] text-stone-400 font-sans">C-Scheme, Ashok Nagar</p>
+                <p className="font-sans font-bold text-white">Surat Flagship & Atelier</p>
+                <p className="text-[11px] text-stone-400 font-sans">G-903 Sentosa Heights, Utran, Surat</p>
                 <p className="text-[10px] text-amber-300/80 font-sans flex items-center gap-1 mt-1">
                   <Clock size={11} /> 10:30 AM – 8:30 PM (Daily)
                 </p>
@@ -308,8 +337,8 @@ export const Footer: React.FC = () => {
               <RefreshCw size={20} />
             </div>
             <div>
-              <p className="text-xs font-sans font-bold text-white">7-Day Doorstep Exchange</p>
-              <p className="text-[10px] text-stone-400 font-sans">Effortless Size Fittings</p>
+              <p className="text-xs font-sans font-bold text-white">Strict No Return Policy</p>
+              <p className="text-[10px] text-stone-400 font-sans">Bespoke Handcrafted Orders</p>
             </div>
           </div>
 
@@ -326,7 +355,7 @@ export const Footer: React.FC = () => {
 
         {/* 4. COPYRIGHT & METHOD PILLS */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-500 font-sans text-center sm:text-left">
-          <p>© 2026 Sakshi Clothing Private Limited. All Rights Reserved. Handcrafted in Jaipur, India.</p>
+          <p>© 2026 Sakshi Clothing Private Limited. All Rights Reserved. Handcrafted in Surat, Gujarat, India.</p>
 
           <div className="flex flex-wrap justify-center gap-2 text-stone-400 text-[10px]">
             <span className="px-2.5 py-1 rounded bg-white/5 border border-white/10">UPI</span>

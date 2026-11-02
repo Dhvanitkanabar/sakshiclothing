@@ -113,7 +113,7 @@ export const Shop = () => {
           className="space-y-3 sm:space-y-4"
         >
           <span className="text-[10px] font-sans uppercase tracking-[0.3em] text-amber-900 font-bold block">
-            ATELIER & ARCHIVE · JAIPUR
+            ATELIER & ARCHIVE · SURAT
           </span>
           <h1 className="text-3xl sm:text-5xl md:text-6xl font-sans font-light text-stone-900 tracking-tight">
             {query ? `Search: "${query}"` : mood ? `${mood} Edit` : 'The Imperial Wardrobe'}

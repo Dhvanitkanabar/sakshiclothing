@@ -4,7 +4,7 @@ import {
   LayoutDashboard, ShoppingBag, Layers, Tag,
   FileText, CreditCard, BarChart2, Users,
   Ticket, Star, Sparkles, LogOut, History, Clock,
-  ChevronLeft, ChevronRight, X
+  ChevronLeft, ChevronRight, X, Mail
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { adminFetch } from '../lib/api';
@@ -57,6 +57,7 @@ export default function Sidebar({ mobileMenuOpen = false, setMobileMenuOpen }: S
     {
       title: 'Marketing',
       items: [
+        { path: '/marketing/subscribers', label: 'Subscribers & Broadcast', icon: Mail },
         { path: '/marketing/coupons', label: 'Coupons & Discounts', icon: Ticket },
         { path: '/marketing/reviews', label: 'Customer Reviews', icon: Star },
       ]

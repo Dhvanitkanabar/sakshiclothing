@@ -89,11 +89,10 @@ export const generateInvoiceHTML = (order) => {
     <div class="header">
       <div>
         <div class="brand">SAKSHI</div>
-        <div class="brand-sub">Clothing & Fashion</div>
-        <div style="margin-top:16px;font-size:12px;opacity:.6;line-height:1.7;">
-          Mumbai, Maharashtra, India<br>
-          GST: 27AABCS1429B1Z1<br>
-          support@sakshiclothing.in
+        <div style="margin-top:16px;font-size:12px;opacity:.75;line-height:1.7;">
+          G-903 Sentosa Heights, Utran, Surat, Gujarat, India<br>
+          GST: 24AABCS1429B1Z1 &bull; Mobile: +91 9316533660<br>
+          Email: sakshiclothing2025@gmail.com
         </div>
       </div>
       <div class="invoice-meta">
@@ -167,8 +166,9 @@ export const generateInvoiceHTML = (order) => {
 
     <div class="footer">
       <div class="footer-left">
-        Thank you for shopping with Sakshi Clothing.<br>
-        For queries, contact us at support@sakshiclothing.in
+        Thank you for shopping with Sakshi Clothing Atelier.<br>
+        Helpline: +91 9316533660 &bull; Email: sakshiclothing2025@gmail.com<br>
+        <strong>Strict No-Return Policy:</strong> All items are bespoke handcrafted couture & fine jewellery.
       </div>
       <div style="font-size:11px;color:#ccc;text-align:right;">
         Generated on ${new Date().toLocaleDateString('en-IN')}<br>
