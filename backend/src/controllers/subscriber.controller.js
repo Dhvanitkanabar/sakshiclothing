@@ -125,7 +125,7 @@ export const broadcastToSubscribers = asyncHandler(async (req, res) => {
     await Notification.create({
       title: `Broadcast: ${heading.trim()}`,
       message: `Atelier update was dispatched to ${subscribers.length} subscribed patrons.`,
-      type: 'BROADCAST',
+      type: 'system',
       isRead: false
     });
   } catch (e) {

@@ -56,5 +56,5 @@ notificationSchema.index({ recipient: 1, createdAt: -1 });
 notificationSchema.index({ orderNumber: 1 });
 notificationSchema.index({ isRead: 1 });
 
-const Notification = mongoose.model('Notification', notificationSchema);
+export const Notification = mongoose.model('Notification', notificationSchema);
 export default Notification;
