@@ -148,7 +148,7 @@ export const Footer: React.FC = () => {
               </span>
             </Link>
             <p className="text-xs text-stone-400 leading-relaxed font-light">
-              Sculpting timeless royal silhouettes through pure Ahimsa mulberry silks, 240-hour zardozi embroidery, and generational pit-loom guilds.
+              Sculpting timeless contemporary fashion, celebratory silhouettes, and luxury jewellery through premium handlooms, artisan tailoring, and elevated design aesthetics.
             </p>
             <div className="text-[11px] font-sans text-amber-300/80 space-y-2 pt-1">
               <p className="flex items-center gap-2 text-stone-300">
@@ -184,38 +184,33 @@ export const Footer: React.FC = () => {
             </h4>
             <ul className="space-y-2 text-xs text-stone-400 font-light">
               <li>
-                <Link to="/shop?category=Women&sub=Bridal Lehengas" className="hover:text-white transition-colors">
-                  The Bridal Trousseau '26
+                <Link to="/shop?category=Women" className="hover:text-white transition-colors">
+                  Women's Festive & Contemporary
                 </Link>
               </li>
               <li>
                 <Link to="/shop?category=Women&sub=Heritage Sarees" className="hover:text-white transition-colors">
-                  Varanasi Pit-Loom Sarees
+                  Artisanal Sarees & Drapes
+                </Link>
+              </li>
+              <li>
+                <Link to="/shop?category=Men" className="hover:text-white transition-colors">
+                  Men's Kurtas & Bandhgalas
                 </Link>
               </li>
               <li>
                 <Link to="/shop?category=Men&sub=Heritage Sherwanis" className="hover:text-white transition-colors">
-                  Imperial Brocade Sherwanis
+                  Distinguished Royal Sherwanis
                 </Link>
               </li>
               <li>
-                <Link to="/shop?category=Women&sub=Couture Anarkalis" className="hover:text-white transition-colors">
-                  Chandrakala Silk Anarkalis
-                </Link>
-              </li>
-              <li>
-                <Link to="/shop?category=Men&sub=Modern Kurtas" className="hover:text-white transition-colors">
-                  Organic Khadi Silk Kurtas
-                </Link>
-              </li>
-              <li>
-                <Link to="/shop?category=Men&sub=Suits & Jackets" className="hover:text-white transition-colors">
-                  Jodhpur Bandhgala Jackets
+                <Link to="/shop?category=Kids" className="hover:text-white transition-colors">
+                  Kids Festive & Celebrations
                 </Link>
               </li>
               <li>
                 <Link to="/shop?category=Jewellery" className="hover:text-white transition-colors">
-                  Heritage Polki & Jadau Suites
+                  Handcrafted Polki & Jadau Jewellery
                 </Link>
               </li>
             </ul>
@@ -239,7 +234,7 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <Link to="/shop" className="hover:text-white transition-colors">
-                  Silk Mark India Authenticity
+                  Fabric Quality & Purity Standards
                 </Link>
               </li>
               <li>
@@ -318,8 +313,8 @@ export const Footer: React.FC = () => {
               <Award size={20} />
             </div>
             <div>
-              <p className="text-xs font-sans font-bold text-white">Silk Mark Certified</p>
-              <p className="text-[10px] text-stone-400 font-sans">100% Pure Mulberry & Chanderi</p>
+              <p className="text-xs font-sans font-bold text-white">Certified Quality Garments</p>
+              <p className="text-[10px] text-stone-400 font-sans">Finest Handloom, Contemporary & Luxury Wear</p>
             </div>
           </div>
 
@@ -349,7 +344,7 @@ export const Footer: React.FC = () => {
             </div>
             <div>
               <p className="text-xs font-sans font-bold text-white">Encrypted Direct Checkout</p>
-              <p className="text-[10px] text-stone-400 font-sans">UPI, Cards, NetBanking, COD</p>
+              <p className="text-[10px] text-stone-400 font-sans">UPI, Cards & NetBanking (100% Prepaid)</p>
             </div>
           </div>
         </div>
@@ -364,7 +359,6 @@ export const Footer: React.FC = () => {
             <span className="px-2.5 py-1 rounded bg-white/5 border border-white/10">VISA</span>
             <span className="px-2.5 py-1 rounded bg-white/5 border border-white/10">MASTERCARD</span>
             <span className="px-2.5 py-1 rounded bg-white/5 border border-white/10">AMEX</span>
-            <span className="px-2.5 py-1 rounded bg-white/5 border border-white/10">COD</span>
           </div>
         </div>
       </div>

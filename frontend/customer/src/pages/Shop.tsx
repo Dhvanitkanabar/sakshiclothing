@@ -43,7 +43,8 @@ export const Shop = () => {
       setProducts(validData);
       setFilteredProducts(validData);
 
-      const cats = new Set<string>();
+      const coreCategories = ['Women', 'Men', 'Kids', 'Jewellery'];
+      const cats = new Set<string>(coreCategories);
       const subs = new Set<string>();
       validData.forEach(p => {
         if (p.category) cats.add(p.category);
@@ -319,6 +320,63 @@ export const Shop = () => {
                     <ProductCard product={product} />
                   </motion.div>
                 ))}
+              </motion.div>
+            ) : (selectedCategory !== 'All' && !products.some(p => p.category?.toLowerCase() === selectedCategory.toLowerCase())) ? (
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center py-20 sm:py-28 bg-white rounded-3xl border border-stone-200/90 shadow-sm flex flex-col items-center px-6 sm:px-12 space-y-5"
+              >
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200 text-[10px] font-sans font-bold uppercase tracking-widest">
+                  <Sparkles size={12} className="text-amber-600" />
+                  <span>New Drop In Progress</span>
+                </div>
+
+                <div className="space-y-2 max-w-lg mx-auto">
+                  <h3 className="text-2xl sm:text-4xl font-sans font-bold text-stone-900 capitalize tracking-tight">
+                    {selectedCategory} Collection Coming Soon...
+                  </h3>
+                  <p className="text-stone-500 font-light text-xs sm:text-sm leading-relaxed">
+                    Our master artisans and designers are currently curating and handcrafting our upcoming {selectedCategory} collection. Exquisite fabrics, bespoke silhouettes, and heirloom craftsmanship will be arriving shortly.
+                  </p>
+                </div>
+
+                {/* 3 Value Highlights */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-xl py-4 text-left">
+                  <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200/70 space-y-1">
+                    <p className="text-xs font-bold text-stone-900">Handcrafted Excellence</p>
+                    <p className="text-[11px] text-stone-500 font-light">Artisanal embroidery and pure textiles tailored to perfection.</p>
+                  </div>
+                  <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200/70 space-y-1">
+                    <p className="text-xs font-bold text-stone-900">Curated New Drop</p>
+                    <p className="text-[11px] text-stone-500 font-light">Seasonal colors and modern fits currently in production.</p>
+                  </div>
+                  <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200/70 space-y-1">
+                    <p className="text-xs font-bold text-stone-900">Priority Patron Access</p>
+                    <p className="text-[11px] text-stone-500 font-light">Join the Atelier Circle in the footer for early notification.</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+                  <button
+                    onClick={() => {
+                      setSelectedCategory('All');
+                      setSelectedSubCategory('All');
+                    }}
+                    className="w-full sm:w-auto px-6 py-3 rounded-xl bg-stone-900 text-white font-sans uppercase tracking-widest text-xs font-bold hover:bg-amber-800 transition-colors shadow-md"
+                  >
+                    Explore Available Collections
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedCategory('Women');
+                      setSelectedSubCategory('All');
+                    }}
+                    className="w-full sm:w-auto px-6 py-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 font-sans uppercase tracking-widest text-xs font-bold transition-colors"
+                  >
+                    View Women's Collection
+                  </button>
+                </div>
               </motion.div>
             ) : (
               <motion.div 

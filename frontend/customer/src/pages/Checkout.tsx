@@ -58,8 +58,8 @@ const Checkout = () => {
   const [discount, setDiscount] = useState(0);
   const [loyaltyPoints, setLoyaltyPoints] = useState(0);
   const [useLoyalty, setUseLoyalty] = useState(false);
-  const [paymentGateway, setPaymentGateway] = useState('razorpay'); // 'razorpay', 'stripe', 'cod'
-  const [selectedPaymentMode, setSelectedPaymentMode] = useState<'upi' | 'cards_all' | 'cod'>('upi');
+  const [paymentGateway, setPaymentGateway] = useState('razorpay');
+  const [selectedPaymentMode, setSelectedPaymentMode] = useState<'upi' | 'cards_all'>('upi');
 
   // Exact Delivery GPS Coordinates State
   const [detectedCoords, setDetectedCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -343,38 +343,7 @@ const Checkout = () => {
         }
       }
 
-      // Case 1: Cash on Delivery (COD)
-      if (paymentGateway === 'cod') {
-        toast.loading('Placing your Cash on Delivery order...');
-        const orderRes = await placeOrder(
-          finalAddressId,
-          true,
-          activeToken,
-          cart.map(item => ({
-            productId: item.id,
-            variantId: item.variantId,
-            quantity: item.quantity
-          })),
-          'cod'
-        );
 
-        toast.dismiss();
-        if (!orderRes.success) {
-          toast.error(orderRes.message || 'Transaction could not be completed.');
-          setLoading(false);
-          return;
-        }
-
-        toast.success('Order confirmed via Cash on Delivery. Welcome to the Maison.');
-        try {
-          const bc = new BroadcastChannel('sakshi_order_sync');
-          bc.postMessage({ type: 'ORDER_PLACED', orderId: orderRes.data.orderNumber });
-          bc.close();
-        } catch {}
-        clearCart();
-        navigate('/order-success', { state: { orderId: orderRes.data.orderNumber, total: finalTotal } });
-        return;
-      }
 
       // Case 2: Online Payment via Razorpay
       if (paymentGateway === 'razorpay') {
@@ -665,7 +634,12 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                <p className="mt-6 text-xs text-muted flex items-center gap-2">
+                <div className="mt-4 p-3.5 rounded-xl bg-amber-50/80 border border-amber-200/60 text-stone-700 text-xs flex items-center gap-2.5">
+                  <ShieldCheck size={16} className="text-amber-800 shrink-0" />
+                  <span>100% Secure Prepaid Orders Only. Cash on Delivery (COD) is not accepted to guarantee direct insured fulfillment.</span>
+                </div>
+
+                <p className="mt-4 text-xs text-muted flex items-center gap-2">
                   <Lock size={12} /> Encrypted & Secured by Razorpay PCI-DSS standards.
                 </p>
               </section>

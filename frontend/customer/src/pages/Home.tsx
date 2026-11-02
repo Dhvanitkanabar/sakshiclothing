@@ -46,7 +46,7 @@ export const Home: React.FC = () => {
   const [products, setProducts] = useState<Product[]>(getCachedProducts);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>(getCachedFeatured);
   const [newArrivals, setNewArrivals] = useState<Product[]>(getCachedNewArrivals);
-  const [activeTab, setActiveTab] = useState<'all' | 'bestsellers' | 'bridal' | 'men' | 'sarees' | 'jewellery'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'women' | 'men' | 'kids' | 'jewellery'>('all');
   const [loading, setLoading] = useState(false);
 
   // Global Page Scroll Progress for Fluid Velocity Indicator
@@ -63,39 +63,39 @@ export const Home: React.FC = () => {
   const heroSlides = [
     {
       id: 1,
-      tag: "Bridal Collection 2026",
-      title: "Handcrafted Luxury Bridal Wear & Couture Lehengas",
-      subtitle: "Bespoke Indian bridal couture hand-embroidered by generational artisans in Jaipur. Woven with pure mulberry silk, fine gold dabka wirework, and delicate scalloped veils.",
+      tag: "Women's Couture & Contemporary 2026",
+      title: "Handcrafted Luxury Apparel & Designer Ensembles",
+      subtitle: "Bespoke contemporary and festive ensembles tailored by master artisans. Woven with rich handlooms, delicate embroidery, and refined modern silhouettes.",
       image: "https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=2000&auto=format&fit=crop",
-      ctaPrimary: "Shop Bridal Collection",
-      linkPrimary: "/shop?category=Women&sub=Bridal Lehengas",
-      ctaSecondary: "Explore Lehengas",
-      linkSecondary: "/shop?category=Women&sub=Bridal Lehengas",
-      badge: "Silk Mark India Certified"
+      ctaPrimary: "Shop Women's Collection",
+      linkPrimary: "/shop?category=Women",
+      ctaSecondary: "Explore Designs",
+      linkSecondary: "/shop?category=Women",
+      badge: "Curated Designer Excellence"
     },
     {
       id: 2,
-      tag: "Royal Menswear Edit",
-      title: "Royal Sherwanis & Tailored Bandhgalas",
-      subtitle: "Ivory and midnight silk brocades with structured canvas, clean royal lines, and hand-engraved metal crest buttons.",
+      tag: "Distinguished Menswear Edit",
+      title: "Royal Sherwanis, Kurtas & Tailored Bandhgalas",
+      subtitle: "Structured canvas, clean royal lines, rich textured fabrics, and hand-engraved metal crest buttons for every celebration.",
       image: "https://images.unsplash.com/photo-1783188223691-8a233ee51cd8?q=80&w=2000&auto=format&fit=crop",
       ctaPrimary: "Shop Menswear",
       linkPrimary: "/shop?category=Men",
-      ctaSecondary: "View Sherwanis",
-      linkSecondary: "/shop?category=Men&sub=Heritage Sherwanis",
-      badge: "Hand-Tailored in Jaipur"
+      ctaSecondary: "View Kurtas & Jackets",
+      linkSecondary: "/shop?category=Men",
+      badge: "Artisan Tailored Quality"
     },
     {
       id: 3,
-      tag: "Pure Heritage Silks",
-      title: "Authentic Handwoven Banarasi Katan Silk Sarees",
-      subtitle: "Pure katan silk Banarasi drapes woven with metallic gold kadwa jaal across generational pit looms in Varanasi.",
+      tag: "Kids & Fine Jewellery Universes",
+      title: "Festive Kids Ensembles & Polki Jewellery Suites",
+      subtitle: "Comfortable celebratory attire for children and certified handcrafted jewellery suites to complete every special moment.",
       image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=2000&auto=format&fit=crop",
-      ctaPrimary: "Shop Pure Silks",
-      linkPrimary: "/shop?category=Women&sub=Heritage Sarees",
-      ctaSecondary: "View Saree Catalog",
-      linkSecondary: "/shop?category=Women&sub=Heritage Sarees",
-      badge: "100% Pure Mulberry Silk"
+      ctaPrimary: "Shop Jewellery",
+      linkPrimary: "/shop?category=Jewellery",
+      ctaSecondary: "Explore Kids Wear",
+      linkSecondary: "/shop?category=Kids",
+      badge: "Handcrafted & Certified"
     }
   ];
 
@@ -136,16 +136,14 @@ export const Home: React.FC = () => {
   // Filter products by tab
   const getTabProducts = () => {
     switch (activeTab) {
-      case 'bestsellers':
-        return featuredProducts;
-      case 'bridal':
-        return products.filter(p => p.category === 'Bridal' || p.subCategory?.toLowerCase().includes('bridal') || p.subCategory?.toLowerCase().includes('anarkali'));
+      case 'women':
+        return products.filter(p => p.category?.toLowerCase() === 'women');
       case 'men':
-        return products.filter(p => p.category === 'Men');
-      case 'sarees':
-        return products.filter(p => p.subCategory?.toLowerCase().includes('saree') || p.name.toLowerCase().includes('saree'));
+        return products.filter(p => p.category?.toLowerCase() === 'men');
+      case 'kids':
+        return products.filter(p => p.category?.toLowerCase() === 'kids');
       case 'jewellery':
-        return products.filter(p => p.category === 'Jewellery' || p.subCategory?.toLowerCase().includes('jewel'));
+        return products.filter(p => p.category?.toLowerCase() === 'jewellery' || p.subCategory?.toLowerCase().includes('jewel'));
       case 'all':
       default:
         return products;
@@ -200,52 +198,52 @@ export const Home: React.FC = () => {
   // 3. CURATED FASHION UNIVERSES (COOL, AVANT-GARDE CATEGORIES)
   const categories = [
     {
-      name: "NOUVEAU BRIDAL",
+      name: "WOMEN'S COLLECTION",
       number: "01",
-      count: "Curated Bridal Lehengas",
+      count: "Ethnic & Contemporary Wear",
       image: "https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=800&auto=format&fit=crop",
-      desc: "Pure raw silk & 240-hour zardozi",
-      link: "/shop?category=Women&sub=Bridal Lehengas"
+      desc: "Anarkalis, Sarees, Kurta Sets & Dresses",
+      link: "/shop?category=Women"
     },
     {
-      name: "HEIRLOOM WEAVES",
+      name: "MEN'S COLLECTION",
       number: "02",
-      count: "Varanasi Pit-Loom Sarees",
+      count: "Kurtas, Jackets & Sherwanis",
+      image: "https://images.unsplash.com/photo-1783188223691-8a233ee51cd8?q=80&w=800&auto=format&fit=crop",
+      desc: "Bandhgalas, Festive Kurtas & Royal Brocades",
+      link: "/shop?category=Men"
+    },
+    {
+      name: "KIDS COLLECTION",
+      number: "03",
+      count: "Celebration & Daily Wear",
+      image: "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?q=80&w=800&auto=format&fit=crop",
+      desc: "Boys & Girls Festive Ensembles",
+      link: "/shop?category=Kids"
+    },
+    {
+      name: "FINE JEWELLERY",
+      number: "04",
+      count: "Handcrafted Polki & Jadau",
+      image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=800&auto=format&fit=crop",
+      desc: "Necklaces, Chokers, Earrings & Suites",
+      link: "/shop?category=Jewellery"
+    },
+    {
+      name: "HEIRLOOM DRAPES",
+      number: "05",
+      count: "Artisanal Sarees",
       image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop",
-      desc: "Real kadwa gold zari & katan silk",
+      desc: "Banarasi, Chanderi & Tissue Organza",
       link: "/shop?category=Women&sub=Heritage Sarees"
     },
     {
-      name: "IMPERIAL HOMME",
-      number: "03",
-      count: "Royal Brocade Sherwanis",
-      image: "https://images.unsplash.com/photo-1783188223691-8a233ee51cd8?q=80&w=800&auto=format&fit=crop",
-      desc: "Hand-engraved crest brass buttons",
-      link: "/shop?category=Men&sub=Heritage Sherwanis"
-    },
-    {
       name: "JODHPUR SUITS",
-      number: "04",
+      number: "06",
       count: "Architectural Bandhgalas",
       image: "https://plus.unsplash.com/premium_photo-1682090774051-77cdd6b1e7cd?q=80&w=800&auto=format&fit=crop",
-      desc: "Silk-wool blend with mandarin collars",
+      desc: "Bespoke tailoring with royal silhouettes",
       link: "/shop?category=Men&sub=Suits & Jackets"
-    },
-    {
-      name: "MODERN ANARKALIS",
-      number: "05",
-      count: "Couture Flared Gowns",
-      image: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?q=80&w=800&auto=format&fit=crop",
-      desc: "Tissue organza with French knots",
-      link: "/shop?category=Women&sub=Couture Anarkalis"
-    },
-    {
-      name: "HERITAGE JADAU",
-      number: "06",
-      count: "Royal Polki Jewelry",
-      image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=800&auto=format&fit=crop",
-      desc: "22k gold plated polki & emeralds",
-      link: "/shop?category=Jewellery"
     }
   ];
 
@@ -291,11 +289,11 @@ export const Home: React.FC = () => {
   const atelierSteps = [
     {
       num: "01",
-      title: "Pure Mulberry Ahimsa Silk",
-      subtitle: "Ethical & Organic Handlooms",
-      desc: "We exclusively source peace silk cultivated with organic luster, natural thermal breathability, and celestial drape.",
+      title: "Finest Natural & Handloom Fabrics",
+      subtitle: "Ethical & Organic Textiles",
+      desc: "We exclusively source premium handloom cottons, chiffons, rich silks, and tailored textiles for comfort and celestial drape.",
       stat: "100%",
-      statLabel: "Silk Mark India Certified",
+      statLabel: "Quality & Purity Certified",
       image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1200&auto=format&fit=crop"
     },
     {
@@ -824,12 +822,11 @@ export const Home: React.FC = () => {
           <div className="pb-2 overflow-x-auto no-scrollbar">
             <SpringTabs
               tabs={[
-                { id: 'all', label: 'All Garments' },
-                { id: 'bestsellers', label: 'Bestsellers' },
-                { id: 'bridal', label: 'Haute Bridal' },
-                { id: 'men', label: 'Atelier Homme' },
-                { id: 'sarees', label: 'Heirloom Silks' },
-                { id: 'jewellery', label: 'Fine Jewels' },
+                { id: 'all', label: 'All Collections' },
+                { id: 'women', label: "Women's Collection" },
+                { id: 'men', label: "Men's Collection" },
+                { id: 'kids', label: "Kids Collection" },
+                { id: 'jewellery', label: 'Fine Jewellery' },
               ]}
               activeTab={activeTab}
               onChange={(id) => setActiveTab(id as any)}
@@ -838,92 +835,115 @@ export const Home: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Editorial Asymmetric Layout: Spotlight Feature + Garment Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
-          {/* Spotlight Masterwork Card (Left 4 cols) */}
-          {spotlightProduct && (
-            <div className="lg:col-span-4 bg-white rounded-3xl p-5 sm:p-6 border border-amber-300/40 shadow-xl space-y-4 relative group">
-              <div className="flex items-center justify-between">
-                <span className="text-[9px] font-sans uppercase tracking-[0.25em] text-amber-800 font-bold bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
-                  ✦ ATELIER SPOTLIGHT ✦
-                </span>
-                <span className="text-[10px] text-stone-500 font-sans">100% Pure Silk Mark</span>
-              </div>
-
-              <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-stone-100">
-                <Link 
-                  to={`/product/${spotlightProduct.id}`}
-                  onClick={() => {
-                    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
-                  }}
-                >
-                  <img
-                    src={spotlightProduct.image}
-                    alt={spotlightProduct.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                </Link>
-                <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-white text-[10px] font-sans">
-                  240 Artisan Hours
-                </div>
-              </div>
-
-              <div className="space-y-2 pt-1">
-                <span className="text-[10px] font-sans tracking-widest uppercase text-stone-500">
-                  {spotlightProduct.subCategory || 'HAUTE COUTURE'}
-                </span>
-                <Link 
-                  to={`/product/${spotlightProduct.id}`}
-                  onClick={() => {
-                    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
-                  }}
-                >
-                  <h3 className="text-lg sm:text-xl font-sans font-bold text-stone-900 hover:text-amber-900 transition-colors">
-                    {spotlightProduct.name}
-                  </h3>
-                </Link>
-                <p className="text-xs text-stone-600 font-light leading-relaxed line-clamp-2">
-                  {spotlightProduct.description}
-                </p>
-                <div className="flex items-center justify-between pt-3 border-t border-stone-100">
-                  <div>
-                    <span className="text-[9px] font-sans uppercase text-stone-400 block">Price</span>
-                    <span className="text-lg sm:text-xl font-sans font-bold text-stone-900">
-                      ₹{spotlightProduct.price.toLocaleString('en-IN')}
-                    </span>
-                  </div>
-                  <button
-                    onClick={(e) => handleQuickAdd(spotlightProduct, e)}
-                    className="px-4 sm:px-5 py-2.5 bg-gradient-to-r from-amber-400 to-amber-300 text-stone-950 font-sans text-xs uppercase tracking-wider font-bold rounded-xl shadow-md hover:scale-105 transition-all flex items-center gap-1.5"
-                  >
-                    <ShoppingBag size={14} />
-                    <span>Add to Bag</span>
-                  </button>
-                </div>
-              </div>
+        {/* Editorial Asymmetric Layout: Spotlight Feature + Garment Grid OR Coming Soon State */}
+        {displayedProducts.length === 0 ? (
+          <div className="py-20 sm:py-28 px-6 text-center bg-white rounded-3xl border border-stone-200 shadow-sm max-w-2xl mx-auto space-y-4 my-8">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-100/80 text-amber-900 border border-amber-200/80 text-[10px] font-sans font-bold uppercase tracking-widest">
+              <Sparkles size={12} className="text-amber-600" />
+              <span>New Arrivals Dropping Soon</span>
             </div>
-          )}
-
-          {/* Grid of Garments (Right 8 cols) - 2 columns on mobile */}
-          <div className="lg:col-span-8">
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-6">
-              {loading ? (
-                [1, 2, 3, 4, 5, 6].map((i) => (
-                  <div key={i} className="aspect-[3/4] bg-stone-200/60 rounded-3xl animate-pulse" />
-                ))
-              ) : gridProducts.length > 0 ? (
-                gridProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))
-              ) : (
-                <div className="col-span-full py-16 text-center bg-white rounded-3xl border border-stone-200">
-                  <ShoppingBag size={40} className="mx-auto text-stone-300 mb-3" />
-                  <p className="text-stone-600 font-sans text-lg">No garments found in this selection.</p>
-                </div>
-              )}
+            <h3 className="text-2xl sm:text-3xl font-sans font-bold text-stone-900 capitalize">
+              {activeTab} Collection Coming Soon...
+            </h3>
+            <p className="text-xs sm:text-sm text-stone-500 font-light max-w-md mx-auto leading-relaxed">
+              Our master artisans and designers are currently curating and handcrafting our upcoming {activeTab} collection. Exquisite fabrics, bespoke silhouettes, and heirloom craftsmanship will be unveiled shortly.
+            </p>
+            <div className="pt-2">
+              <button
+                onClick={() => setActiveTab('all')}
+                className="px-6 py-3 bg-stone-900 hover:bg-amber-800 text-white rounded-xl text-xs font-sans uppercase tracking-widest font-bold transition-all shadow-md"
+              >
+                Explore Available Garments
+              </button>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
+            {/* Spotlight Masterwork Card (Left 4 cols) */}
+            {spotlightProduct && (
+              <div className="lg:col-span-4 bg-white rounded-3xl p-5 sm:p-6 border border-amber-300/40 shadow-xl space-y-4 relative group">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-sans uppercase tracking-[0.25em] text-amber-800 font-bold bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
+                    ✦ ATELIER SPOTLIGHT ✦
+                  </span>
+                  <span className="text-[10px] text-stone-500 font-sans">Quality Certified</span>
+                </div>
+
+                <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-stone-100">
+                  <Link 
+                    to={`/product/${spotlightProduct.id}`}
+                    onClick={() => {
+                      window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+                    }}
+                  >
+                    <img
+                      src={spotlightProduct.image}
+                      alt={spotlightProduct.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                  </Link>
+                  <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-white text-[10px] font-sans">
+                    Artisanal Handcraft
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-1">
+                  <span className="text-[10px] font-sans tracking-widest uppercase text-stone-500">
+                    {spotlightProduct.subCategory || 'CURATED APPAREL'}
+                  </span>
+                  <Link 
+                    to={`/product/${spotlightProduct.id}`}
+                    onClick={() => {
+                      window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+                    }}
+                  >
+                    <h3 className="text-lg sm:text-xl font-sans font-bold text-stone-900 hover:text-amber-900 transition-colors">
+                      {spotlightProduct.name}
+                    </h3>
+                  </Link>
+                  <p className="text-xs text-stone-600 font-light leading-relaxed line-clamp-2">
+                    {spotlightProduct.description}
+                  </p>
+                  <div className="flex items-center justify-between pt-3 border-t border-stone-100">
+                    <div>
+                      <span className="text-[9px] font-sans uppercase text-stone-400 block">Price</span>
+                      <span className="text-lg sm:text-xl font-sans font-bold text-stone-900">
+                        ₹{spotlightProduct.price.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                    <button
+                      onClick={(e) => handleQuickAdd(spotlightProduct, e)}
+                      className="px-4 sm:px-5 py-2.5 bg-gradient-to-r from-amber-400 to-amber-300 text-stone-950 font-sans text-xs uppercase tracking-wider font-bold rounded-xl shadow-md hover:scale-105 transition-all flex items-center gap-1.5"
+                    >
+                      <ShoppingBag size={14} />
+                      <span>Add to Bag</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Grid of Garments (Right 8 cols) - 2 columns on mobile */}
+            <div className="lg:col-span-8">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-6">
+                {loading ? (
+                  [1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={i} className="aspect-[3/4] bg-stone-200/60 rounded-3xl animate-pulse" />
+                  ))
+                ) : gridProducts.length > 0 ? (
+                  gridProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))
+                ) : (
+                  <div className="col-span-full py-16 text-center bg-white rounded-3xl border border-stone-200">
+                    <ShoppingBag size={40} className="mx-auto text-stone-300 mb-3" />
+                    <p className="text-stone-600 font-sans text-lg">No garments found in this selection.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="mt-12 sm:mt-16 text-center">
           <Link
@@ -1061,19 +1081,19 @@ export const Home: React.FC = () => {
               <span>AUTHENTICITY & CRAFTSMANSHIP GUARANTEE</span>
             </div>
             <h3 className="text-2xl sm:text-4xl md:text-5xl font-sans font-light leading-tight">
-              Heirloom Artistry. <span className="italic font-normal text-amber-300">Certified Heritage.</span>
+              Heirloom Artistry. <span className="italic font-normal text-amber-300">Certified Quality.</span>
             </h3>
             <p className="text-stone-300 text-xs sm:text-sm md:text-base font-light leading-relaxed">
-              Every Sakshi bridal ensemble, Varanasi handloom weave, and handcrafted Polki suite is certified for authenticity. Crafted by master karigars with complimentary insured doorstep delivery across India.
+              Every Sakshi creation—from contemporary womenswear and distinguished mens silhouettes to festive kids couture and handcrafted jewellery—is certified for quality and tailored to perfection.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 shrink-0 w-full sm:w-auto">
             <Link
-              to="/shop?category=Women&sub=Bridal Lehengas"
+              to="/shop?category=Women"
               className="w-full sm:w-auto px-6 py-3.5 sm:py-4 bg-white/10 hover:bg-white/20 text-white rounded-2xl text-xs font-sans uppercase tracking-widest font-bold transition-all border border-white/25 flex items-center justify-center gap-2"
             >
-              <Crown size={14} className="text-amber-300" />
-              <span>Bridal Trousseau</span>
+              <Sparkles size={14} className="text-amber-300" />
+              <span>Women's Collection</span>
             </Link>
             <Link
               to="/shop"

@@ -122,11 +122,13 @@ export const fetchProducts = async (filters: any = {}) => {
     const params = new URLSearchParams(filters);
     const response = await fetchWithTimeout(`${API_URL}/products?${params.toString()}`, {}, 3800);
     const data = await response.json();
-    if (data.success && data.data?.data?.length > 0) {
+    if (data.success && Array.isArray(data.data?.data)) {
       const mapped = data.data.data.map(mapBackendProductToFrontend);
-      try {
-        localStorage.setItem('sakshi_cached_products', JSON.stringify(mapped));
-      } catch {}
+      if (mapped.length > 0 && Object.keys(filters).length === 0) {
+        try {
+          localStorage.setItem('sakshi_cached_products', JSON.stringify(mapped));
+        } catch {}
+      }
       return mapped;
     }
     return getCachedProducts();

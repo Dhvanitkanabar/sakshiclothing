@@ -338,7 +338,7 @@ export const ProductDetails = () => {
               <div className="text-xs text-stone-600 font-light leading-relaxed pt-2">
                 {activeTab === 'craft' && (
                   <ul className="space-y-2 font-sans text-[11px]">
-                    <li className="flex items-center gap-2">✦ 100% Ahimsa Mulberry Pure Raw Silk Mark certified</li>
+                    <li className="flex items-center gap-2">✦ 100% Premium Certified Fabric & Tailored Fit</li>
                     <li className="flex items-center gap-2">✦ Authentic 24K real gold/silver metallic dabka and zardozi</li>
                     <li className="flex items-center gap-2">✦ Tailored with Italian canvas interlining and breathable mulmul cotton</li>
                     <li className="flex items-center gap-2">✦ Hand-dyed using organic wild botanical infusions in Jaipur</li>

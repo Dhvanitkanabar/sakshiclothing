@@ -34,7 +34,7 @@ export const ScrollMetricBar: React.FC = () => {
       value: 240,
       suffix: '+',
       label: 'Artisan Hours',
-      desc: 'Dedicated to every bridal masterpiece',
+      desc: 'Dedicated to every handcrafted masterpiece',
       color: 'text-amber-600',
       bg: 'bg-amber-500/10'
     },
@@ -42,8 +42,8 @@ export const ScrollMetricBar: React.FC = () => {
       icon: ShieldCheck,
       value: 100,
       suffix: '%',
-      label: 'Pure Silk Mark',
-      desc: 'Government certified authentic weaves',
+      label: 'Certified Quality',
+      desc: 'Finest fabric & tailoring standards',
       color: 'text-emerald-600',
       bg: 'bg-emerald-500/10'
     },
@@ -61,7 +61,7 @@ export const ScrollMetricBar: React.FC = () => {
       value: 4.96,
       suffix: ' ★',
       label: 'Patron Rating',
-      desc: 'Over 1,800+ 5-star bridal reviews',
+      desc: 'Over 1,800+ 5-star patron reviews',
       color: 'text-amber-500',
       bg: 'bg-amber-500/10'
     }

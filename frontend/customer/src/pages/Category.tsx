@@ -13,6 +13,7 @@ const CATEGORY_IMAGES: Record<string, string> = {
   jewellery: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=1920&q=80',
   women: 'https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?w=1920&q=80',
   men: 'https://images.unsplash.com/photo-1783188223691-8a233ee51cd8?w=1920&q=80',
+  kids: 'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?w=1920&q=80',
   bridal: 'https://images.unsplash.com/photo-1651132133386-a64fbf794081?w=1920&q=80',
   clothing: 'https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?w=1920&q=80'
 };
@@ -37,9 +38,9 @@ const getSubCategoryImage = (subName: string) => {
 export const Category = () => {
   const { main, sub } = useParams<{ main: string; sub?: string }>();
   const navigate = useNavigate();
-  // Instant 0ms startup
-  const [products, setProducts] = useState<Product[]>(getCachedProducts);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>(getCachedProducts);
+  // Initialize empty and load from server
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [subcategories, setSubcategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 160000]);
@@ -69,21 +70,20 @@ export const Category = () => {
       const filterKey = sub || main || '';
       const data = await fetchProducts({ category: filterKey });
       
-      let validData = (data && data.length > 0) ? data : [];
+      let validData = Array.isArray(data) ? data : [];
       if (validData.length === 0) {
         const lowerKey = filterKey.toLowerCase();
         validData = PRODUCTS.filter(p => 
-          p.category.toLowerCase().includes(lowerKey) || 
+          p.category.toLowerCase() === lowerKey || 
           p.subCategory?.toLowerCase().includes(lowerKey) ||
           p.name.toLowerCase().includes(lowerKey)
         );
       }
-      const finalData = validData.length > 0 ? validData : PRODUCTS;
       
-      setProducts(finalData);
-      setFilteredProducts(finalData);
-      if (finalData.length > 0) {
-        const maxP = Math.max(...finalData.map((p: Product) => p.price), 160000);
+      setProducts(validData);
+      setFilteredProducts(validData);
+      if (validData.length > 0) {
+        const maxP = Math.max(...validData.map((p: Product) => p.price), 160000);
         setMaxProductPrice(Math.ceil(maxP / 5000) * 5000);
         setPriceRange([0, Math.ceil(maxP / 5000) * 5000]);
       }
@@ -168,7 +168,7 @@ export const Category = () => {
             className="mt-6 sm:mt-8 flex flex-wrap justify-center items-center gap-4 sm:gap-8 text-[10px] sm:text-[11px] font-sans text-white/90 uppercase tracking-widest"
           >
             <div className="flex items-center gap-1.5">
-              <ShieldCheck size={14} className="text-amber-400" /> 100% Silk Mark Authenticated
+              <ShieldCheck size={14} className="text-amber-400" /> Certified Premium Quality Garments
             </div>
             <div className="flex items-center gap-1.5">
               <Sparkles size={14} className="text-amber-400" /> 24K Real Zari Craft
@@ -276,6 +276,57 @@ export const Category = () => {
                     {filteredProducts.map((product) => (
                       <ProductCard key={product.id} product={product} />
                     ))}
+                  </motion.div>
+                ) : products.length === 0 ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center py-20 sm:py-28 bg-white rounded-3xl border border-stone-200/90 shadow-sm flex flex-col items-center px-6 sm:px-12 space-y-5"
+                  >
+                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200 text-[10px] font-sans font-bold uppercase tracking-widest">
+                      <Sparkles size={12} className="text-amber-600" />
+                      <span>New Collection In Progress</span>
+                    </div>
+
+                    <div className="space-y-2 max-w-lg mx-auto">
+                      <h3 className="text-2xl sm:text-4xl font-sans font-bold text-stone-900 capitalize tracking-tight">
+                        {sub || main} Collection Coming Soon...
+                      </h3>
+                      <p className="text-stone-500 font-light text-xs sm:text-sm leading-relaxed">
+                        Our master karigars and designers are currently curating and handcrafting our upcoming {sub || main} collection. Exquisite fabrics, bespoke silhouettes, and heirloom craftsmanship will be arriving shortly.
+                      </p>
+                    </div>
+
+                    {/* 3 Value Pillars */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-xl py-4 text-left">
+                      <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200/70 space-y-1">
+                        <p className="text-xs font-bold text-stone-900">Handcrafted Quality</p>
+                        <p className="text-[11px] text-stone-500 font-light">Artisanal embroidery and pure textiles tailored to perfection.</p>
+                      </div>
+                      <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200/70 space-y-1">
+                        <p className="text-xs font-bold text-stone-900">Curated New Drop</p>
+                        <p className="text-[11px] text-stone-500 font-light">Seasonal colors and modern fits currently in production.</p>
+                      </div>
+                      <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200/70 space-y-1">
+                        <p className="text-xs font-bold text-stone-900">Priority Patron Access</p>
+                        <p className="text-[11px] text-stone-500 font-light">Join the Atelier Circle in the footer for early notification.</p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+                      <Link
+                        to="/shop?category=Women"
+                        className="w-full sm:w-auto px-6 py-3 rounded-xl bg-stone-900 text-white font-sans uppercase tracking-widest text-xs font-bold hover:bg-amber-800 transition-colors shadow-md"
+                      >
+                        Explore Women's Collection
+                      </Link>
+                      <Link
+                        to="/shop"
+                        className="w-full sm:w-auto px-6 py-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 font-sans uppercase tracking-widest text-xs font-bold transition-colors"
+                      >
+                        View All Collections
+                      </Link>
+                    </div>
                   </motion.div>
                 ) : (
                   <motion.div

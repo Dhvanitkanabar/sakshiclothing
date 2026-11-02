@@ -123,7 +123,7 @@ export const Navbar = () => {
   const announcements = [
     "Free Express Delivery Across India on All Orders",
     "Bespoke Handcrafted Orders · Strict No Return Policy",
-    "100% Pure Silk Mark Certified Authentic Weaves",
+    "Premium Quality Guaranteed · Finest Fabrics & Contemporary Styles",
     "Surat Atelier & Artisanal Quality Guarantee"
   ];
   const [tickerIndex, setTickerIndex] = useState(0);
@@ -179,10 +179,10 @@ export const Navbar = () => {
       name: "Women",
       path: "/shop?category=Women",
       dropdown: [
-        { label: "Bridal Lehengas", path: "/shop?category=Women&sub=Bridal Lehengas" },
-        { label: "Banarasi Sarees", path: "/shop?category=Women&sub=Heritage Sarees" },
-        { label: "Anarkali Suits", path: "/shop?category=Women&sub=Couture Anarkalis" },
-        { label: "Festive Kurta Sets", path: "/shop?category=Women&sub=Artisanal Sets" },
+        { label: "Ethnic & Festive Sets", path: "/shop?category=Women&sub=Artisanal Sets" },
+        { label: "Dresses & Indo-Western", path: "/shop?category=Women&sub=Couture Anarkalis" },
+        { label: "Sarees & Drapes", path: "/shop?category=Women&sub=Heritage Sarees" },
+        { label: "Suits & Kurtis", path: "/shop?category=Women&sub=Bridal Lehengas" },
         { label: "View All Women", path: "/shop?category=Women" },
       ]
     },
@@ -190,47 +190,34 @@ export const Navbar = () => {
       name: "Men",
       path: "/shop?category=Men",
       dropdown: [
-        { label: "Royal Sherwanis", path: "/shop?category=Men&sub=Heritage Sherwanis" },
-        { label: "Bandhgala Jackets", path: "/shop?category=Men&sub=Suits & Jackets" },
-        { label: "Silk & Khadi Kurtas", path: "/shop?category=Men&sub=Modern Kurtas" },
-        { label: "Trousers & Stoles", path: "/shop?category=Men" },
+        { label: "Kurtas & Kurta Sets", path: "/shop?category=Men&sub=Modern Kurtas" },
+        { label: "Jackets & Blazers", path: "/shop?category=Men&sub=Suits & Jackets" },
+        { label: "Ethnic & Festive Wear", path: "/shop?category=Men&sub=Heritage Sherwanis" },
+        { label: "Shirts & Trousers", path: "/shop?category=Men" },
         { label: "View All Men", path: "/shop?category=Men" },
       ]
     },
     {
-      name: "Bridal",
-      path: "/shop?category=Bridal",
+      name: "Kids",
+      path: "/shop?category=Kids",
       dropdown: [
-        { label: "Red & Crimson Lehengas", path: "/shop?category=Women&sub=Bridal Lehengas" },
-        { label: "Pastel & Blush Lehengas", path: "/shop?category=Women&sub=Bridal Lehengas" },
-        { label: "Velvet Bridal Sets", path: "/shop?category=Women&sub=Bridal Lehengas" },
-        { label: "Bridal Dupattas & Veils", path: "/shop?category=Women" },
-        { label: "View Bridal Edit", path: "/shop?category=Bridal" },
-      ]
-    },
-    {
-      name: "Sarees",
-      path: "/shop?sub=Heritage Sarees",
-      dropdown: [
-        { label: "Katan Silk Sarees", path: "/shop?sub=Heritage Sarees" },
-        { label: "Kadwa Zari Banarasi", path: "/shop?sub=Heritage Sarees" },
-        { label: "Organza Tissue Sarees", path: "/shop?sub=Heritage Sarees" },
-        { label: "View All Sarees", path: "/shop?sub=Heritage Sarees" },
+        { label: "Boys Clothing", path: "/shop?category=Kids&sub=Boys" },
+        { label: "Girls Clothing", path: "/shop?category=Kids&sub=Girls" },
+        { label: "Kids Festive & Ethnic Wear", path: "/shop?category=Kids&sub=Festive" },
+        { label: "Casual & Party Wear", path: "/shop?category=Kids&sub=Casual" },
+        { label: "View All Kids", path: "/shop?category=Kids" },
       ]
     },
     {
       name: "Jewellery",
       path: "/shop?category=Jewellery",
       dropdown: [
-        { label: "Kundan Necklaces", path: "/shop?category=Jewellery" },
-        { label: "Polki Earrings", path: "/shop?category=Jewellery" },
-        { label: "Statement Chokers", path: "/shop?category=Jewellery" },
+        { label: "Necklaces & Chokers", path: "/shop?category=Jewellery" },
+        { label: "Earrings & Jhumkas", path: "/shop?category=Jewellery" },
+        { label: "Bangles & Bracelets", path: "/shop?category=Jewellery" },
+        { label: "Festive Jewellery Sets", path: "/shop?category=Jewellery" },
         { label: "View All Jewellery", path: "/shop?category=Jewellery" },
       ]
-    },
-    {
-      name: "New In",
-      path: "/shop?sortBy=newest"
     }
   ];
 
@@ -498,7 +485,7 @@ export const Navbar = () => {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search bridal lehengas, sarees, sherwanis, kurtas..."
+                  placeholder="Search womenswear, mens kurtas, kids wear, jewellery..."
                   autoFocus
                   className="w-full bg-transparent text-stone-900 text-sm placeholder:text-stone-400 focus:outline-none"
                 />
@@ -520,12 +507,12 @@ export const Navbar = () => {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {[
-                    "Bridal Lehenga",
-                    "Banarasi Saree",
-                    "Silk Sherwani",
-                    "Bandhgala Jacket",
-                    "Anarkali Suit",
-                    "Kundan Jewellery"
+                    "Women's Collection",
+                    "Men's Kurta Sets",
+                    "Kids Festive Wear",
+                    "Bandhgala Jackets",
+                    "Sarees & Drapes",
+                    "Polki Jewellery"
                   ].map((term) => (
                     <button
                       key={term}
