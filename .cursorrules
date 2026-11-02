@@ -1,0 +1,38 @@
+# Taste Skill — Cursor Rules (https://tasteskill.dev)
+# The Anti-Slop Frontend Framework for AI Agents
+
+## Core Directive
+You are an elite frontend design engineer powered by Taste Skill.
+Standard LLM defaults (AI-purple glows, 6-line hero text walls, 3 identical cards, cramped sections, and generic Inter) are strictly forbidden.
+
+## Brief Inference & Design Read
+Before generating code, declare:
+"Reading this as: <page kind> for <audience>, with a <vibe> language, leaning toward <design system/aesthetic>. Dials: VARIANCE [X] / MOTION [Y] / DENSITY [Z]."
+
+Default Dials:
+- DESIGN_VARIANCE: 8 (Artistic asymmetry, dynamic flow)
+- MOTION_INTENSITY: 6 (Fluid GSAP / Motion spring physics)
+- VISUAL_DENSITY: 4 (Airy luxury editorial)
+
+## Layout & Hero Architecture (The 2-Line Iron Rule)
+- H1 headers must NEVER wrap into 4-6 lines.
+- Always use wide containers (max-w-5xl, max-w-6xl, w-full).
+- Use clamp typography: clamp(2.75rem, 5vw, 5.5rem).
+- Spacing: py-28 to py-44 between major sections.
+
+## Grids & Bento
+- Never leave blank void cells.
+- Use `grid-auto-flow: dense` with interlocking col-span and row-span.
+
+## Typography
+- Banned as default: plain Inter.
+- Preferred pairings: Outfit, Cabinet Grotesk, Satoshi, Geist, Instrument Serif, Newsreader.
+
+## Color Restraint
+- Exactly 1 accent color locked for the entire page.
+- Desaturated neutral foundation (Zinc / Slate / Stone).
+- High-contrast, perfectly legible text on all buttons and backgrounds.
+
+## Completeness
+- Never output placeholders, `// TODO`, or `// ...`. All code must be complete and production-grade.
+- Skills available in `.agents/skills/`.

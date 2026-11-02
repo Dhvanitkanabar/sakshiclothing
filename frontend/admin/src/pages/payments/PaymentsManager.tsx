@@ -51,7 +51,7 @@ const PaymentsManager = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-2xl font-serif text-gray-900">Payment Gateway</h1>
+          <h1 className="text-2xl font-sans text-gray-900">Payment Gateway</h1>
           <p className="text-sm text-gray-500 mt-1">Manage and track all customer transactions.</p>
         </div>
       </div>
@@ -121,7 +121,7 @@ const PaymentsManager = () => {
               ) : (
                 payments.map((payment) => (
                   <tr key={payment._id} className="hover:bg-gray-50 transition-colors">
-                    <td className="p-4 font-mono text-xs text-gray-900">{payment.gatewayOrderId || payment._id}</td>
+                    <td className="p-4 font-sans text-xs text-gray-900">{payment.gatewayOrderId || payment._id}</td>
                     <td className="p-4">
                       <p className="font-medium text-gray-900">{payment.customer?.name || 'Guest'}</p>
                       <p className="text-xs text-gray-500">{payment.customer?.email || 'N/A'}</p>

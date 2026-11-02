@@ -15,7 +15,7 @@ const Login = () => {
     setIsSubmitting(true);
     
     try {
-      const success = await login(email, password);
+      const success = await login(email.trim(), password.trim());
       if (success) {
         toast.success('Login successful!');
         navigate('/dashboard');

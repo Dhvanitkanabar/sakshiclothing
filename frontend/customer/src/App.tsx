@@ -34,10 +34,19 @@ const PaymentRetry = lazy(() => import('./pages/PaymentRetry'));
 const TrackOrder = lazy(() => import('./pages/TrackOrder'));
 
 
+import ScrollToTop from './components/ScrollToTop';
+
 const AnimatedRoutes = () => {
   const location = useLocation();
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence 
+      mode="wait"
+      onExitComplete={() => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+        if (document.documentElement) document.documentElement.scrollTop = 0;
+        if (document.body) document.body.scrollTop = 0;
+      }}
+    >
       <motion.div
         key={location.pathname}
         initial={{ opacity: 0, y: 20 }}
@@ -97,6 +106,7 @@ export default function App() {
           <CartProvider>
             <WishlistProvider>
               <Router>
+                <ScrollToTop />
                 <AppContent />
               </Router>
             </WishlistProvider>

@@ -403,7 +403,7 @@ export default function CustomerList() {
                       {orderHistory.map((order: any) => (
                         <div key={order._id} className="flex items-center gap-4 bg-gray-50 rounded-xl px-4 py-3">
                           <div className="flex-1 min-w-0">
-                            <p className="font-mono text-sm font-medium text-gray-900">#{order.orderNumber || order._id?.slice(-8)}</p>
+                            <p className="font-sans text-sm font-medium text-gray-900">#{order.orderNumber || order._id?.slice(-8)}</p>
                             <p className="text-gray-400 text-xs mt-0.5">{new Date(order.createdAt).toLocaleDateString('en-IN')}</p>
                           </div>
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${

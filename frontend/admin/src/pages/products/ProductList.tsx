@@ -66,10 +66,10 @@ export default function ProductList() {
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-slate-800 to-[#090D16] p-8 rounded-3xl text-white shadow-xl border border-slate-800">
         <div>
-          <div className="flex items-center gap-2 text-amber-400 text-xs font-mono uppercase tracking-widest font-bold mb-1">
+          <div className="flex items-center gap-2 text-amber-400 text-xs font-sans uppercase tracking-widest font-bold mb-1">
             <Sparkles size={14} /> Catalog Management
           </div>
-          <h1 className="text-3xl font-serif font-bold tracking-tight text-white">Maison Products</h1>
+          <h1 className="text-3xl font-sans font-bold tracking-tight text-white">Maison Products</h1>
           <p className="text-sm text-slate-400 mt-1 font-sans">Manage luxury items, inventory levels, variants, and pricing.</p>
         </div>
         <Link
@@ -167,7 +167,7 @@ export default function ProductList() {
                         {product.status}
                       </button>
                     </td>
-                    <td className="px-6 py-4 font-serif font-bold text-slate-900 text-sm">
+                    <td className="px-6 py-4 font-sans font-bold text-slate-900 text-sm">
                       ₹{product.pricing?.basePrice?.toLocaleString()}
                     </td>
                     <td className="px-6 py-4">

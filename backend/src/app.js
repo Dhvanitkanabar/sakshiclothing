@@ -7,8 +7,13 @@ import hpp from 'hpp';
 import cookieParser from 'cookie-parser';
 import xss from 'xss';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import swaggerJsDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Import Custom Middlewares
 import notFound from './middlewares/notFound.js';
@@ -32,8 +37,10 @@ import addressRouter from './routes/address.routes.js';
 import userRouter from './routes/user.routes.js';
 import searchRouter from './routes/search.routes.js';
 import couponRouter from './routes/coupon.routes.js';
+import notificationRouter from './routes/notification.routes.js';
 
 import paymentRouter from './routes/payment.routes.js';
+import { createStandardOrder, verifyStandardPayment } from './controllers/payment.controller.js';
 
 // Initialize dotenv in application scope
 dotenv.config();
@@ -168,7 +175,9 @@ app.use(compression());
 app.use(requestLogger);
 
 // Static files and temporary uploads folders setup
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads', express.static(path.join(process.cwd(), 'backend/uploads')));
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 import { clerkMiddleware } from '@clerk/express';
 
@@ -194,8 +203,11 @@ app.use('/api/v1/addresses', addressRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/search', searchRouter);
 app.use('/api/v1/coupons', couponRouter);
+app.use('/api/v1/notifications', notificationRouter);
 
 app.use('/api/v1/payments', paymentRouter);
+app.post('/api/create-order', createStandardOrder);
+app.post('/api/verify-payment', verifyStandardPayment);
 
 // =========================================================================
 // Fallback Error & Not Found Middlewares

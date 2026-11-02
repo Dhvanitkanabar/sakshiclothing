@@ -293,7 +293,7 @@ export default function CustomerDetails() {
                   <tbody className="divide-y divide-gray-50">
                     {orderHistory.map((order: any) => (
                       <tr key={order._id} className="hover:bg-gray-50">
-                        <td className="py-3 font-mono text-gray-700">{order.orderNumber || order._id?.slice(-8)}</td>
+                        <td className="py-3 font-sans text-gray-700">{order.orderNumber || order._id?.slice(-8)}</td>
                         <td className="py-3 text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</td>
                         <td className="py-3">
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${

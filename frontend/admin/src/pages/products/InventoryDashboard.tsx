@@ -159,7 +159,7 @@ export default function InventoryDashboard() {
                   >
                     <div className="flex items-center gap-3 font-bold text-gray-900 text-sm">
                       {isCatExpanded ? <ChevronDown size={18} className="text-amber-600" /> : <ChevronRight size={18} className="text-gray-400" />}
-                      <span className="font-serif text-base">{parent.name}</span>
+                      <span className="font-sans text-base">{parent.name}</span>
                     </div>
                     <div className="flex items-center gap-4">
                       <span className="text-xs font-bold px-3 py-1 bg-amber-50 text-amber-700 rounded-full border border-amber-200/60">
@@ -221,7 +221,7 @@ export default function InventoryDashboard() {
                                               {p.name}
                                             </Link>
                                           </td>
-                                          <td className="py-3 px-3 font-serif font-bold text-gray-800">
+                                          <td className="py-3 px-3 font-sans font-bold text-gray-800">
                                             ₹{(p.pricing?.basePrice || p.price || 0).toLocaleString()}
                                           </td>
                                           <td className="py-3 px-3 font-bold text-gray-600">
@@ -267,7 +267,7 @@ export default function InventoryDashboard() {
                                       {p.name}
                                     </Link>
                                   </td>
-                                  <td className="py-3 px-3 font-serif font-bold text-gray-800">
+                                  <td className="py-3 px-3 font-sans font-bold text-gray-800">
                                     ₹{(p.pricing?.basePrice || p.price || 0).toLocaleString()}
                                   </td>
                                   <td className="py-3 px-3 font-bold text-gray-600">

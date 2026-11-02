@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import razorpayAdapter from './adapters/razorpay.adapter.js';
 import stripeAdapter from './adapters/stripe.adapter.js';
 import Payment from '../models/Payment.model.js';
@@ -62,8 +63,26 @@ class PaymentService {
       clientSecret: intentResponse.clientSecret,
       amount: intentResponse.amount,
       currency: intentResponse.currency,
-      gateway
+      gateway,
+      isSimulated: !!intentResponse.isSimulated
     };
+  }
+
+  verifyPaymentSignature(orderId, paymentId, signature) {
+    return razorpayAdapter.verifyPaymentSignature(orderId, paymentId, signature);
+  }
+
+  async verifyAndConfirmPayment(gatewayOrderId, gatewayPaymentId, signature) {
+    const isSignatureValid = this.verifyPaymentSignature(gatewayOrderId, gatewayPaymentId, signature);
+    if (!isSignatureValid) {
+      throw new Error('Invalid payment signature');
+    }
+    await this.handlePaymentSuccess(gatewayOrderId, gatewayPaymentId, 'razorpay', {
+      gatewayOrderId,
+      gatewayPaymentId,
+      signature
+    });
+    return { verified: true };
   }
 
   async processWebhook(gateway, body, signature, secret) {
@@ -101,9 +120,31 @@ class PaymentService {
   }
 
   async handlePaymentSuccess(gatewayOrderId, gatewayPaymentId, gateway, rawPayload) {
-    const payment = await Payment.findOne({ gatewayOrderId, gateway });
+    let payment = await Payment.findOne({ gatewayOrderId, gateway });
+    if (!payment && rawPayload?.orderId) {
+      payment = await Payment.findOne({ order: rawPayload.orderId });
+    }
+    if (!payment && rawPayload?.orderNumber) {
+      const orderMatch = await Order.findOne({ orderNumber: rawPayload.orderNumber });
+      if (orderMatch) {
+        payment = await Payment.findOne({ order: orderMatch._id });
+      }
+    }
+
     if (!payment) {
-      console.error(`Payment not found for ${gateway} order: ${gatewayOrderId}`);
+      console.warn(`Payment not found for ${gateway} order: ${gatewayOrderId}. Attempting direct order update fallback.`);
+      const directId = rawPayload?.orderId || rawPayload?.order_id;
+      if (directId) {
+        const order = (await Order.findById(directId).catch(() => null)) || (await Order.findOne({ orderNumber: directId }).catch(() => null));
+        if (order) {
+          order.paymentStatus = PAYMENT_STATUS.COMPLETED;
+          if (order.orderStatus === 'pending') {
+            order.orderStatus = 'processing';
+            order.timeline.push({ status: 'processing', note: 'Payment received and verified successfully.' });
+          }
+          await order.save();
+        }
+      }
       return;
     }
 

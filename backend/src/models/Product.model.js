@@ -156,8 +156,10 @@ productSchema.virtual('discountPercentage').get(function() {
 
 // Pre-save hook to calculate total stock from variants
 productSchema.pre('save', function(next) {
-  if (this.variants && this.variants.length > 0) {
-    this.inventory.totalStock = this.variants.reduce((total, v) => total + v.stock, 0);
+  if (this.variants && this.variants.length === 1 && this.variants[0].stock === 0 && (this.inventory?.totalStock || 0) > 0) {
+    this.variants[0].stock = this.inventory.totalStock;
+  } else if (this.variants && this.variants.length > 0) {
+    this.inventory.totalStock = this.variants.reduce((total, v) => total + (v.stock || 0), 0);
   }
   next();
 });

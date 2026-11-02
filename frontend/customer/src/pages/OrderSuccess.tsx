@@ -47,7 +47,7 @@ const OrderSuccess = () => {
           >
             <Sparkles size={12} /> Transaction Confirmed
           </motion.span>
-          <h1 className="text-7xl md:text-9xl font-serif font-medium tracking-tighter text-luxury-black">
+          <h1 className="text-7xl md:text-9xl font-sans font-medium tracking-tighter text-luxury-black">
             Welcome to <br />
             <span className="italic">the Maison</span>
           </h1>
@@ -68,7 +68,7 @@ const OrderSuccess = () => {
           </div>
           <div className="flex justify-between items-center pb-6 border-b border-gray-50">
             <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Total Investment</span>
-            <span className="text-lg font-serif font-medium text-luxury-black">₹{orderData.total.toLocaleString()}</span>
+            <span className="text-lg font-sans font-medium text-luxury-black">₹{orderData.total.toLocaleString()}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Status</span>

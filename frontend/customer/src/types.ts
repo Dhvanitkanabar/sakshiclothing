@@ -2,10 +2,10 @@ export interface Product {
   id: string;
   name: string;
   price: number;
-  category: 'Women' | 'Men' | 'Kids';
+  category: 'Women' | 'Men' | 'Kids' | 'Jewellery' | 'Bridal' | string;
   subCategory: string;
   sizes: string[];
-  variants?: { _id: string; size: string; color: string; stock: number; status?: string }[];
+  variants?: { _id?: string; size?: string; color?: string; stock?: number; status?: string; price?: number }[];
   image: string;
   images?: string[];
   description: string;
@@ -40,6 +40,6 @@ export interface Order {
   total: number;
   address: string;
   phone: string;
-  status: 'pending' | 'completed' | 'cancelled';
+  status: 'pending' | 'processing' | 'confirmed' | 'packed' | 'shipped' | 'out_for_delivery' | 'delivered' | 'cancelled' | 'rejected' | string;
   createdAt: any;
 }

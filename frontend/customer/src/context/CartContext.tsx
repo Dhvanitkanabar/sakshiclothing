@@ -5,7 +5,7 @@ import { useAuth as useClerkAuth } from '@clerk/clerk-react';
 
 interface CartContextType {
   cart: CartItem[];
-  addToCart: (product: Product, size: string, quantity: number) => void;
+  addToCart: (product: Product, size: string, quantity: number) => Promise<boolean>;
   removeFromCart: (productId: string, size: string) => void;
   updateQuantity: (productId: string, size: string, quantity: number) => void;
   clearCart: () => void;
@@ -73,16 +73,47 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [getClerkToken]);
 
-  // Fetch cart when auth state changes
+  // Fetch cart when auth state changes & restore pending cart item
   useEffect(() => {
     fetchCart();
+
+    const pendingItemStr = sessionStorage.getItem('pendingCartItem');
+    if (isSignedIn && pendingItemStr) {
+      try {
+        const { product, size, quantity } = JSON.parse(pendingItemStr);
+        sessionStorage.removeItem('pendingCartItem');
+        // Small delay to allow session token propagation
+        setTimeout(() => {
+          addToCart(product, size, quantity);
+        }, 300);
+      } catch {
+        sessionStorage.removeItem('pendingCartItem');
+      }
+    }
   }, [isSignedIn, fetchCart]);
 
-  const addToCart = async (product: Product, size: string, quantity: number) => {
-    let variantId = product.variants?.find(v => v.size === size)?._id;
-    if (!variantId && product.variants && product.variants.length > 0) {
-      variantId = product.variants[0]._id;
+  const addToCart = async (product: Product, size: string, quantity: number): Promise<boolean> => {
+    if (!isSignedIn) {
+      toast.info('Please sign in to add pieces to your shopping bag', {
+        description: 'Sign in to access your bag & secure checkout.'
+      });
+      sessionStorage.setItem('authRedirectUrl', window.location.pathname + window.location.search);
+      sessionStorage.setItem('pendingCartItem', JSON.stringify({ product, size, quantity }));
+      window.location.href = '/login';
+      return false;
     }
+
+    let targetVariant = product.variants?.find(v => v.size === size);
+    if (!targetVariant && product.variants && product.variants.length > 0) {
+      targetVariant = product.variants[0];
+    }
+    const availableStock = targetVariant?.stock !== undefined ? targetVariant.stock : (product as any).stock;
+    if (availableStock !== undefined && availableStock <= 0) {
+      toast.error(`"${product.name}" (${size || 'Standard'}) is currently out of stock.`);
+      return false;
+    }
+
+    let variantId = targetVariant?._id;
     // Fallback to product ID if no explicit sub-variants exist
     if (!variantId) {
       variantId = product.id;
@@ -97,15 +128,18 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }));
       const data = await res.json();
       if (data.success) {
-        toast.success(`Added ${product.name} to cart`);
+        toast.success(`Added ${product.name} to your shopping bag`);
         setIsCartOpen(true);
         fetchCart();
+        return true;
       } else {
         toast.error(data.message || 'Error adding to cart');
+        return false;
       }
     } catch (err) {
       console.error(err);
       toast.error('Failed to add to cart');
+      return false;
     }
   };
 

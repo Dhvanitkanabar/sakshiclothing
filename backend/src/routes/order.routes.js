@@ -12,7 +12,8 @@ import {
   trackOrderPublic,
   updateOrderStatus,
   updateTracking,
-  approveReturn
+  approveReturn,
+  updateOrderCoordinates
 } from '../controllers/order.controller.js';
 import { verifyJWT, authorizeRoles } from '../middlewares/auth.middleware.js';
 
@@ -35,6 +36,7 @@ router.post('/admin/:id/accept', verifyJWT, authorizeRoles('admin'), acceptOrder
 router.post('/admin/:id/reject', verifyJWT, authorizeRoles('admin'), rejectOrder);
 router.patch('/admin/:id/status', verifyJWT, authorizeRoles('admin'), updateOrderStatus);
 router.patch('/admin/:id/tracking', verifyJWT, authorizeRoles('admin'), updateTracking);
+router.patch('/admin/:id/coordinates', verifyJWT, authorizeRoles('admin'), updateOrderCoordinates);
 router.patch('/admin/:id/return', verifyJWT, authorizeRoles('admin'), approveReturn);
 
 export default router;

@@ -1,1 +1,32 @@
 @import "tailwindcss";
+
+@layer base {
+  :root {
+    --insight-prediction: #6366f1;
+    --insight-vitals: #f43f5e;
+    --insight-actions: #0d9488;
+    --vital-good: #10b981;
+    --prediction-warn: #f59e0b;
+    --prediction-danger: #ef4444;
+    --chart-warn: #f59e0b;
+    --chart-period: #64748b;
+    --live: #10b981;
+    --font-serif: 'Plus Jakarta Sans', 'Inter', 'Outfit', system-ui, sans-serif;
+    --font-sans: 'Plus Jakarta Sans', 'Inter', 'Outfit', system-ui, sans-serif;
+    --font-mono: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    color: #0f172a;
+    background-color: #f8fafc;
+  }
+}
+
+html, body, #root, *, *::before, *::after {
+  font-family: "Plus Jakarta Sans", "Inter", "Outfit", system-ui, -apple-system, sans-serif !important;
+}
+
+.font-serif, .font-sans, .font-mono {
+  font-family: "Plus Jakarta Sans", "Inter", "Outfit", system-ui, -apple-system, sans-serif !important;
+}

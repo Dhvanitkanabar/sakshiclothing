@@ -3,81 +3,55 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Product } from '../types';
 import ProductCard from '../components/ProductCard';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronRight, SlidersHorizontal, SearchX, X, Sparkles, ArrowUpRight, CheckCircle2, ShieldCheck, Truck, Filter } from 'lucide-react';
+import { ChevronRight, SlidersHorizontal, SearchX, X, Sparkles, ShieldCheck, Truck, Filter } from 'lucide-react';
 import Skeleton from '../components/ui/Skeleton';
 import { fetchProducts, API_URL } from '../lib/api';
+import { PRODUCTS } from '../data/products';
 
 // Curated high-resolution realistic photography for categories & subcategories
 const CATEGORY_IMAGES: Record<string, string> = {
-  jewellery: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1920&q=80',
-  clothing: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1920&q=80',
-  accessories: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=1920&q=80',
-  footwear: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=1920&q=80',
+  jewellery: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=1920&q=80',
+  women: 'https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?w=1920&q=80',
+  men: 'https://images.unsplash.com/photo-1783188223691-8a233ee51cd8?w=1920&q=80',
+  bridal: 'https://images.unsplash.com/photo-1651132133386-a64fbf794081?w=1920&q=80',
+  clothing: 'https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?w=1920&q=80'
 };
 
 const SUBCATEGORY_IMAGES: Record<string, string> = {
-  // Clothing Subcategories
-  'dresses': 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&q=80',
-  'tops & shirts': 'https://images.unsplash.com/photo-1618244972963-dbee1a7edc95?w=800&q=80',
-  'tops': 'https://images.unsplash.com/photo-1618244972963-dbee1a7edc95?w=800&q=80',
+  'bridal lehengas': 'https://images.unsplash.com/photo-1651132133386-a64fbf794081?w=800&q=80',
+  'heritage sarees': 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80',
   'sarees': 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=80',
-  'kurtas': 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=800&q=80',
-  'lehengas': 'https://images.unsplash.com/photo-1583391733975-0e7195821c9a?w=800&q=80',
-  'jackets': 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800&q=80',
-  'bottoms': 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=800&q=80',
-
-  // Jewellery Subcategories
-  'necklaces': 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&q=80',
-  'earrings': 'https://images.unsplash.com/photo-1630019852942-f89202989a59?w=800&q=80',
-  'bangles': 'https://images.unsplash.com/photo-1611591475285-a36ad5e14391?w=800&q=80',
-  'bracelets': 'https://images.unsplash.com/photo-1611591475285-a36ad5e14391?w=800&q=80',
-  'rings': 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&q=80',
-  'pendants': 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&q=80',
-
-  // Accessories Subcategories
-  'handbags': 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&q=80',
-  'bags': 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&q=80',
-  'sunglasses': 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=800&q=80',
-  'scarves': 'https://images.unsplash.com/photo-1601924994987-69e26d50dc26?w=800&q=80',
-  'belts': 'https://images.unsplash.com/photo-1624222247344-550fb60583dc?w=800&q=80',
-
-  // Footwear Subcategories
-  'heels': 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=800&q=80',
-  'flats': 'https://images.unsplash.com/photo-1560343776-97e7d202ff0e?w=800&q=80',
-  'sneakers': 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80',
-  'boots': 'https://images.unsplash.com/photo-1520639888713-7851133b1ed0?w=800&q=80',
+  'heritage sherwanis': 'https://images.unsplash.com/photo-1783188223691-8a233ee51cd8?w=800&q=80',
+  'couture anarkalis': 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=800&q=80',
+  'modern kurtas': 'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?w=800&q=80',
+  'suits & jackets': 'https://plus.unsplash.com/premium_photo-1682090774051-77cdd6b1e7cd?w=800&q=80',
+  'heritage jewels': 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&q=80'
 };
 
-const getSubCategoryImage = (subName: string, subSlug: string, parentSlug?: string) => {
+const getSubCategoryImage = (subName: string) => {
   const nameKey = (subName || '').toLowerCase().trim();
-  const slugKey = (subSlug || '').toLowerCase().trim();
   if (SUBCATEGORY_IMAGES[nameKey]) return SUBCATEGORY_IMAGES[nameKey];
-  if (SUBCATEGORY_IMAGES[slugKey]) return SUBCATEGORY_IMAGES[slugKey];
-  if (parentSlug === 'jewellery') return 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&q=80';
-  if (parentSlug === 'accessories') return 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&q=80';
-  if (parentSlug === 'footwear') return 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=800&q=80';
-  return 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&q=80';
+  return 'https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?w=800&q=80';
 };
 
-const Category = () => {
+export const Category = () => {
   const { main, sub } = useParams<{ main: string; sub?: string }>();
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [subcategories, setSubcategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
-  const [maxProductPrice, setMaxProductPrice] = useState(10000);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 160000]);
+  const [maxProductPrice, setMaxProductPrice] = useState(160000);
   const [sortBy, setSortBy] = useState('featured');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Fetch subcategories for the current main category
   useEffect(() => {
     if (!main) return;
     fetch(`${API_URL}/categories?parentSlug=${main}`)
       .then(r => r.json())
       .then(data => {
-        if (data.success) {
+        if (data.success && data.data) {
           const subs = (data.data || []).filter((c: any) =>
             c.parentCategory?.slug?.toLowerCase() === main.toLowerCase() ||
             c.parentCategory?.name?.toLowerCase() === main.toLowerCase()
@@ -91,14 +65,26 @@ const Category = () => {
   useEffect(() => {
     const loadCategoryProducts = async () => {
       setLoading(true);
-      const filterKey = sub || main;
+      const filterKey = sub || main || '';
       const data = await fetchProducts({ category: filterKey });
-      setProducts(data);
-      setFilteredProducts(data);
-      if (data.length > 0) {
-        const maxP = Math.max(...data.map((p: Product) => p.price), 1000);
-        setMaxProductPrice(Math.ceil(maxP / 500) * 500);
-        setPriceRange([0, Math.ceil(maxP / 500) * 500]);
+      
+      let validData = (data && data.length > 0) ? data : [];
+      if (validData.length === 0) {
+        const lowerKey = filterKey.toLowerCase();
+        validData = PRODUCTS.filter(p => 
+          p.category.toLowerCase().includes(lowerKey) || 
+          p.subCategory?.toLowerCase().includes(lowerKey) ||
+          p.name.toLowerCase().includes(lowerKey)
+        );
+      }
+      const finalData = validData.length > 0 ? validData : PRODUCTS;
+      
+      setProducts(finalData);
+      setFilteredProducts(finalData);
+      if (finalData.length > 0) {
+        const maxP = Math.max(...finalData.map((p: Product) => p.price), 160000);
+        setMaxProductPrice(Math.ceil(maxP / 5000) * 5000);
+        setPriceRange([0, Math.ceil(maxP / 5000) * 5000]);
       }
       setLoading(false);
     };
@@ -112,23 +98,20 @@ const Category = () => {
     result = result.filter(p => p.price >= minPrice && p.price <= maxPrice);
     if (sortBy === 'low-high') result.sort((a, b) => a.price - b.price);
     else if (sortBy === 'high-low') result.sort((a, b) => b.price - a.price);
-    else if (sortBy === 'featured') result.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
-    setFilteredProducts(prev => {
-      if (JSON.stringify(prev) === JSON.stringify(result)) return prev;
-      return result;
-    });
+    else if (sortBy === 'newest') result.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+    setFilteredProducts(result);
   }, [priceRange[0], priceRange[1], sortBy, products, loading]);
 
-  const heroImage = CATEGORY_IMAGES[main?.toLowerCase() || ''] || `https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1920&q=80`;
+  const heroImage = CATEGORY_IMAGES[main?.toLowerCase() || ''] || `https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?w=1920&q=80`;
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6]">
+    <div className="min-h-screen bg-[#FAF8F5] pb-28 lg:pb-16 text-stone-900 selection:bg-amber-400 selection:text-black">
       {/* Category Hero Header */}
-      <div className="relative min-h-[50vh] md:min-h-[60vh] flex items-center justify-center overflow-hidden bg-black text-white">
+      <div className="relative min-h-[42vh] sm:min-h-[50vh] flex items-center justify-center overflow-hidden bg-stone-950 text-white">
         <motion.div
           initial={{ opacity: 0, scale: 1.08 }}
           animate={{ opacity: 0.65, scale: 1 }}
-          transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
           className="absolute inset-0"
         >
           <img
@@ -137,32 +120,32 @@ const Category = () => {
             className="w-full h-full object-cover filter brightness-90"
             referrerPolicy="no-referrer"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#FAF9F6] via-black/40 to-black/60" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#FAF8F5] via-black/45 to-black/60" />
         </motion.div>
 
-        <div className="relative z-10 text-center px-6 max-w-5xl mx-auto pt-24 pb-16">
+        <div className="relative z-10 text-center px-5 max-w-4xl mx-auto pt-16 pb-12 sm:pt-20 sm:pb-16">
           <motion.nav
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[10px] text-white uppercase tracking-[0.3em] mb-8 font-sans font-bold shadow-2xl"
+            transition={{ delay: 0.15 }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[9px] sm:text-[10px] text-white uppercase tracking-[0.28em] mb-6 font-sans font-bold shadow-xl"
           >
-            <Link to="/" className="hover:text-amber-300 transition-colors">Home</Link>
+            <Link to="/" className="hover:text-amber-300 transition-colors">Atelier</Link>
             <ChevronRight size={10} />
-            <Link to={`/category/${main}`} className="hover:text-amber-300 transition-colors">{main}</Link>
+            <Link to={`/category/${main}`} className="hover:text-amber-300 transition-colors capitalize">{main}</Link>
             {sub && (
               <>
                 <ChevronRight size={10} />
-                <span className="text-amber-300">{sub}</span>
+                <span className="text-amber-300 capitalize">{sub}</span>
               </>
             )}
           </motion.nav>
 
           <motion.h1
-            initial={{ opacity: 0, y: 25 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.8 }}
-            className="text-5xl md:text-8xl font-serif font-medium tracking-tight text-white capitalize leading-tight mb-4 drop-shadow-md"
+            transition={{ delay: 0.25, duration: 0.7 }}
+            className="text-3xl sm:text-5xl md:text-6xl font-sans font-light tracking-tight text-white capitalize leading-tight mb-3 drop-shadow-md"
           >
             {sub ? sub : main}
           </motion.h1>
@@ -170,167 +153,125 @@ const Category = () => {
           <motion.p
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="text-white/80 text-sm md:text-base font-light max-w-xl mx-auto tracking-wide"
+            transition={{ delay: 0.35 }}
+            className="text-white/80 text-xs sm:text-sm font-light max-w-lg mx-auto tracking-wide"
           >
-            Handcrafted luxury pieces curated with precision, elegance, and timeless allure.
+            Authentic handcrafted fashion curated with precision, pure Ahimsa silks, and Rajputana royal traditions.
           </motion.p>
 
-          {/* Luxury Highlights Bar */}
+          {/* Highlights Bar */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="mt-10 flex flex-wrap justify-center items-center gap-6 md:gap-12 text-[11px] font-bold text-white/90 uppercase tracking-widest"
+            transition={{ delay: 0.45 }}
+            className="mt-6 sm:mt-8 flex flex-wrap justify-center items-center gap-4 sm:gap-8 text-[10px] sm:text-[11px] font-sans text-white/90 uppercase tracking-widest"
           >
-            <div className="flex items-center gap-2">
-              <ShieldCheck size={16} className="text-amber-400" /> 100% Authentic Luxury
+            <div className="flex items-center gap-1.5">
+              <ShieldCheck size={14} className="text-amber-400" /> 100% Silk Mark Authenticated
             </div>
-            <div className="flex items-center gap-2">
-              <Sparkles size={16} className="text-amber-400" /> Artisan Handcrafted
+            <div className="flex items-center gap-1.5">
+              <Sparkles size={14} className="text-amber-400" /> 24K Real Zari Craft
             </div>
-            <div className="flex items-center gap-2">
-              <Truck size={16} className="text-amber-400" /> Express Complimentary Shipping
+            <div className="flex items-center gap-1.5">
+              <Truck size={14} className="text-amber-400" /> Insured White-Glove Courier
             </div>
           </motion.div>
         </div>
       </div>
 
-      <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-12 py-16">
-
-
-
-        <div className="flex flex-col lg:flex-row gap-12">
-          {/* Mobile Filter Toggle */}
-          <div className="lg:hidden flex justify-between items-center mb-8 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest border border-black bg-black text-white px-6 py-3 rounded-xl"
-            >
-              <SlidersHorizontal size={14} />
-              {showFilters ? 'Hide Filters' : 'Filter & Sort'}
-            </button>
-            <span className="text-xs text-gray-500 font-bold uppercase tracking-widest">
-              {filteredProducts.length} Products
-            </span>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
+        {/* Mobile Filter Toggle Bar */}
+        <div className="lg:hidden flex justify-between items-center mb-6 pb-4 border-b border-stone-200">
+          <div>
+            <h3 className="text-base font-sans font-bold text-stone-900 uppercase">
+              {sub ? `${sub}` : `All ${main}`}
+            </h3>
+            <p className="text-[11px] font-sans text-stone-500">{filteredProducts.length} Items</p>
           </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center gap-1.5 px-4 py-2 bg-stone-900 text-white rounded-full text-xs font-sans uppercase tracking-wider font-bold"
+          >
+            <Filter size={12} />
+            <span>Refine</span>
+          </button>
+        </div>
 
-          {/* Premium Sidebar */}
-          <aside className={`lg:w-72 flex-shrink-0 ${showFilters ? 'block' : 'hidden lg:block'}`}>
-            <div className="sticky top-32 bg-white rounded-3xl p-8 shadow-sm border border-gray-100 space-y-10">
-
-              {/* Subcategories Sidebar Filter */}
-              {subcategories.length > 0 && (
-                <div>
-                  <div className="flex items-center gap-2 pb-3 mb-4 border-b border-gray-100">
-                    <Filter size={14} className="text-black" />
-                    <p className="text-xs font-serif font-bold uppercase tracking-wider text-black">Subcollections</p>
-                  </div>
-                  <ul className="space-y-1.5">
-                    <li>
-                      <Link
-                        to={`/category/${main}`}
-                        className={`flex items-center justify-between text-xs font-bold uppercase tracking-wider px-4 py-3 rounded-xl transition-all ${
-                          !sub ? 'bg-black text-white shadow-md' : 'text-gray-600 hover:bg-gray-50 hover:text-black'
-                        }`}
-                      >
-                        <span>All {main}</span>
-                        <ChevronRight size={12} />
-                      </Link>
-                    </li>
-                    {subcategories.map((sc: any) => (
-                      <li key={sc._id}>
-                        <Link
-                          to={`/category/${main}/${sc.slug}`}
-                          className={`flex items-center justify-between text-xs font-medium uppercase tracking-wider px-4 py-3 rounded-xl transition-all ${
-                            sub === sc.slug ? 'bg-black text-white font-bold shadow-md' : 'text-gray-600 hover:bg-gray-50 hover:text-black'
-                          }`}
-                        >
-                          <span>{sc.name}</span>
-                          <ChevronRight size={12} className={sub === sc.slug ? 'text-white' : 'text-gray-400'} />
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Price Range Slider */}
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
+          {/* Sidebar Filters */}
+          <aside className={`w-full lg:w-64 shrink-0 space-y-6 ${showFilters ? 'block' : 'hidden lg:block'}`}>
+            <div className="bg-white p-5 sm:p-6 rounded-3xl border border-stone-200/90 shadow-xs space-y-6">
               <div>
-                <div className="flex justify-between items-center pb-3 mb-4 border-b border-gray-100">
-                  <p className="text-xs font-serif font-bold uppercase tracking-wider text-black">Max Price</p>
-                  <span className="text-xs font-bold text-black">₹{priceRange[1].toLocaleString()}</span>
-                </div>
+                <span className="text-[10px] font-sans uppercase tracking-widest text-stone-400 font-bold block mb-3">
+                  PRICE THRESHOLD
+                </span>
                 <input
                   type="range"
-                  min={0}
+                  min="0"
                   max={maxProductPrice}
-                  step={100}
+                  step="5000"
                   value={priceRange[1]}
                   onChange={e => setPriceRange([priceRange[0], Number(e.target.value)])}
-                  className="w-full accent-black h-1.5 bg-gray-200 rounded-lg cursor-pointer"
+                  className="w-full accent-stone-900 h-1.5 bg-stone-200 rounded-lg cursor-pointer"
                 />
-                <div className="flex justify-between text-[11px] text-gray-500 font-medium mt-3">
+                <div className="flex justify-between text-xs font-sans text-stone-600 mt-2">
                   <span>₹0</span>
-                  <span>₹{maxProductPrice.toLocaleString()}</span>
+                  <span className="font-bold text-stone-900">₹{priceRange[1].toLocaleString('en-IN')}</span>
                 </div>
               </div>
 
-              {/* Sort By Dropdown */}
               <div>
-                <div className="pb-3 mb-4 border-b border-gray-100">
-                  <p className="text-xs font-serif font-bold uppercase tracking-wider text-black">Sort Order</p>
-                </div>
+                <span className="text-[10px] font-sans uppercase tracking-widest text-stone-400 font-bold block mb-3">
+                  SORT ORDER
+                </span>
                 <select
                   value={sortBy}
                   onChange={e => setSortBy(e.target.value)}
-                  className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-xs text-black font-medium focus:ring-2 focus:ring-black focus:outline-none bg-gray-50/50"
+                  className="w-full border border-stone-200 rounded-xl px-3.5 py-2.5 text-xs font-sans text-stone-900 focus:ring-1 focus:ring-stone-900 focus:outline-none bg-stone-50"
                 >
-                  <option value="featured">✨ Featured Collection</option>
-                  <option value="low-high">🏷️ Price: Low to High</option>
-                  <option value="high-low">💎 Price: High to Low</option>
+                  <option value="featured">✦ Curated Collection</option>
+                  <option value="low-high">Price: Low to High</option>
+                  <option value="high-low">Price: High to Low</option>
+                  <option value="newest">New Arrivals</option>
                 </select>
               </div>
 
-              {/* Active filters summary */}
               {(priceRange[1] < maxProductPrice || sortBy !== 'featured') && (
                 <button
                   onClick={() => { setPriceRange([0, maxProductPrice]); setSortBy('featured'); }}
-                  className="w-full py-3 rounded-2xl border border-rose-200 bg-rose-50 text-rose-700 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-rose-100 transition-all"
+                  className="w-full py-2.5 rounded-xl border border-stone-200 bg-stone-100 text-stone-700 text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 hover:bg-stone-200 transition-colors"
                 >
-                  <X size={14} /> Clear All Filters
+                  <X size={13} /> Reset Filters
                 </button>
               )}
             </div>
           </aside>
 
-          {/* Product Grid Main Area */}
-          <main className="flex-grow">
-            <div className="hidden lg:flex justify-between items-center mb-8 pb-4 border-b border-gray-200/60">
+          {/* Product Grid Area (2 columns on mobile, 3 on desktop) */}
+          <main className="flex-grow w-full">
+            <div className="hidden lg:flex justify-between items-center mb-6 pb-3 border-b border-stone-200">
               <div>
-                <h3 className="text-xl font-serif font-bold text-black uppercase tracking-wide">
-                  {sub ? `${sub} Collection` : `All ${main}`}
+                <h3 className="text-xl font-sans font-bold text-stone-900 uppercase tracking-wide">
+                  {sub ? `${sub} Atelier` : `All ${main} Masterpieces`}
                 </h3>
-                <p className="text-xs text-muted mt-0.5">Showing {filteredProducts.length} luxury creations</p>
+                <p className="text-xs font-sans text-stone-500 mt-0.5">Showing {filteredProducts.length} items</p>
               </div>
             </div>
 
             {loading ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3.5 sm:gap-6">
                 {[1, 2, 3, 4, 5, 6].map(i => (
-                  <div key={i} className="space-y-6">
-                    <Skeleton className="aspect-[3/4] rounded-3xl" />
-                    <div className="space-y-3">
-                      <Skeleton className="h-6 w-3/4" />
-                      <Skeleton className="h-4 w-1/2" />
-                    </div>
+                  <div key={i} className="space-y-3">
+                    <Skeleton className="aspect-[3/4] rounded-2xl" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
                   </div>
                 ))}
               </div>
             ) : (
               <AnimatePresence mode="popLayout">
                 {filteredProducts.length > 0 ? (
-                  <motion.div layout className="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
+                  <motion.div layout className="grid grid-cols-2 md:grid-cols-3 gap-3.5 sm:gap-6">
                     {filteredProducts.map((product) => (
                       <ProductCard key={product.id} product={product} />
                     ))}
@@ -339,18 +280,18 @@ const Category = () => {
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="text-center py-32 bg-white rounded-3xl border border-gray-100 shadow-sm flex flex-col items-center px-6"
+                    className="text-center py-24 sm:py-32 bg-white rounded-3xl border border-stone-200 shadow-xs flex flex-col items-center px-6"
                   >
-                    <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6 text-black border border-gray-100">
-                      <SearchX size={32} />
+                    <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mb-4 text-stone-400">
+                      <SearchX size={28} />
                     </div>
-                    <h3 className="text-2xl font-serif font-bold text-black mb-2">No Pieces Found</h3>
-                    <p className="text-muted font-light max-w-sm mx-auto mb-8 text-xs leading-relaxed">
-                      We couldn't find any products matching your current price or category criteria. Try broadening your filter selection.
+                    <h3 className="text-xl font-sans font-bold text-stone-900 mb-2">No Products Found</h3>
+                    <p className="text-stone-500 font-light max-w-sm mx-auto mb-6 text-xs leading-relaxed">
+                      We couldn't find any creations matching your current price threshold. Try broadening your filter selection.
                     </p>
                     <button
                       onClick={() => { setPriceRange([0, maxProductPrice]); setSortBy('featured'); if (sub) navigate(`/category/${main}`); }}
-                      className="px-8 py-4 rounded-2xl bg-black text-white font-bold uppercase tracking-widest text-xs hover:bg-gray-800 transition-all shadow-md"
+                      className="px-6 py-3 rounded-xl bg-stone-900 text-white font-sans uppercase tracking-widest text-xs font-bold hover:bg-amber-800 transition-colors"
                     >
                       Explore All {main}
                     </button>

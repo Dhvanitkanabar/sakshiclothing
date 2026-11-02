@@ -6,7 +6,10 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShieldCheck, CreditCard, ArrowLeft, ChevronRight, Lock, Tag, Award, MapPin, Edit3 } from 'lucide-react';
+import {
+  ShieldCheck, CreditCard, ArrowLeft, ChevronRight, Lock, Tag, Award, MapPin, Edit3,
+  Smartphone, AlertCircle, Navigation
+} from 'lucide-react';
 import MapPicker from '../components/MapPicker';
 
 import { fetchAddresses, addAddress, placeOrder, authedFetch } from '../lib/api';
@@ -26,6 +29,21 @@ const Checkout = () => {
   const [addressInputMode, setAddressInputMode] = useState<'manual' | 'map'>('manual');
   const [showConfirmation, setShowConfirmation] = useState(false);
 
+
+
+  const getFreshClerkToken = async (): Promise<string | null> => {
+    try {
+      const fresh = await getClerkToken();
+      if (fresh) {
+        setClerkToken(fresh);
+        return fresh;
+      }
+    } catch (err) {
+      console.warn('Could not refresh Clerk token:', err);
+    }
+    return clerkToken;
+  };
+
   const [formData, setFormData] = useState({
     fullName: user?.fullName || user?.name || '',
     address: '',
@@ -42,6 +60,11 @@ const Checkout = () => {
   const [useLoyalty, setUseLoyalty] = useState(false);
   const [paymentGateway, setPaymentGateway] = useState('razorpay'); // 'razorpay', 'stripe', 'cod'
   const [selectedPaymentMode, setSelectedPaymentMode] = useState<'upi' | 'cards_all' | 'cod'>('upi');
+
+  // Exact Delivery GPS Coordinates State
+  const [detectedCoords, setDetectedCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [detectingLocation, setDetectingLocation] = useState(false);
+  const [showMapPicker, setShowMapPicker] = useState(false);
 
   const baseTotal = totalPrice;
   const loyaltyDiscount = useLoyalty ? Math.min(loyaltyPoints, baseTotal - discount) : 0;
@@ -107,6 +130,48 @@ const Checkout = () => {
     }
   };
 
+  const handleDetectLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by your browser');
+      return;
+    }
+    setDetectingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setDetectedCoords({ lat: latitude, lng: longitude });
+        toast.success(`Exact GPS pin captured: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+        
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`);
+          const data = await res.json();
+          if (data && data.address) {
+            const addr = data.address;
+            const streetParts = [];
+            if (addr.house_number) streetParts.push(addr.house_number);
+            if (addr.road) streetParts.push(addr.road);
+            if (addr.suburb) streetParts.push(addr.suburb);
+            const street = streetParts.join(', ') || data.display_name.split(',')[0];
+
+            setFormData(prev => ({
+              ...prev,
+              address: prev.address || street,
+              city: prev.city || addr.city || addr.town || addr.village || addr.county || '',
+              state: prev.state || addr.state || '',
+              zip: prev.zip || addr.postcode || ''
+            }));
+          }
+        } catch {}
+        setDetectingLocation(false);
+      },
+      (err) => {
+        toast.error(`Location detection failed: ${err.message}`);
+        setDetectingLocation(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
   const handlePaymentRequest = (e: React.FormEvent) => {
     e.preventDefault();
     // User is authenticated via Clerk — just check the session is loaded
@@ -124,10 +189,125 @@ const Checkout = () => {
     setShowConfirmation(true);
   };
 
+  const openRazorpayModal = (intentData: any, orderData: any, activeToken: string | null) => {
+    const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
+    if (!razorpayKey || razorpayKey.includes('REPLACE_WITH')) {
+      toast.error('Razorpay Live Key is not configured yet. Please add your Key ID in frontend/customer/.env');
+      setLoading(false);
+      return;
+    }
+
+    if (typeof (window as any).Razorpay === 'undefined') {
+      toast.error('Payment gateway SDK is still initializing. Please tap Confirm & Pay again.');
+      setLoading(false);
+      return;
+    }
+
+    const options: any = {
+      key: razorpayKey,
+      amount: intentData.amount, // amount in paise
+      currency: intentData.currency || 'INR',
+      name: 'Sakshi Clothing',
+      description: `Order #${orderData.orderNumber}`,
+      order_id: intentData.gatewayOrderId,
+      // If user selected UPI, prioritize UPI apps and live dynamic QR code
+      ...(selectedPaymentMode === 'upi' ? {
+        config: {
+          display: {
+            blocks: {
+              upi: {
+                name: 'Pay with UPI (GPay, PhonePe, Paytm, QR)',
+                instruments: [{ method: 'upi' }]
+              },
+              cards: {
+                name: 'Cards, Netbanking & Others',
+                instruments: [{ method: 'card' }, { method: 'netbanking' }, { method: 'wallet' }]
+              }
+            },
+            sequence: ['block.upi', 'block.cards'],
+            preferences: { show_default_blocks: true }
+          }
+        }
+      } : {}),
+      handler: async function (response: any) {
+        setLoading(true);
+        const toastId = toast.loading('Securing live bank confirmation...');
+        try {
+          const freshToken = await getFreshClerkToken() || activeToken;
+          const verifyRes = await authedFetch(`${API_URL}/payments/verify-payment`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              order_id: response.razorpay_order_id,
+              payment_id: response.razorpay_payment_id,
+              orderId: orderData._id || orderData.id,
+              orderNumber: orderData.orderNumber
+            })
+          }, freshToken);
+
+          const verifyData = await verifyRes.json();
+          toast.dismiss(toastId);
+
+          if (verifyRes.ok && verifyData.success) {
+            try {
+              const bc = new BroadcastChannel('sakshi_order_sync');
+              bc.postMessage({ type: 'ORDER_PLACED', orderId: orderData.orderNumber });
+              bc.close();
+            } catch {}
+            toast.success('Live payment received! Your bespoke order is confirmed.');
+            clearCart();
+            navigate('/order-success', { state: { orderId: orderData.orderNumber, total: finalTotal } });
+          } else {
+            toast.error(verifyData.error || verifyData.message || 'Payment verification failed: Signature mismatch.');
+          }
+        } catch (verifErr: any) {
+          toast.dismiss(toastId);
+          console.error('Payment verification error:', verifErr);
+          toast.error(verifErr.message || 'Payment verification encountered an issue.');
+        } finally {
+          setLoading(false);
+        }
+      },
+      prefill: {
+        name: user?.fullName || user?.name || formData.fullName || 'Customer',
+        email: user?.email || 'customer@sakshiclothing.com',
+        contact: formData.phone || user?.phone || ''
+      },
+      modal: {
+        ondismiss: function () {
+          toast.info('Payment window closed.');
+          setLoading(false);
+        }
+      },
+      notes: {
+        order_number: orderData.orderNumber,
+        selected_mode: selectedPaymentMode
+      },
+      theme: { color: '#1c1917' }
+    };
+
+    try {
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on('payment.failed', function (response: any) {
+        toast.error(response?.error?.description || 'Payment failed or declined by your bank.');
+        setLoading(false);
+      });
+      rzp.open();
+    } catch (e: any) {
+      console.error('Razorpay initialization exception:', e);
+      toast.error('Unable to open payment modal. Please refresh and retry.');
+      setLoading(false);
+    }
+  };
+
   const executePayment = async () => {
     setLoading(true);
 
     try {
+      const activeToken = await getFreshClerkToken();
       let finalAddressId = selectedAddressId;
       if (isAddingNew || addresses.length === 0) {
         // Create new address
@@ -141,8 +321,9 @@ const Checkout = () => {
           state: formData.state || formData.city,
           country: formData.country,
           pincode: formData.zip,
+          coordinates: detectedCoords || undefined,
           isDefault: true
-        }, clerkToken);
+        }, activeToken);
         if (res.success) {
           finalAddressId = res.data._id || res.data.id;
         } else {
@@ -153,7 +334,7 @@ const Checkout = () => {
       }
 
       toast.loading('Securing your transaction...');
-      const orderRes = await placeOrder(finalAddressId, true, clerkToken, cart.map(item => ({
+      const orderRes = await placeOrder(finalAddressId, true, activeToken, cart.map(item => ({
         productId: item.id,
         variantId: item.variantId,
         quantity: item.quantity
@@ -168,17 +349,22 @@ const Checkout = () => {
 
       if (paymentGateway === 'cod') {
         toast.success('Order confirmed. Welcome to the Maison.');
+        try {
+          const bc = new BroadcastChannel('sakshi_order_sync');
+          bc.postMessage({ type: 'ORDER_PLACED', orderId: orderRes.data.orderNumber });
+          bc.close();
+        } catch {}
         clearCart(); // Local clear
         navigate('/order-success', { state: { orderId: orderRes.data.orderNumber, total: finalTotal } });
         return;
       }
 
-      // Create Payment Intent with Clerk Token auth
+      // Create Payment Intent with active token
       const intentRes = await authedFetch(`${API_URL}/payments/create-intent`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderId: orderRes.data._id || orderRes.data.id, gateway: paymentGateway })
-      }, clerkToken);
+      }, activeToken);
       const intentData = await intentRes.json();
 
       if (!intentData.success) {
@@ -187,59 +373,10 @@ const Checkout = () => {
         return;
       }
 
+      setShowConfirmation(false);
       if (paymentGateway === 'razorpay') {
-        const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TcbUFZUs36mOw8';
-        const options: any = {
-          key: razorpayKey,
-          amount: intentData.data.amount,
-          currency: intentData.data.currency || 'INR',
-          name: 'Sakshi Clothing',
-          description: `Order ${orderRes.data.orderNumber}`,
-          handler: function (response: any) {
-            toast.success('Payment successful!');
-            clearCart();
-            navigate('/order-success', { state: { orderId: orderRes.data.orderNumber, total: finalTotal } });
-          },
-          prefill: {
-            name: user?.fullName || user?.name || formData.fullName || 'Customer',
-            email: user?.email || 'customer@example.com',
-            contact: formData.phone || user?.phone || '9876543210'
-          },
-          config: selectedPaymentMode === 'upi' ? {
-            display: {
-              blocks: {
-                upi: {
-                  name: "Pay via UPI",
-                  instruments: [
-                    {
-                      method: "upi"
-                    }
-                  ]
-                }
-              },
-              sequence: ["block.upi"]
-            }
-          } : undefined,
-          notes: {
-            order_id: orderRes.data.orderNumber,
-            payment_mode: selectedPaymentMode
-          },
-          theme: { color: '#000000' }
-        };
-
-        // Only attach order_id if it's a real Razorpay API order ID
-        if (intentData.data.gatewayOrderId && !intentData.data.gatewayOrderId.startsWith('order_1')) {
-          options.order_id = intentData.data.gatewayOrderId;
-        }
-
-        const rzp = new (window as any).Razorpay(options);
-        rzp.on('payment.failed', function (response: any) {
-          toast.error(response?.error?.description || 'Payment was not completed.');
-        });
-        rzp.open();
+        openRazorpayModal(intentData.data, orderRes.data, activeToken);
       } else if (paymentGateway === 'stripe') {
-        // Normally redirect to Stripe Checkout or use Elements.
-        // For this implementation plan, we will mock redirect
         toast.info('Redirecting to Stripe...');
         setTimeout(() => {
           toast.success('Payment simulated successfully.');
@@ -262,35 +399,35 @@ const Checkout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#fcfcfc] pt-32 pb-20">
+    <div className="min-h-screen bg-[#FAF8F5] pt-8 sm:pt-14 pb-28 lg:pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Navigation Back */}
-        <div className="mb-12">
+        <div className="mb-6 sm:mb-8">
           <button
             onClick={() => navigate('/cart')}
-            className="group flex items-center gap-2 text-xs font-medium text-muted hover:text-black transition-colors"
+            className="group flex items-center gap-2 text-xs font-sans font-bold uppercase tracking-wider text-stone-500 hover:text-stone-900 transition-colors"
           >
-            <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-1" />
-            Back to Bag
+            <ArrowLeft size={15} className="transition-transform group-hover:-translate-x-1" />
+            <span>Back to Bag</span>
           </button>
         </div>
 
-        <header className="mb-16">
-          <h1 className="text-4xl md:text-5xl font-serif font-medium tracking-tight text-black mb-2">
-            Checkout
+        <header className="mb-8 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-sans font-bold tracking-tight text-stone-900 mb-2">
+            Secure Checkout
           </h1>
-          <p className="text-muted font-sans">Complete your order to bring home the Maison's latest pieces.</p>
+          <p className="text-stone-500 font-sans text-xs sm:text-sm">Complete your bespoke order handcrafted in our Jaipur atelier.</p>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           {/* Left Column: Shipping & Payment */}
-          <div className="lg:col-span-7 space-y-10">
-            <form onSubmit={handlePaymentRequest} className="space-y-10">
+          <div className="lg:col-span-7 space-y-8">
+            <form onSubmit={handlePaymentRequest} className="space-y-8">
               {/* Shipping Section */}
-              <section className="bg-white p-8 md:p-10 rounded-3xl shadow-sm border border-gray-100">
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-xs font-bold">1</div>
-                  <h2 className="text-xl font-serif font-medium">Shipping Address</h2>
+              <section className="bg-white p-5 sm:p-8 md:p-10 rounded-3xl shadow-sm border border-stone-200/90">
+                <div className="flex items-center gap-4 mb-6 sm:mb-8">
+                  <div className="w-8 h-8 rounded-full bg-stone-900 text-white flex items-center justify-center text-xs font-sans font-bold">1</div>
+                  <h2 className="text-lg sm:text-xl font-sans font-bold text-stone-900">Shipping Address</h2>
                 </div>
 
                 {addresses.length > 0 && (
@@ -329,15 +466,31 @@ const Checkout = () => {
 
                 {(isAddingNew || addresses.length === 0) && (
                   <div className="space-y-6">
-                    <div className="flex bg-gray-100 p-1 rounded-xl w-full max-w-sm mb-6">
-                      <button type="button" onClick={() => setAddressInputMode('manual')} className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${addressInputMode === 'manual' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}>Enter Manually</button>
-                      <button type="button" onClick={() => setAddressInputMode('map')} className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${addressInputMode === 'map' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}><MapPin size={14} /> Select on Map</button>
+                    <div className="flex flex-wrap items-center gap-3 mb-6">
+                      <div className="flex bg-gray-100 p-1 rounded-xl w-full max-w-sm">
+                        <button type="button" onClick={() => setAddressInputMode('manual')} className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${addressInputMode === 'manual' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}>Enter Manually</button>
+                        <button type="button" onClick={() => setAddressInputMode('map')} className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${addressInputMode === 'map' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}><MapPin size={14} /> Select on Map</button>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleDetectLocation}
+                        disabled={detectingLocation}
+                        className="px-4 py-2.5 bg-stone-900 hover:bg-black text-white text-xs font-bold rounded-xl flex items-center gap-2 transition-colors shadow-xs"
+                      >
+                        <Navigation size={13} className={detectingLocation ? 'animate-spin' : ''} />
+                        {detectingLocation ? 'Locating…' : detectedCoords ? `GPS Pin: ${detectedCoords.lat.toFixed(4)}, ${detectedCoords.lng.toFixed(4)}` : '📍 Use Exact Device Location'}
+                      </button>
                     </div>
 
                     {addressInputMode === 'map' && (
                       <div className="mb-6">
-                        <MapPicker onLocationSelect={(data) => setFormData(prev => ({ ...prev, ...data }))} />
-                        <p className="text-[10px] text-muted mt-2 uppercase tracking-widest text-center">Pin drop will auto-fill the fields below. You can edit them if needed.</p>
+                        <MapPicker onLocationSelect={(data) => {
+                          setFormData(prev => ({ ...prev, ...data }));
+                          if (data.coordinates) {
+                            setDetectedCoords(data.coordinates);
+                          }
+                        }} />
+                        <p className="text-[10px] text-muted mt-2 uppercase tracking-widest text-center">Pin drop will auto-fill the fields below and lock your exact delivery coordinates.</p>
                       </div>
                     )}
 
@@ -403,10 +556,10 @@ const Checkout = () => {
               </section>
 
               {/* Payment Section */}
-              <section className="bg-white p-8 md:p-10 rounded-3xl shadow-sm border border-gray-100">
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-xs font-bold">2</div>
-                  <h2 className="text-xl font-serif font-medium">Payment Method</h2>
+              <section className="bg-white p-5 sm:p-8 md:p-10 rounded-3xl shadow-sm border border-stone-200/90">
+                <div className="flex items-center gap-4 mb-6 sm:mb-8">
+                  <div className="w-8 h-8 rounded-full bg-stone-900 text-white flex items-center justify-center text-xs font-sans font-bold">2</div>
+                  <h2 className="text-lg sm:text-xl font-sans font-bold text-stone-900">Payment Method</h2>
                 </div>
 
                 <div className="space-y-4">
@@ -479,8 +632,8 @@ const Checkout = () => {
 
           {/* Right Column: Order Summary */}
           <aside className="lg:col-span-5">
-            <div className="bg-white rounded-3xl shadow-xl shadow-black/5 border border-gray-100 p-8 md:p-10 sticky top-32">
-              <h2 className="text-xl font-serif font-medium mb-8">Order Summary</h2>
+            <div className="bg-white rounded-3xl shadow-md border border-stone-200/90 p-5 sm:p-8 md:p-10 sticky top-24">
+              <h2 className="text-lg sm:text-xl font-sans font-bold text-stone-900 mb-6">Order Summary</h2>
 
               <div className="space-y-6 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                 {cart.map(item => (
@@ -515,7 +668,7 @@ const Checkout = () => {
                     <span className="text-xs font-bold uppercase tracking-wider text-muted">Total</span>
                     <p className="text-[10px] text-muted mt-1">Inclusive of all taxes</p>
                   </div>
-                  <span className="text-3xl font-serif font-medium">₹{finalTotal.toLocaleString()}</span>
+                  <span className="text-3xl font-sans font-medium">₹{finalTotal.toLocaleString()}</span>
                 </div>
               </div>
 
@@ -599,7 +752,7 @@ const Checkout = () => {
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowConfirmation(false)} />
             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl">
-              <h3 className="text-2xl font-serif font-medium mb-6 text-center">Confirm Your Details</h3>
+              <h3 className="text-2xl font-sans font-medium mb-6 text-center">Confirm Your Details</h3>
 
               <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4 mb-8">
                 <div>
@@ -625,12 +778,22 @@ const Checkout = () => {
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-muted mb-1">Payment Method</p>
                   <p className="font-medium flex items-center gap-2">
-                    <CreditCard size={16} /> Razorpay (Card / UPI ID / Netbanking)
+                    {selectedPaymentMode === 'upi' ? (
+                      <>
+                        <Smartphone size={16} className="text-black" />
+                        <span>UPI (Google Pay, PhonePe, Paytm, QR)</span>
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard size={16} className="text-black" />
+                        <span>Cards, Netbanking & Wallets</span>
+                      </>
+                    )}
                   </p>
                 </div>
                 <div className="pt-4 border-t border-gray-200 flex justify-between items-center">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-muted">Total Amount</span>
-                  <span className="font-serif font-bold text-lg">₹{finalTotal.toLocaleString()}</span>
+                  <span className="font-sans font-bold text-lg">₹{finalTotal.toLocaleString()}</span>
                 </div>
               </div>
 
@@ -646,6 +809,7 @@ const Checkout = () => {
           </div>
         )}
       </AnimatePresence>
+
     </div>
   );
 };

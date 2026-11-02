@@ -57,6 +57,10 @@ const addressSchema = new Schema(
       type: String,
       trim: true
     },
+    coordinates: {
+      lat: { type: Number },
+      lng: { type: Number }
+    },
     addressType: {
       type: String,
       enum: ['Home', 'Work', 'Other'],

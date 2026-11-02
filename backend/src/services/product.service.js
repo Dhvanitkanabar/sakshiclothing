@@ -47,6 +47,14 @@ class ProductService {
       }
     }
 
+    if (data.variants && data.variants.length > 0) {
+      const sum = data.variants.reduce((acc, v) => acc + (Number(v.stock) || 0), 0);
+      data.inventory = data.inventory || {};
+      data.inventory.totalStock = sum;
+    } else if (data.inventory?.totalStock !== undefined && product.variants?.length === 1) {
+      data.variants = product.variants.map((v, i) => i === 0 ? { ...v.toObject(), stock: Number(data.inventory.totalStock) } : v);
+    }
+
     data.updatedBy = userId;
     return await ProductRepository.updateById(id, data);
   }

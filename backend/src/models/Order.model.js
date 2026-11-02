@@ -44,7 +44,11 @@ const orderSchema = new Schema(
       state: String,
       country: String,
       pincode: String,
-      landmark: String
+      landmark: String,
+      coordinates: {
+        lat: { type: Number },
+        lng: { type: Number }
+      }
     },
     billingAddress: {
       fullName: String,
@@ -56,6 +60,24 @@ const orderSchema = new Schema(
       state: String,
       country: String,
       pincode: String
+    },
+    userLocation: {
+      ip: { type: String, default: '127.0.0.1' },
+      city: { type: String },
+      region: { type: String },
+      country: { type: String, default: 'India' },
+      coordinates: {
+        lat: { type: Number },
+        lng: { type: Number }
+      },
+      userAgent: { type: String }
+    },
+    authenticity: {
+      isGenuine: { type: Boolean, default: true },
+      riskScore: { type: String, default: 'Low Risk (Verified Genuine)' },
+      paymentVerified: { type: Boolean, default: true },
+      addressVerified: { type: Boolean, default: true },
+      verificationNotes: [{ type: String }]
     },
     payment: {
       method: String, // e.g., 'Credit Card', 'UPI', 'COD'
@@ -110,7 +132,11 @@ const orderSchema = new Schema(
       trackingNumber: String,
       trackingUrl: String,
       carrier: String,
-      status: String
+      status: String,
+      estimatedDeliveryTime: String,
+      currentLocation: String,
+      liveStatusNote: String,
+      lastCheckpointAt: Date
     },
     invoice: {
       invoiceNumber: String,

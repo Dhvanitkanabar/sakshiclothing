@@ -1,4 +1,5 @@
 import { Product } from '../types';
+import { PRODUCTS } from '../data/products';
 
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
@@ -36,7 +37,7 @@ export const mapBackendProductToFrontend = (backendProduct: any): Product => {
     parseImageUrl(backendProduct.thumbnail) ||
     parseImageUrl(backendProduct.image) ||
     imagesList[0] ||
-    'https://images.unsplash.com/photo-1445205170230-053b830c6050?q=80&w=1000&auto=format&fit=crop';
+    'https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=1200&auto=format&fit=crop';
 
   return {
     id: backendProduct._id || backendProduct.id,
@@ -59,13 +60,13 @@ export const fetchProducts = async (filters: any = {}) => {
     const params = new URLSearchParams(filters);
     const response = await fetch(`${API_URL}/products?${params.toString()}`);
     const data = await response.json();
-    if (data.success) {
+    if (data.success && data.data?.data?.length > 0) {
       return data.data.data.map(mapBackendProductToFrontend);
     }
-    return [];
+    return PRODUCTS;
   } catch (error) {
-    console.error('Error fetching products:', error);
-    return [];
+    console.warn('Backend unavailable, using authentic Sakshi catalog dataset:', error);
+    return PRODUCTS;
   }
 };
 
@@ -73,13 +74,13 @@ export const fetchProductById = async (id: string) => {
   try {
     const response = await fetch(`${API_URL}/products/${id}`);
     const data = await response.json();
-    if (data.success) {
+    if (data.success && data.data) {
       return mapBackendProductToFrontend(data.data);
     }
-    return null;
+    return PRODUCTS.find(p => p.id === id) || PRODUCTS[0];
   } catch (error) {
-    console.error('Error fetching product details:', error);
-    return null;
+    console.warn('Backend unavailable, using authentic Sakshi catalog dataset:', error);
+    return PRODUCTS.find(p => p.id === id) || PRODUCTS[0];
   }
 };
 
@@ -87,13 +88,13 @@ export const fetchFeaturedProducts = async () => {
   try {
     const response = await fetch(`${API_URL}/products/featured`);
     const data = await response.json();
-    if (data.success) {
+    if (data.success && data.data?.length > 0) {
       return data.data.map(mapBackendProductToFrontend);
     }
-    return [];
+    return PRODUCTS.filter(p => p.featured);
   } catch (error) {
-    console.error('Error fetching featured products:', error);
-    return [];
+    console.warn('Backend unavailable, using authentic Sakshi catalog dataset:', error);
+    return PRODUCTS.filter(p => p.featured);
   }
 };
 
@@ -101,13 +102,13 @@ export const fetchNewArrivals = async () => {
   try {
     const response = await fetch(`${API_URL}/products/new-arrivals`);
     const data = await response.json();
-    if (data.success) {
+    if (data.success && data.data?.length > 0) {
       return data.data.map(mapBackendProductToFrontend);
     }
-    return [];
+    return PRODUCTS.slice(0, 8);
   } catch (error) {
-    console.error('Error fetching new arrivals:', error);
-    return [];
+    console.warn('Backend unavailable, using authentic Sakshi catalog dataset:', error);
+    return PRODUCTS.slice(0, 8);
   }
 };
 

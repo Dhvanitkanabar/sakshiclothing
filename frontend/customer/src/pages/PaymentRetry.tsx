@@ -80,13 +80,13 @@ const PaymentRetry = () => {
   return (
     <div className="min-h-screen bg-[#fcfcfc] pt-32 pb-20 flex items-center justify-center px-4">
       <div className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-xl max-w-md w-full text-center">
-        <h1 className="text-3xl font-serif mb-4">Retry Payment</h1>
+        <h1 className="text-3xl font-sans mb-4">Retry Payment</h1>
         <p className="text-sm text-gray-500 mb-8">
           The payment for your order could not be completed. You can try again using your selected payment method.
         </p>
         <div className="bg-gray-50 p-6 rounded-2xl mb-8">
           <p className="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1">Amount Due</p>
-          <p className="text-3xl font-serif font-medium">₹{amount?.toLocaleString()}</p>
+          <p className="text-3xl font-sans font-medium">₹{amount?.toLocaleString()}</p>
         </div>
         <button
           onClick={handleRetry}

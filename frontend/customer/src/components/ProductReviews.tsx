@@ -59,12 +59,12 @@ export default function ProductReviews({ productId }: { productId: string }) {
 
   return (
     <div className="mt-24 pt-16 border-t border-black/5">
-      <h2 className="text-3xl font-serif font-bold tracking-tight mb-12">Customer Reviews</h2>
+      <h2 className="text-3xl font-sans font-bold tracking-tight mb-12">Customer Reviews</h2>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
         <div className="lg:col-span-1 space-y-8">
           <div className="bg-gray-50 border border-gray-100 rounded-3xl p-8">
-            <h3 className="text-xl font-serif font-bold mb-6">Write a Review</h3>
+            <h3 className="text-xl font-sans font-bold mb-6">Write a Review</h3>
             {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
             {success && <p className="text-green-500 text-sm mb-4">{success}</p>}
             <form onSubmit={handleSubmit} className="space-y-6">

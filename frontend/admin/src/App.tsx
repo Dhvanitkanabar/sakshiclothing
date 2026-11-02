@@ -42,7 +42,9 @@ function App() {
             <Route element={<DashboardLayout />}>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/orders" element={<OrderList />} />
+              <Route path="/orders" element={<OrderList defaultSection="pending" />} />
+              <Route path="/order-history" element={<OrderList defaultSection="history" />} />
+              <Route path="/orders/history" element={<OrderList defaultSection="history" />} />
               <Route path="/orders/:id" element={<OrderDetails />} />
               <Route path="/products" element={<ProductList />} />
               <Route path="/products/add" element={<ProductForm />} />
@@ -62,6 +64,7 @@ function App() {
               <Route path="/marketing/reviews" element={<ReviewsModeration />} />
 
               <Route path="/payments" element={<PaymentsManager />} />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Route>
           </Route>
         </Routes>

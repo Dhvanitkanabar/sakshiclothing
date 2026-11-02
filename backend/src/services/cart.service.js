@@ -37,8 +37,20 @@ class CartService {
 
     if (!variant) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid variant');
 
-    if (variant.stock > 0 && variant.stock < quantity) {
-      throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Insufficient stock');
+    // Effective available stock
+    let effectiveStock = typeof variant.stock === 'number' ? variant.stock : 0;
+    if (effectiveStock === 0 && (product.inventory?.totalStock || 0) > 0 && product.variants?.length === 1) {
+      effectiveStock = product.inventory.totalStock;
+      variant.stock = effectiveStock;
+      await product.save().catch(() => {});
+    }
+
+    if (effectiveStock <= 0 || variant.status === 'out_of_stock') {
+      throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Selected piece (${variant.size || 'Standard'}) is currently out of stock`);
+    }
+
+    if (effectiveStock < quantity) {
+      throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Insufficient stock for ${product.name} (Size: ${variant.size || 'Standard'}). Available: ${effectiveStock}`);
     }
 
     let cart = await cartRepository.findCartByUserOrGuest(userId, guestId);
@@ -52,7 +64,9 @@ class CartService {
 
     if (existingItemIndex > -1) {
       const newQty = cart.items[existingItemIndex].quantity + quantity;
-      if (variant.stock < newQty) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Insufficient stock for combined quantity');
+      if (effectiveStock < newQty) {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Insufficient stock for ${product.name} (Size: ${variant.size || 'Standard'}). Already in bag: ${cart.items[existingItemIndex].quantity}. Maximum available: ${effectiveStock}`);
+      }
       cart.items[existingItemIndex].quantity = newQty;
       // Subtotal is recalculated in pre-save hook
     } else {

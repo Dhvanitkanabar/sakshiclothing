@@ -4,6 +4,7 @@ import Product from '../models/Product.model.js';
 import Order from '../models/Order.model.js';
 import User from '../models/User.model.js';
 import AuditLog from '../models/AuditLog.model.js';
+import Notification from '../models/Notification.model.js';
 import { ApiError } from '../utils/ApiError.js';
 import { ORDER_STATUS } from '../constants/index.js';
 import { sendOrderConfirmationEmail, sendOrderRejectionEmail } from '../utils/emailService.js';
@@ -41,8 +42,16 @@ class OrderService {
         throw new ApiError(400, `Selected variant for ${product.name} is unavailable`);
       }
 
-      if (variant.stock < item.quantity) {
-        throw new ApiError(400, `Insufficient stock for ${product.name} (Size: ${variant.size}). Available: ${variant.stock}`);
+      // Check stock with fallback for single variant/standard size stock desync
+      let effectiveStock = typeof variant.stock === 'number' ? variant.stock : 0;
+      if (effectiveStock === 0 && (product.inventory?.totalStock || 0) > 0 && product.variants?.length === 1) {
+        effectiveStock = product.inventory.totalStock;
+        variant.stock = effectiveStock;
+        await product.save().catch(() => {});
+      }
+
+      if (effectiveStock < item.quantity) {
+        throw new ApiError(400, `Insufficient stock for ${product.name} (Size: ${variant.size}). Available: ${effectiveStock}`);
       }
 
       const price = product.calculateDiscount(variant._id);
@@ -61,11 +70,16 @@ class OrderService {
         subtotal
       });
 
-      // Prepare bulk update to decrement stock. Add a query condition to ensure stock hasn't dropped below requirement
+      // Prepare bulk update to decrement both variant stock and total inventory stock
       bulkProductUpdates.push({
         updateOne: {
           filter: { _id: product._id, 'variants._id': variant._id, 'variants.stock': { $gte: item.quantity } },
-          update: { $inc: { 'variants.$.stock': -item.quantity } }
+          update: {
+            $inc: {
+              'variants.$.stock': -item.quantity,
+              'inventory.totalStock': -item.quantity
+            }
+          }
         }
       });
     }
@@ -89,7 +103,8 @@ class OrderService {
         state: shippingAddress.state,
         country: shippingAddress.country,
         pincode: shippingAddress.pincode,
-        landmark: shippingAddress.landmark
+        landmark: shippingAddress.landmark,
+        coordinates: shippingAddress.coordinates
       },
       billingAddress: {
         fullName: shippingAddress.fullName,
@@ -151,30 +166,92 @@ class OrderService {
     });
   }
 
-  // Admin Accept Order
-  async acceptOrder(id, adminUser) {
-    const order = await Order.findById(id).populate('customer', 'fullName email');
+  // Admin Accept Order with Estimated Delivery Time & Verification
+  async acceptOrder(id, approvalData = {}, adminUser = {}) {
+    const { estimatedDeliveryTime, note, status, courierName, trackingNumber } = approvalData;
+    const order = await Order.findById(id).populate('customer', 'fullName email phone');
     if (!order) throw new ApiError(404, 'Order not found');
 
     if (order.orderStatus !== 'pending_approval' && order.approvalStatus !== 'pending') {
+      if (order.approvalStatus === 'approved') {
+        // Allow updating estimated delivery time if already approved
+        if (estimatedDeliveryTime) {
+          order.tracking = order.tracking || {};
+          order.tracking.estimatedDeliveryTime = estimatedDeliveryTime;
+          if (courierName) order.tracking.courierName = courierName;
+          if (trackingNumber) order.tracking.trackingNumber = trackingNumber;
+          if (note) order.tracking.liveStatusNote = note;
+          order.timeline.push({
+            status: order.orderStatus,
+            note: `Estimated delivery updated to: ${estimatedDeliveryTime}. ${note || ''}`,
+            date: new Date()
+          });
+          await order.save();
+          return order;
+        }
+      }
       throw new ApiError(400, `Order is already ${order.orderStatus}`);
     }
 
-    order.orderStatus = 'confirmed';
+    const nextStatus = status || 'confirmed';
+    order.orderStatus = nextStatus;
     order.approvalStatus = 'approved';
+
+    const deliveryEstimate = estimatedDeliveryTime || '2 to 3 Business Days';
+    order.tracking = order.tracking || {};
+    order.tracking.status = nextStatus;
+    order.tracking.estimatedDeliveryTime = deliveryEstimate;
+    if (courierName) order.tracking.courierName = courierName;
+    if (trackingNumber) order.tracking.trackingNumber = trackingNumber;
+    order.tracking.currentLocation = order.tracking.currentLocation || 'Sakshi Maison Atelier — Packaging Desk';
+    order.tracking.liveStatusNote = note || `Order verified genuine by admin. Packing started. Estimated arrival: ${deliveryEstimate}`;
+    order.tracking.lastCheckpointAt = new Date();
+
+    const timelineNote = note 
+      ? `Order verified genuine & approved by admin. Packing initiated. Estimated delivery: ${deliveryEstimate}. Note: ${note}`
+      : `Order verified genuine & approved by admin. Packing initiated. Estimated delivery: ${deliveryEstimate}`;
+
     order.timeline.push({
-      status: 'confirmed',
-      note: `Order approved by admin ${adminUser.fullName || adminUser.email || ''}`
+      status: nextStatus,
+      note: timelineNote,
+      date: new Date()
     });
 
     await order.save();
+
+    // Create Live Notification for Customer
+    try {
+      await Notification.create({
+        recipient: order.customer?._id,
+        recipientEmail: order.customer?.email,
+        recipientPhone: order.customer?.phone || order.shippingAddress?.phone,
+        order: order._id,
+        orderNumber: order.orderNumber,
+        title: 'Order Approved & Packing Initiated',
+        message: `Your order #${order.orderNumber} has been verified and approved! Estimated delivery time: ${deliveryEstimate}. Our atelier has started packaging your order.`,
+        type: 'order_accepted',
+        estimatedDeliveryTime: deliveryEstimate,
+        metadata: {
+          orderStatus: nextStatus,
+          courierName: order.tracking.courierName,
+          currentLocation: order.tracking.currentLocation
+        }
+      });
+    } catch (notifErr) {
+      console.error('Failed to create customer notification:', notifErr);
+    }
 
     // Audit Logging
     try {
       await AuditLog.create({
         user: adminUser._id,
         action: 'ORDER_ACCEPTED',
-        details: { orderId: order._id, orderNumber: order.orderNumber }
+        details: { 
+          orderId: order._id, 
+          orderNumber: order.orderNumber, 
+          estimatedDeliveryTime: deliveryEstimate,
+          status: nextStatus 
+        }
       });
     } catch (e) {
       console.error('AuditLog error:', e);
@@ -211,10 +288,26 @@ class OrderService {
     order.rejectionReason = reason;
     order.timeline.push({
       status: 'rejected',
-      note: `Order rejected by admin: ${reason}`
+      note: `Order rejected by admin: ${reason}`,
+      date: new Date()
     });
 
     await order.save();
+
+    // Create rejection notification
+    try {
+      await Notification.create({
+        recipient: order.customer?._id,
+        recipientEmail: order.customer?.email,
+        order: order._id,
+        orderNumber: order.orderNumber,
+        title: 'Order Status Update',
+        message: `Your order #${order.orderNumber} could not be approved. Reason: ${reason}`,
+        type: 'order_status'
+      });
+    } catch (e) {
+      console.error('Rejection notification error:', e);
+    }
 
     // Audit Logging
     try {
@@ -233,13 +326,19 @@ class OrderService {
     return order;
   }
 
-  // Public/Secure Order Tracking
+  // Public/Secure Order Tracking with Live Notifications & Checkpoints
   async trackOrderPublic(orderIdInput, email, phone, currentUserId) {
-    const cleanId = orderIdInput.trim().toUpperCase();
+    const raw = (orderIdInput || '').trim();
+    const cleanId = raw.replace(/^#+/, '').trim().toUpperCase();
+
     const query = {
       $or: [
         { orderNumber: cleanId },
-        ...(mongoose.Types.ObjectId.isValid(orderIdInput) ? [{ _id: orderIdInput }] : [])
+        { orderNumber: `#${cleanId}` },
+        { orderNumber: raw.toUpperCase() },
+        { orderNumber: { $regex: new RegExp(`^#?${cleanId.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') } },
+        ...(mongoose.Types.ObjectId.isValid(cleanId) ? [{ _id: cleanId }] : []),
+        ...(mongoose.Types.ObjectId.isValid(raw) ? [{ _id: raw }] : [])
       ]
     };
 
@@ -251,9 +350,16 @@ class OrderService {
       throw new ApiError(404, 'No order found with the provided Order ID');
     }
 
+    // Fetch related live notifications
+    const notifications = await Notification.find({
+      orderNumber: order.orderNumber
+    }).sort({ createdAt: -1 }).limit(5);
+
     // IDOR Protection: If logged in, verify ownership
     if (currentUserId && order.customer && order.customer._id.toString() === currentUserId.toString()) {
-      return order;
+      const orderObj = order.toObject();
+      orderObj.notifications = notifications;
+      return orderObj;
     }
 
     // Secondary verification check for guest lookup
@@ -270,11 +376,35 @@ class OrderService {
         rejectionReason: order.rejectionReason,
         tracking: order.tracking,
         timeline: order.timeline,
+        products: (order.products || []).map(p => ({
+          name: p.name,
+          quantity: p.quantity,
+          price: p.price,
+          size: p.size,
+          product: p.product ? {
+            name: p.product.name,
+            thumbnail: p.product.thumbnail,
+            images: p.product.images
+          } : undefined
+        })),
+        totals: {
+          grandTotal: order.totals?.grandTotal || 0
+        },
+        shippingAddress: {
+          city: order.shippingAddress?.city,
+          state: order.shippingAddress?.state,
+          pincode: order.shippingAddress?.pincode,
+          country: order.shippingAddress?.country || 'India',
+          coordinates: order.shippingAddress?.coordinates
+        },
+        notifications,
         createdAt: order.createdAt
       };
     }
 
-    return order;
+    const orderObj = order.toObject();
+    orderObj.notifications = notifications;
+    return orderObj;
   }
 
   // Admin Methods
@@ -282,8 +412,8 @@ class OrderService {
     return await orderRepository.findAll(filter, sort, skip, limit);
   }
 
-  async updateOrderStatus(id, status, note = '') {
-    const order = await orderRepository.findById(id);
+  async updateOrderStatus(id, status, note = '', currentLocation = '') {
+    const order = await Order.findById(id).populate('customer', 'fullName email phone');
     if (!order) throw new ApiError(404, 'Order not found');
 
     const validStatuses = [
@@ -297,16 +427,121 @@ class OrderService {
       throw new ApiError(400, 'Invalid status');
     }
 
-    return await orderRepository.updateStatus(id, status, {
+    order.orderStatus = status;
+    if (status === 'rejected') {
+      order.approvalStatus = 'rejected';
+      order.rejectionReason = note || 'Rejected by admin';
+    } else if (status === 'confirmed') {
+      order.approvalStatus = 'approved';
+    } else if (status === 'cancelled') {
+      order.approvalStatus = 'rejected';
+      order.rejectionReason = note || 'Cancelled by admin';
+    }
+
+    order.tracking = order.tracking || {};
+    order.tracking.status = status;
+    if (currentLocation) order.tracking.currentLocation = currentLocation;
+    if (note) order.tracking.liveStatusNote = note;
+    order.tracking.lastCheckpointAt = new Date();
+
+    const statusNote = note || `Order status updated to ${status}${currentLocation ? ` at ${currentLocation}` : ''}`;
+    order.timeline.push({
       status,
-      note: note || `Order status updated to ${status}`
+      note: statusNote,
+      date: new Date()
     });
+
+    await order.save();
+
+    // Create Notification for Customer
+    try {
+      await Notification.create({
+        recipient: order.customer?._id,
+        recipientEmail: order.customer?.email,
+        recipientPhone: order.customer?.phone || order.shippingAddress?.phone,
+        order: order._id,
+        orderNumber: order.orderNumber,
+        title: `Order Update: ${status.replace(/_/g, ' ').toUpperCase()}`,
+        message: statusNote,
+        type: 'order_status',
+        estimatedDeliveryTime: order.tracking?.estimatedDeliveryTime,
+        metadata: {
+          orderStatus: status,
+          currentLocation: order.tracking?.currentLocation
+        }
+      });
+    } catch (e) {
+      console.error('Notification creation failed:', e);
+    }
+
+    return order;
   }
 
-  async updateTracking(id, tracking) {
-    const order = await orderRepository.findById(id);
+  async updateTracking(id, trackingData = {}) {
+    const order = await Order.findById(id).populate('customer', 'fullName email phone');
     if (!order) throw new ApiError(404, 'Order not found');
-    return await orderRepository.updateTracking(id, tracking);
+
+    order.tracking = {
+      ...(order.tracking ? (order.tracking.toObject ? order.tracking.toObject() : order.tracking) : {}),
+      ...trackingData,
+      lastCheckpointAt: new Date()
+    };
+
+    if (trackingData.coordinates) {
+      order.shippingAddress = order.shippingAddress || {};
+      order.shippingAddress.coordinates = {
+        lat: Number(trackingData.coordinates.lat),
+        lng: Number(trackingData.coordinates.lng)
+      };
+      delete order.tracking.coordinates;
+    }
+
+    if (trackingData.status && trackingData.status !== order.orderStatus) {
+      order.orderStatus = trackingData.status;
+    }
+
+    const note = trackingData.liveStatusNote || `Tracking update: Courier ${order.tracking?.courierName || 'Express'}, Location: ${order.tracking?.currentLocation || 'In Transit'}`;
+    order.timeline.push({
+      status: order.orderStatus,
+      note,
+      date: new Date()
+    });
+
+    await order.save();
+
+    // Notify customer about tracking update
+    try {
+      await Notification.create({
+        recipient: order.customer?._id,
+        recipientEmail: order.customer?.email,
+        recipientPhone: order.customer?.phone || order.shippingAddress?.phone,
+        order: order._id,
+        orderNumber: order.orderNumber,
+        title: 'Order Tracking & Location Update',
+        message: note,
+        type: 'shipping_update',
+        estimatedDeliveryTime: order.tracking?.estimatedDeliveryTime,
+        metadata: order.tracking
+      });
+    } catch (e) {
+      console.error('Tracking notification failed:', e);
+    }
+
+    return order;
+  }
+
+  async updateCoordinates(id, { lat, lng }) {
+    const order = await Order.findById(id).populate('customer', 'fullName email phone');
+    if (!order) throw new ApiError(404, 'Order not found');
+
+    order.shippingAddress = order.shippingAddress || {};
+    order.shippingAddress.coordinates = {
+      lat: Number(lat),
+      lng: Number(lng)
+    };
+
+    await order.save();
+    return order;
   }
 }
 

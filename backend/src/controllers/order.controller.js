@@ -46,7 +46,8 @@ export const getUserOrders = asyncHandler(async (req, res) => {
 });
 
 export const getOrderById = asyncHandler(async (req, res) => {
-  const order = await orderService.getOrderById(req.params.id, req.user._id);
+  const isAdmin = req.user.role === 'admin' || req.user.role === 'superadmin';
+  const order = await orderService.getOrderById(req.params.id, isAdmin ? null : req.user._id);
   return res.status(200).json(new ApiResponse(200, order, 'Order details fetched successfully'));
 });
 
@@ -99,8 +100,13 @@ export const getAllOrders = asyncHandler(async (req, res) => {
 });
 
 export const acceptOrder = asyncHandler(async (req, res) => {
-  const order = await orderService.acceptOrder(req.params.id, req.user);
-  return res.status(200).json(new ApiResponse(200, order, 'Order accepted successfully'));
+  const { estimatedDeliveryTime, note, status, courierName, trackingNumber } = req.body;
+  const order = await orderService.acceptOrder(
+    req.params.id, 
+    { estimatedDeliveryTime, note, status, courierName, trackingNumber }, 
+    req.user
+  );
+  return res.status(200).json(new ApiResponse(200, order, 'Order accepted and estimated delivery recorded successfully'));
 });
 
 export const rejectOrder = asyncHandler(async (req, res) => {
@@ -127,8 +133,8 @@ export const approveReturn = asyncHandler(async (req, res) => {
 });
 
 export const updateOrderStatus = asyncHandler(async (req, res) => {
-  const { status, note } = req.body;
-  const order = await orderService.updateOrderStatus(req.params.id, status, note);
+  const { status, note, currentLocation } = req.body;
+  const order = await orderService.updateOrderStatus(req.params.id, status, note, currentLocation);
   return res.status(200).json(new ApiResponse(200, order, 'Order status updated'));
 });
 
@@ -136,4 +142,13 @@ export const updateTracking = asyncHandler(async (req, res) => {
   const { tracking } = req.body;
   const order = await orderService.updateTracking(req.params.id, tracking);
   return res.status(200).json(new ApiResponse(200, order, 'Tracking information updated'));
+});
+
+export const updateOrderCoordinates = asyncHandler(async (req, res) => {
+  const { lat, lng } = req.body;
+  if (lat === undefined || lng === undefined) {
+    throw new ApiError(400, 'Latitude (lat) and Longitude (lng) are required');
+  }
+  const order = await orderService.updateCoordinates(req.params.id, { lat, lng });
+  return res.status(200).json(new ApiResponse(200, order, 'Delivery coordinates updated successfully'));
 });

@@ -100,7 +100,7 @@ router.post('/login', authLimiter, validateRequest(loginSchema), AuthController.
  *     summary: Login admin using hardcoded credentials
  *     tags: [Authentication]
  */
-router.post('/admin-login', authLimiter, AuthController.adminLogin);
+router.post('/admin-login', AuthController.adminLogin);
 /**
  * @swagger
  * /api/v1/auth/forgot-password:

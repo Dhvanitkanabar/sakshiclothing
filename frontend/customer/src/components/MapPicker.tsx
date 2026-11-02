@@ -16,7 +16,7 @@ L.Icon.Default.mergeOptions({
 });
 
 interface MapPickerProps {
-  onLocationSelect: (addressData: { address: string; city: string; state: string; zip: string; country: string }) => void;
+  onLocationSelect: (addressData: { address: string; city: string; state: string; zip: string; country: string; coordinates?: { lat: number; lng: number } }) => void;
 }
 
 // Center initially on India / Mumbai or user's location
@@ -54,7 +54,8 @@ const LocationMarker = ({ position, setPosition, onLocationSelect }: any) => {
           city: addr.city || addr.town || addr.village || addr.county || '',
           state: addr.state || '',
           zip: addr.postcode || '',
-          country: addr.country || 'India'
+          country: addr.country || 'India',
+          coordinates: { lat, lng }
         });
       }
     } catch (error) {

@@ -37,7 +37,7 @@ const Wishlist = () => {
             </motion.div>
           </div>
           <div className="space-y-4">
-            <h1 className="text-5xl font-serif font-medium tracking-tight text-luxury-black">Your Wishlist is Empty</h1>
+            <h1 className="text-5xl font-sans font-medium tracking-tight text-luxury-black">Your Wishlist is Empty</h1>
             <p className="text-gray-400 text-sm font-bold uppercase tracking-[0.2em] max-w-md mx-auto leading-relaxed">
               Save your favorite pieces to curated your personal collection.
             </p>
@@ -57,7 +57,7 @@ const Wishlist = () => {
     <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 py-32">
       <header className="mb-24 space-y-4">
         <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-rose-600">Personal Curation</span>
-        <h1 className="text-6xl md:text-8xl font-serif font-medium tracking-tighter text-luxury-black">
+        <h1 className="text-6xl md:text-8xl font-sans font-medium tracking-tighter text-luxury-black">
           My <span className="italic">Wishlist</span>
         </h1>
       </header>
@@ -105,7 +105,7 @@ const Wishlist = () => {
 
               <div className="space-y-2 px-2 text-center">
                 <h3 className="text-sm font-bold text-luxury-black tracking-tight">{product.name}</h3>
-                <p className="text-sm font-serif font-medium text-rose-600 italic">₹{product.price.toLocaleString()}</p>
+                <p className="text-sm font-sans font-medium text-rose-600 italic">₹{product.price.toLocaleString()}</p>
               </div>
             </motion.div>
           ))}

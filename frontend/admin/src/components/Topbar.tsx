@@ -53,7 +53,7 @@ const Topbar = () => {
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10 pr-10 py-2 rounded-xl border border-slate-200 w-80 lg:w-96 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-xs bg-slate-50/50 transition-all font-sans"
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono text-slate-400 border border-slate-200 rounded px-1.5 py-0.5 bg-white">⌘K</span>
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-sans text-slate-400 border border-slate-200 rounded px-1.5 py-0.5 bg-white">⌘K</span>
 
           {showResults && results && (
             <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 max-h-[400px] overflow-y-auto z-50 p-3">
@@ -71,7 +71,7 @@ const Topbar = () => {
                 <div>
                   <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-1.5">Orders</h4>
                   {results.orders.map((o: any) => (
-                    <Link key={o._id} to={`/orders/${o._id}`} onClick={() => setShowResults(false)} className="block px-3 py-2 text-xs font-medium text-slate-700 hover:bg-amber-50 hover:text-amber-900 rounded-xl transition-colors font-mono">
+                    <Link key={o._id} to={`/orders/${o._id}`} onClick={() => setShowResults(false)} className="block px-3 py-2 text-xs font-medium text-slate-700 hover:bg-amber-50 hover:text-amber-900 rounded-xl transition-colors font-sans">
                       {o.orderNumber}
                     </Link>
                   ))}
@@ -86,7 +86,7 @@ const Topbar = () => {
         {/* Status Badge */}
         <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-700 text-xs font-medium">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          Maison Live Sync Active
+          Store Live Sync Active
         </div>
 
         {/* Notifications */}
