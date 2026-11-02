@@ -28,11 +28,12 @@ const OrderDetails = lazy(() => import('./pages/orders/OrderDetails'));
 
 
 import { AuthProvider } from './context/AuthContext';
-// Removed Clerk imports
+import { Toaster } from 'sonner';
 
 function App() {
   return (
       <AuthProvider>
+      <Toaster position="top-right" richColors closeButton />
       <BrowserRouter>
       <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading Admin...</div>}>
         <Routes>

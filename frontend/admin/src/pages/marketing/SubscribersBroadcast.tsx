@@ -72,6 +72,10 @@ export default function SubscribersBroadcast() {
   const [testRecipient, setTestRecipient] = useState('sakshiclothing2025@gmail.com');
   const [testingEmail, setTestingEmail] = useState(false);
 
+  // Modal Inline Feedback State
+  const [modalError, setModalError] = useState<string | null>(null);
+  const [modalSuccess, setModalSuccess] = useState<string | null>(null);
+
   // Broadcast Composer State
   const [heading, setHeading] = useState('');
   const [description, setDescription] = useState('');
@@ -148,12 +152,19 @@ export default function SubscribersBroadcast() {
 
   const handleSaveSmtp = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    setModalError(null);
+    setModalSuccess(null);
+
     if (!smtpUser.trim() || !smtpUser.includes('@')) {
-      toast.error('Please enter a valid Gmail / sender email');
+      const msg = 'Please enter a valid Gmail / sender email address';
+      toast.error(msg);
+      setModalError(msg);
       return;
     }
     if (!smtpPassword.trim() && !smtpConfig?.hasPassword) {
-      toast.error('Please enter your 16-character Google App Password');
+      const msg = 'Please enter your 16-character Google App Password';
+      toast.error(msg);
+      setModalError(msg);
       return;
     }
 
@@ -174,24 +185,34 @@ export default function SubscribersBroadcast() {
       });
       const data = await res.json();
       if (res.ok) {
-        toast.success(data.message || 'SMTP Gateway verified & connected successfully!');
-        setShowSmtpModal(false);
+        const okMsg = data.message || 'SMTP Gateway verified & activated successfully!';
+        toast.success(okMsg);
+        setModalSuccess(okMsg);
         setSmtpPassword('');
         fetchSmtpConfig();
+        setTimeout(() => setShowSmtpModal(false), 2000);
       } else {
-        toast.error(data.message || 'Failed to verify SMTP credentials');
+        const failMsg = data.message || 'Failed to verify SMTP credentials';
+        toast.error(failMsg);
+        setModalError(failMsg);
       }
     } catch (err: any) {
-      toast.error('Failed to save SMTP configuration');
+      const errTxt = err.message || 'Failed to save SMTP configuration';
+      toast.error(errTxt);
+      setModalError(errTxt);
     } finally {
       setSavingSmtp(false);
     }
   };
 
   const handleSendTestEmail = async (overrideEmail?: string) => {
+    setModalError(null);
+    setModalSuccess(null);
     const target = overrideEmail || testRecipient || smtpUser;
     if (!target || !target.includes('@')) {
-      toast.error('Please enter a valid email address to receive the test email');
+      const msg = 'Please enter a valid email address to receive the test email';
+      toast.error(msg);
+      setModalError(msg);
       return;
     }
 
@@ -213,12 +234,18 @@ export default function SubscribersBroadcast() {
       });
       const data = await res.json();
       if (res.ok) {
-        toast.success(data.message || `Test email dispatched to ${target}!`);
+        const okMsg = data.message || `Test email dispatched to ${target}!`;
+        toast.success(okMsg);
+        setModalSuccess(okMsg);
       } else {
-        toast.error(data.message || 'Failed to dispatch test email');
+        const failMsg = data.message || 'Failed to dispatch test email';
+        toast.error(failMsg);
+        setModalError(failMsg);
       }
     } catch (err: any) {
-      toast.error('Error dispatching test email');
+      const errTxt = err.message || 'Error dispatching test email';
+      toast.error(errTxt);
+      setModalError(errTxt);
     } finally {
       setTestingEmail(false);
     }
@@ -813,6 +840,39 @@ export default function SubscribersBroadcast() {
                   />
                 </div>
               </div>
+
+              {/* Inline Feedback Banner */}
+              {modalError && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-2xl text-xs text-red-800 space-y-2">
+                  <div className="flex items-start gap-2.5">
+                    <AlertCircle size={17} className="text-red-500 shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="font-bold text-red-900">SMTP Verification Error:</p>
+                      <p className="font-mono text-[11px] leading-relaxed break-words">{modalError}</p>
+                    </div>
+                  </div>
+                  {(modalError.toLowerCase().includes('535') || modalError.toLowerCase().includes('password not accepted') || modalError.toLowerCase().includes('rejected')) && (
+                    <div className="bg-red-100/70 p-3 rounded-xl text-[11px] text-red-900 space-y-1">
+                      <p className="font-bold">Google Rejected This Password. What to check:</p>
+                      <ul className="list-disc list-inside space-y-0.5 text-red-800">
+                        <li>You must use a 16-letter <strong>Google App Password</strong>, NOT your regular Gmail account login password.</li>
+                        <li>Ensure <strong>2-Step Verification</strong> is ON in your Google Account security settings.</li>
+                        <li>Confirm the email is exactly <code>sakshiclothing2025@gmail.com</code>.</li>
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {modalSuccess && (
+                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-800 flex items-start gap-2.5">
+                  <CheckCircle2 size={17} className="text-emerald-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-bold text-emerald-900">Connection Verified!</p>
+                    <p className="text-[11px] leading-relaxed mt-0.5">{modalSuccess}</p>
+                  </div>
+                </div>
+              )}
 
               {/* Direct Verification & Test Strip */}
               <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">

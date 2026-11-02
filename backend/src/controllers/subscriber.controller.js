@@ -8,7 +8,8 @@ import {
   sendSubscriberWelcomeEmail,
   sendSubscriberBroadcastEmail,
   getTransporter,
-  sendTestEmail
+  sendTestEmail,
+  verifyConnectionWithFallback
 } from '../utils/emailService.js';
 
 // @desc    Public subscription to Atelier Circle
@@ -163,25 +164,23 @@ export const saveSmtpConfig = asyncHandler(async (req, res) => {
     fromName: fromName?.trim() || 'Sakshi Clothing Atelier'
   };
 
-  // Verify credentials with transporter.verify()
-  const transporter = await getTransporter(candidateConfig);
-  if (!transporter) {
-    throw new ApiError(400, 'Could not initialize email transporter with provided settings.');
-  }
-
+  // Verify credentials with dual-port fallback
+  let activePort = Number(port) || 465;
   try {
-    await transporter.verify();
+    const verified = await verifyConnectionWithFallback(candidateConfig);
+    activePort = verified.activePort;
   } catch (verifyErr) {
     console.error('[SMTP Verify Error]:', verifyErr);
     throw new ApiError(
       400,
-      `SMTP Verification failed: ${verifyErr.message}. For Gmail, ensure 2-Step Verification is ON and generate a 16-character App Password at myaccount.google.com/apppasswords.`
+      verifyErr.message || 'SMTP Authentication failed. Please verify your 16-character App Password.'
     );
   }
 
   // Save to StoreSettings
   settings.smtp = {
     ...candidateConfig,
+    port: activePort,
     isActive: true
   };
   await settings.save();
@@ -193,9 +192,10 @@ export const saveSmtpConfig = asyncHandler(async (req, res) => {
         isConfigured: true,
         user: candidateConfig.user,
         fromEmail: candidateConfig.fromEmail,
-        fromName: candidateConfig.fromName
+        fromName: candidateConfig.fromName,
+        port: activePort
       },
-      'SMTP credentials verified and activated successfully! Real emails will now be delivered.'
+      `SMTP credentials verified and activated successfully on port ${activePort}! Real emails will now be delivered.`
     )
   );
 });
@@ -229,22 +229,21 @@ export const testSmtpConnection = asyncHandler(async (req, res) => {
   };
 
   try {
-    await sendTestEmail({ toEmail: targetRecipient, config: testConfig });
+    const result = await sendTestEmail({ toEmail: targetRecipient, config: testConfig });
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        { recipient: targetRecipient, port: result.activePort },
+        `Test email dispatched to ${targetRecipient} (Port ${result.activePort})! Please check your inbox & spam folder.`
+      )
+    );
   } catch (err) {
     console.error('[Test Email Error]:', err);
     throw new ApiError(
       400,
-      `Failed to send test email: ${err.message}. Please check your credentials.`
+      err.message || 'Failed to dispatch test email. Please check your credentials.'
     );
   }
-
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      { recipient: targetRecipient },
-      `Test email sent successfully to ${targetRecipient}! Please check your inbox (and Spam folder).`
-    )
-  );
 });
 
 // @desc    Broadcast announcement/update email to all active subscribers

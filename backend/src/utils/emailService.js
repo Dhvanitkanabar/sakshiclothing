@@ -1,86 +1,75 @@
 import nodemailer from 'nodemailer';
 import StoreSettings from '../models/StoreSettings.model.js';
 
-export const getTransporter = async (customConfig = null) => {
-  // 1. If explicit config passed (e.g. testing credentials)
-  if (customConfig && customConfig.user && customConfig.password) {
-    const isGmail = customConfig.provider === 'gmail' || (customConfig.host && customConfig.host.includes('gmail'));
-    if (isGmail) {
-      return nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: customConfig.user.trim(),
-          pass: customConfig.password.replace(/\s+/g, '')
-        }
-      });
+export const getTransporter = async (customConfig = null, forcePort = null) => {
+  let cfg = customConfig;
+
+  // 1. If no custom config, try StoreSettings from MongoDB
+  if (!cfg || !cfg.user || !cfg.password) {
+    try {
+      const settings = await StoreSettings.findOne().lean();
+      if (settings?.smtp?.user && settings?.smtp?.password) {
+        cfg = settings.smtp;
+      }
+    } catch (err) {
+      console.warn('[Email Warning] Could not load SMTP from StoreSettings:', err.message);
     }
+  }
+
+  // 2. If still no config, fallback to process.env
+  if (!cfg || !cfg.user || !cfg.password) {
+    const user = process.env.SMTP_USER || process.env.EMAIL_USER;
+    const pass = process.env.SMTP_PASSWORD || process.env.EMAIL_PASSWORD;
+    const host = process.env.SMTP_HOST || process.env.EMAIL_HOST;
+    const port = process.env.SMTP_PORT || process.env.EMAIL_PORT || 465;
+    if (user && pass) {
+      cfg = { user, password: pass, host, port, provider: 'gmail' };
+    }
+  }
+
+  if (!cfg || !cfg.user || !cfg.password) {
+    return null;
+  }
+
+  const cleanUser = cfg.user.trim();
+  const cleanPass = cfg.password.replace(/\s+/g, '');
+  const isGmail = cfg.provider === 'gmail' || (cfg.host && cfg.host.includes('gmail')) || cleanUser.endsWith('@gmail.com');
+  const effectivePort = forcePort || Number(cfg.port) || 465;
+  const isSecure = effectivePort === 465;
+
+  if (isGmail) {
     return nodemailer.createTransport({
-      host: customConfig.host || 'smtp.gmail.com',
-      port: Number(customConfig.port) || 465,
-      secure: Number(customConfig.port) === 465,
+      host: 'smtp.gmail.com',
+      port: effectivePort,
+      secure: isSecure,
       auth: {
-        user: customConfig.user.trim(),
-        pass: customConfig.password.replace(/\s+/g, '')
+        user: cleanUser,
+        pass: cleanPass
+      },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
+      tls: {
+        rejectUnauthorized: false
       }
     });
   }
 
-  // 2. Try StoreSettings from MongoDB
-  try {
-    const settings = await StoreSettings.findOne().lean();
-    if (settings?.smtp?.user && settings?.smtp?.password) {
-      const isGmail = settings.smtp.provider === 'gmail' || (settings.smtp.host && settings.smtp.host.includes('gmail'));
-      if (isGmail) {
-        return nodemailer.createTransport({
-          service: 'gmail',
-          auth: {
-            user: settings.smtp.user.trim(),
-            pass: settings.smtp.password.replace(/\s+/g, '')
-          }
-        });
-      }
-      return nodemailer.createTransport({
-        host: settings.smtp.host || 'smtp.gmail.com',
-        port: Number(settings.smtp.port) || 465,
-        secure: Number(settings.smtp.port) === 465,
-        auth: {
-          user: settings.smtp.user.trim(),
-          pass: settings.smtp.password.replace(/\s+/g, '')
-        }
-      });
+  return nodemailer.createTransport({
+    host: cfg.host || 'smtp.gmail.com',
+    port: effectivePort,
+    secure: isSecure,
+    auth: {
+      user: cleanUser,
+      pass: cleanPass
+    },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
+    tls: {
+      rejectUnauthorized: false
     }
-  } catch (err) {
-    console.warn('[Email Warning] Could not load SMTP from StoreSettings:', err.message);
-  }
-
-  // 3. Fallback to process.env
-  const host = process.env.SMTP_HOST || process.env.EMAIL_HOST;
-  const port = process.env.SMTP_PORT || process.env.EMAIL_PORT || 465;
-  const user = process.env.SMTP_USER || process.env.EMAIL_USER;
-  const pass = process.env.SMTP_PASSWORD || process.env.EMAIL_PASSWORD;
-
-  if (user && pass) {
-    if (!host || host.includes('gmail')) {
-      return nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: user.trim(),
-          pass: pass.replace(/\s+/g, '')
-        }
-      });
-    }
-    return nodemailer.createTransport({
-      host,
-      port: Number(port),
-      secure: Number(port) === 465,
-      auth: {
-        user: user.trim(),
-        pass: pass.replace(/\s+/g, '')
-      }
-    });
-  }
-
-  return null;
+  });
 };
 
 const DEFAULT_SENDER = process.env.EMAIL_FROM || 'sakshiclothing2025@gmail.com';
@@ -97,28 +86,59 @@ export const getSenderEmail = async () => {
   return process.env.EMAIL_FROM || DEFAULT_SENDER;
 };
 
-export const sendTestEmail = async ({ toEmail, config = null }) => {
-  const transporter = await getTransporter(config);
-  if (!transporter) {
-    throw new Error('SMTP credentials are missing. Please enter your Gmail address and 16-character App Password.');
+export const verifyConnectionWithFallback = async (config) => {
+  // First attempt on port 465 (SSL)
+  const transporter465 = await getTransporter(config, 465);
+  if (!transporter465) {
+    throw new Error('SMTP credentials missing. Please enter your Gmail address and 16-character App Password.');
   }
 
-  // Verify connection
-  await transporter.verify();
+  try {
+    await transporter465.verify();
+    return { transporter: transporter465, activePort: 465 };
+  } catch (err465) {
+    const isAuthError = err465.message?.includes('535') || err465.message?.toLowerCase().includes('badcredentials') || err465.message?.toLowerCase().includes('username and password not accepted');
+    if (isAuthError) {
+      throw new Error(
+        'Google Authentication Rejected (Error 535). Please ensure: 1) You are using a 16-character Google App Password (not your normal Gmail password); 2) 2-Step Verification is turned ON in Google Security; 3) The email is sakshiclothing2025@gmail.com.'
+      );
+    }
+
+    console.warn('[SMTP Warning] Port 465 failed, attempting port 587 (TLS/STARTTLS)...', err465.message);
+
+    // Fallback to port 587 (TLS/STARTTLS) in case cloud host or firewall blocks port 465
+    try {
+      const transporter587 = await getTransporter(config, 587);
+      await transporter587.verify();
+      return { transporter: transporter587, activePort: 587 };
+    } catch (err587) {
+      const isAuthError587 = err587.message?.includes('535') || err587.message?.toLowerCase().includes('username and password not accepted');
+      if (isAuthError587) {
+        throw new Error(
+          'Google Authentication Rejected (Error 535). Please ensure: 1) You are using a 16-character Google App Password (not your normal Gmail password); 2) 2-Step Verification is turned ON in Google Security; 3) The email is sakshiclothing2025@gmail.com.'
+        );
+      }
+      throw new Error(`SMTP connection failed on port 465 and 587: ${err587.message || err465.message}`);
+    }
+  }
+};
+
+export const sendTestEmail = async ({ toEmail, config = null }) => {
+  const { transporter, activePort } = await verifyConnectionWithFallback(config);
 
   const senderEmail = config?.fromEmail || config?.user || await getSenderEmail();
   const mailOptions = {
     from: `"Sakshi Clothing Atelier" <${senderEmail}>`,
     to: toEmail,
     subject: `Sakshi Clothing Atelier — Live Email Test`,
-    text: `Hello,\n\nThis is a real live test email from the Sakshi Clothing Atelier admin system.\n\nYour SMTP gateway is successfully connected and verified.\n\nAtelier Address: ${COMPANY_ADDRESS}\nContact: ${COMPANY_PHONE} | ${COMPANY_EMAIL}`,
+    text: `Hello,\n\nThis is a real live test email from the Sakshi Clothing Atelier admin system.\n\nYour SMTP gateway is successfully connected and verified on port ${activePort}.\n\nAtelier Address: ${COMPANY_ADDRESS}\nContact: ${COMPANY_PHONE} | ${COMPANY_EMAIL}`,
     html: `
       <div style="background-color:#12100e;padding:40px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#f5f2eb;">
         <div style="max-width:560px;margin:0 auto;background:#1a1714;border:1px solid #3d342a;border-radius:20px;padding:36px;text-align:center;">
           <div style="font-size:26px;letter-spacing:0.3em;color:#ffffff;font-weight:300;">SAKSHI</div>
           <div style="font-size:9px;letter-spacing:0.35em;color:#e5a93c;text-transform:uppercase;margin:6px 0 24px 0;">ATELIER LIVE EMAIL VERIFICATION</div>
           <div style="background:#142318;border:1px solid #234c2e;color:#52c41a;padding:12px;border-radius:12px;font-size:13px;font-weight:600;margin-bottom:20px;">
-            ✓ Real Email Dispatch Successful!
+            ✓ Real Email Dispatch Successful! (Port ${activePort} Active)
           </div>
           <p style="color:#b8b0a5;font-size:13px;line-height:1.7;margin-bottom:16px;">
             Your SMTP email delivery system is 100% active and connected to <strong>${senderEmail}</strong>. All subscriber updates and customer order notifications will now be delivered directly to inboxes.
@@ -132,7 +152,7 @@ export const sendTestEmail = async ({ toEmail, config = null }) => {
   };
 
   const info = await transporter.sendMail(mailOptions);
-  return info;
+  return { info, activePort };
 };
 
 export const sendOrderConfirmationEmail = async (order, customerUser) => {
