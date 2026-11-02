@@ -35,6 +35,7 @@ export const createProductSchema = z.object({
     discountPrice: z.number().min(0).optional()
   }),
   inventory: z.object({
+    totalStock: z.number().min(0).optional(),
     lowStockThreshold: z.number().optional()
   }).optional(),
   variants: z.array(variantSchema).optional(),

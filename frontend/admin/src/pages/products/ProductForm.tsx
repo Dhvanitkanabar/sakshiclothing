@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import ImageUpload from '../../components/ImageUpload';
-import { Package, Layers, Image as ImageIcon, DollarSign, ArrowLeft } from 'lucide-react';
+import { Package, Layers, Image as ImageIcon, DollarSign, ArrowLeft, CheckCircle2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { adminFetch } from '../../lib/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
@@ -144,14 +144,26 @@ export default function ProductForm() {
       basePrice = Number(formData.variants[0].price) || 0;
     }
 
-    // Calculate total stock from variants if not set
-    let totalStock = Number(formData.inventory.totalStock) || 0;
-    if (formData.variants.length > 0) {
-      const variantStockSum = formData.variants.reduce((acc, v) => acc + (Number(v.stock) || 0), 0);
-      if (variantStockSum > 0 || totalStock <= 0) {
-        totalStock = variantStockSum;
+    // STRICT VALIDATION: Total Stock must match the sum of variant stock!
+    const hasVariants = formData.variants.length > 0;
+    const variantStockSum = formData.variants.reduce((acc, v) => acc + (Number(v.stock) || 0), 0);
+    const declaredStock = Number(formData.inventory.totalStock) || 0;
+
+    if (hasVariants) {
+      if (declaredStock !== variantStockSum) {
+        alert(
+          `⚠️ STOCK MISMATCH ERROR:\n\n` +
+          `• Total Stock: ${declaredStock}\n` +
+          `• Sum of Variant Stocks: ${variantStockSum}\n` +
+          `• Difference: ${Math.abs(declaredStock - variantStockSum)}\n\n` +
+          `The Total Stock must exactly equal the sum of all variant stocks before you can create or update this product.\n\n` +
+          `Please update the Total Stock to ${variantStockSum} or adjust your variant stock quantities to match.`
+        );
+        return; // BLOCK PRODUCT CREATION!
       }
     }
+
+    const totalStock = hasVariants ? variantStockSum : declaredStock;
 
     try {
       const cleanedVariants = formData.variants.map((v) => {
@@ -218,6 +230,12 @@ export default function ProductForm() {
       alert('An unexpected error occurred while saving product: ' + (err.message || 'Check console.'));
     }
   };
+
+  const hasVariants = formData.variants.length > 0;
+  const variantStockSum = formData.variants.reduce((acc, v) => acc + (Number(v.stock) || 0), 0);
+  const currentTotalStock = Number(formData.inventory.totalStock) || 0;
+  const isStockMatching = !hasVariants || variantStockSum === currentTotalStock;
+  const stockDifference = Math.abs(currentTotalStock - variantStockSum);
 
   return (
     <div className="max-w-5xl mx-auto pb-16">
@@ -310,26 +328,109 @@ export default function ProductForm() {
         </div>
 
         <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm space-y-6">
-          <h2 className="text-lg font-bold flex items-center gap-2 border-b border-gray-100 pb-4">
-            <DollarSign size={20} /> Pricing & Inventory
-          </h2>
+          <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+            <h2 className="text-lg font-bold flex items-center gap-2">
+              <DollarSign size={20} /> Pricing & Inventory
+            </h2>
+            {hasVariants && (
+              <span className={`text-xs px-3 py-1 rounded-full font-semibold border flex items-center gap-1.5 ${
+                isStockMatching 
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                  : 'bg-red-50 text-red-700 border-red-200'
+              }`}>
+                {isStockMatching ? <CheckCircle2 size={13} /> : <AlertTriangle size={13} />}
+                Variant Stock: {variantStockSum} / Total: {currentTotalStock}
+              </span>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Base Price (₹)</label>
               <input type="number" name="pricing.basePrice" value={formData.pricing.basePrice} onChange={handleChange} className="w-full border-gray-200 border p-3 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all outline-none" required />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Total Stock</label>
-              <input type="number" name="inventory.totalStock" value={formData.inventory.totalStock} onChange={handleChange} className="w-full border-gray-200 border p-3 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all outline-none" placeholder="Calculated from variants if used" />
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-semibold text-gray-700">Total Stock</label>
+                {hasVariants && (
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, inventory: { ...prev.inventory, totalStock: variantStockSum } }))}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                    title="Set Total Stock equal to the sum of variants"
+                  >
+                    <RefreshCw size={12} /> Auto-Sync ({variantStockSum})
+                  </button>
+                )}
+              </div>
+              <input 
+                type="number" 
+                name="inventory.totalStock" 
+                value={formData.inventory.totalStock} 
+                onChange={handleChange} 
+                className={`w-full border p-3 rounded-lg focus:ring-2 transition-all outline-none ${
+                  hasVariants && !isStockMatching 
+                    ? 'border-red-400 bg-red-50/20 focus:ring-red-500 focus:border-red-500' 
+                    : hasVariants && isStockMatching 
+                      ? 'border-emerald-400 bg-emerald-50/10 focus:ring-emerald-500 focus:border-emerald-500'
+                      : 'border-gray-200 focus:ring-black focus:border-black'
+                }`} 
+                placeholder={hasVariants ? `Must equal variant sum (${variantStockSum})` : "Total stock quantity"} 
+              />
+              
+              {/* Real-time Matching Indicator */}
+              {hasVariants && (
+                <div className="mt-2">
+                  {isStockMatching ? (
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
+                      <CheckCircle2 size={14} className="shrink-0 text-emerald-600" />
+                      <span>Stock Verified: Total Stock ({currentTotalStock}) equals variant sum ({variantStockSum})</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs font-semibold text-red-700 bg-red-50 px-3 py-2 rounded-lg border border-red-200">
+                        <div className="flex items-center gap-1.5">
+                          <AlertTriangle size={14} className="shrink-0 text-red-600" />
+                          <span>
+                            Mismatch: Total is {currentTotalStock}, but Variants sum to {variantStockSum} (Diff: {stockDifference})
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, inventory: { ...prev.inventory, totalStock: variantStockSum } }))}
+                          className="ml-2 text-xs bg-red-600 hover:bg-red-700 text-white px-2.5 py-1 rounded font-medium transition-colors shrink-0"
+                        >
+                          Auto-Match ({variantStockSum})
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-red-600 font-medium">
+                        ⚠️ Total stock and variant stock sum must match exactly before this product can be saved.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm space-y-6">
-          <div className="flex justify-between items-center border-b border-gray-100 pb-4">
-            <h2 className="text-lg font-bold flex items-center gap-2">
-              <Layers size={20} /> Variants
-            </h2>
+          <div className="flex flex-wrap justify-between items-center border-b border-gray-100 pb-4 gap-2">
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-bold flex items-center gap-2">
+                <Layers size={20} /> Variants
+              </h2>
+              {hasVariants && (
+                <span className={`text-xs px-2.5 py-1 rounded-full font-semibold border flex items-center gap-1 ${
+                  isStockMatching 
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                    : 'bg-red-50 text-red-700 border-red-200'
+                }`}>
+                  {isStockMatching ? <CheckCircle2 size={12} /> : <AlertTriangle size={12} />}
+                  Variant Stock Total: {variantStockSum} / {currentTotalStock}
+                </span>
+              )}
+            </div>
             <button type="button" onClick={addVariant} className="bg-black hover:bg-gray-800 transition-colors text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm">
               + Add Variant
             </button>
@@ -406,13 +507,36 @@ export default function ProductForm() {
           />
         </div>
 
-        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200 sticky bottom-4 bg-white/95 backdrop-blur p-4 rounded-2xl shadow-lg border z-30">
-          <button type="button" onClick={() => navigate('/products')} className="w-full sm:w-auto px-6 py-2.5 border-2 border-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-50 transition-colors text-center">
-            Cancel
-          </button>
-          <button type="submit" className="w-full sm:w-auto px-8 py-2.5 bg-black text-white font-bold rounded-lg shadow-md hover:bg-gray-800 transition-colors text-center">
-            {isEdit ? 'Update Product' : 'Publish Product'}
-          </button>
+        <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-3 pt-4 border-t border-gray-200 sticky bottom-4 bg-white/95 backdrop-blur p-4 rounded-2xl shadow-lg border z-30">
+          <div>
+            {hasVariants && !isStockMatching && (
+              <span className="text-xs font-semibold text-red-600 flex items-center gap-1.5 bg-red-50 px-3 py-1.5 rounded-lg border border-red-200">
+                <AlertTriangle size={14} className="shrink-0 text-red-600" />
+                <span>Total Stock ({currentTotalStock}) and Variants ({variantStockSum}) must match to save.</span>
+              </span>
+            )}
+            {hasVariants && isStockMatching && (
+              <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1.5 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
+                <CheckCircle2 size={14} className="shrink-0 text-emerald-600" />
+                <span>Stock matching verified: {currentTotalStock} total units across {formData.variants.length} variants</span>
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <button type="button" onClick={() => navigate('/products')} className="w-full sm:w-auto px-6 py-2.5 border-2 border-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-50 transition-colors text-center">
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              className={`w-full sm:w-auto px-8 py-2.5 font-bold rounded-lg shadow-md transition-colors text-center ${
+                hasVariants && !isStockMatching 
+                  ? 'bg-red-600 hover:bg-red-700 text-white' 
+                  : 'bg-black text-white hover:bg-gray-800'
+              }`}
+            >
+              {isEdit ? 'Update Product' : 'Publish Product'}
+            </button>
+          </div>
         </div>
       </form>
     </div>

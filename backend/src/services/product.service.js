@@ -40,9 +40,21 @@ class ProductService {
         return cleaned;
       });
 
-      const totalStock = data.variants.reduce((acc, v) => acc + (Number(v.stock) || 0), 0);
+      const variantStockSum = data.variants.reduce((acc, v) => acc + (Number(v.stock) || 0), 0);
       data.inventory = data.inventory || {};
-      data.inventory.totalStock = totalStock;
+
+      // STRICT CHECK: If totalStock is specified, it MUST match the sum of variant stock!
+      if (data.inventory.totalStock !== undefined && data.inventory.totalStock !== null && data.inventory.totalStock !== '') {
+        const declaredTotal = Number(data.inventory.totalStock);
+        if (declaredTotal !== variantStockSum) {
+          throw new ApiError(
+            HTTP_STATUS.BAD_REQUEST,
+            `Total stock (${declaredTotal}) does not match the sum of variant stock (${variantStockSum}). They must be exactly equal.`
+          );
+        }
+      } else {
+        data.inventory.totalStock = variantStockSum;
+      }
 
       if ((!data.pricing?.basePrice || data.pricing.basePrice === 0) && data.variants[0]?.price) {
         data.pricing = data.pricing || {};
@@ -100,9 +112,33 @@ class ProductService {
     }
 
     if (data.variants && data.variants.length > 0) {
-      const sum = data.variants.reduce((acc, v) => acc + (Number(v.stock) || 0), 0);
+      data.variants = data.variants.map((v) => {
+        const cleaned = { ...v };
+        if (!cleaned.sku || !cleaned.sku.toString().trim()) {
+          delete cleaned.sku;
+        } else {
+          cleaned.sku = cleaned.sku.toString().trim();
+        }
+        cleaned.price = Number(cleaned.price) || 0;
+        cleaned.stock = Number(cleaned.stock) || 0;
+        return cleaned;
+      });
+
+      const variantStockSum = data.variants.reduce((acc, v) => acc + (Number(v.stock) || 0), 0);
       data.inventory = data.inventory || {};
-      data.inventory.totalStock = sum;
+
+      // STRICT CHECK: If totalStock is specified, it MUST match the sum of variant stock!
+      if (data.inventory.totalStock !== undefined && data.inventory.totalStock !== null && data.inventory.totalStock !== '') {
+        const declaredTotal = Number(data.inventory.totalStock);
+        if (declaredTotal !== variantStockSum) {
+          throw new ApiError(
+            HTTP_STATUS.BAD_REQUEST,
+            `Total stock (${declaredTotal}) does not match the sum of variant stock (${variantStockSum}). They must be exactly equal.`
+          );
+        }
+      } else {
+        data.inventory.totalStock = variantStockSum;
+      }
     } else if (data.inventory?.totalStock !== undefined && product.variants?.length === 1) {
       data.variants = product.variants.map((v, i) => i === 0 ? { ...v.toObject(), stock: Number(data.inventory.totalStock) } : v);
     }
