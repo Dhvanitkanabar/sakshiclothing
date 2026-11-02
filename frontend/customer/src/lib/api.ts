@@ -71,60 +71,114 @@ export const mapBackendProductToFrontend = (backendProduct: any): Product => {
   };
 };
 
+export const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeoutMs = 3800): Promise<Response> => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(id);
+    return res;
+  } catch (err) {
+    clearTimeout(id);
+    throw err;
+  }
+};
+
+export const getCachedProducts = (): Product[] => {
+  try {
+    const saved = localStorage.getItem('sakshi_cached_products');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {}
+  return PRODUCTS;
+};
+
+export const getCachedFeatured = (): Product[] => {
+  try {
+    const saved = localStorage.getItem('sakshi_cached_featured');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {}
+  return PRODUCTS.filter(p => p.featured);
+};
+
+export const getCachedNewArrivals = (): Product[] => {
+  try {
+    const saved = localStorage.getItem('sakshi_cached_arrivals');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {}
+  return PRODUCTS.slice(0, 8);
+};
+
 export const fetchProducts = async (filters: any = {}) => {
   try {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_URL}/products?${params.toString()}`);
+    const response = await fetchWithTimeout(`${API_URL}/products?${params.toString()}`, {}, 3800);
     const data = await response.json();
     if (data.success && data.data?.data?.length > 0) {
-      return data.data.data.map(mapBackendProductToFrontend);
+      const mapped = data.data.data.map(mapBackendProductToFrontend);
+      try {
+        localStorage.setItem('sakshi_cached_products', JSON.stringify(mapped));
+      } catch {}
+      return mapped;
     }
-    return PRODUCTS;
-  } catch (error) {
-    console.warn('Backend unavailable, using authentic Sakshi catalog dataset:', error);
-    return PRODUCTS;
+    return getCachedProducts();
+  } catch {
+    return getCachedProducts();
   }
 };
 
 export const fetchProductById = async (id: string) => {
   try {
-    const response = await fetch(`${API_URL}/products/${id}`);
+    const response = await fetchWithTimeout(`${API_URL}/products/${id}`, {}, 3800);
     const data = await response.json();
     if (data.success && data.data) {
       return mapBackendProductToFrontend(data.data);
     }
-    return PRODUCTS.find(p => p.id === id) || PRODUCTS[0];
-  } catch (error) {
-    console.warn('Backend unavailable, using authentic Sakshi catalog dataset:', error);
-    return PRODUCTS.find(p => p.id === id) || PRODUCTS[0];
+    return getCachedProducts().find(p => p.id === id) || PRODUCTS.find(p => p.id === id) || PRODUCTS[0];
+  } catch {
+    return getCachedProducts().find(p => p.id === id) || PRODUCTS.find(p => p.id === id) || PRODUCTS[0];
   }
 };
 
 export const fetchFeaturedProducts = async () => {
   try {
-    const response = await fetch(`${API_URL}/products/featured`);
+    const response = await fetchWithTimeout(`${API_URL}/products/featured`, {}, 3800);
     const data = await response.json();
     if (data.success && data.data?.length > 0) {
-      return data.data.map(mapBackendProductToFrontend);
+      const mapped = data.data.map(mapBackendProductToFrontend);
+      try {
+        localStorage.setItem('sakshi_cached_featured', JSON.stringify(mapped));
+      } catch {}
+      return mapped;
     }
-    return PRODUCTS.filter(p => p.featured);
-  } catch (error) {
-    console.warn('Backend unavailable, using authentic Sakshi catalog dataset:', error);
-    return PRODUCTS.filter(p => p.featured);
+    return getCachedFeatured();
+  } catch {
+    return getCachedFeatured();
   }
 };
 
 export const fetchNewArrivals = async () => {
   try {
-    const response = await fetch(`${API_URL}/products/new-arrivals`);
+    const response = await fetchWithTimeout(`${API_URL}/products/new-arrivals`, {}, 3800);
     const data = await response.json();
     if (data.success && data.data?.length > 0) {
-      return data.data.map(mapBackendProductToFrontend);
+      const mapped = data.data.map(mapBackendProductToFrontend);
+      try {
+        localStorage.setItem('sakshi_cached_arrivals', JSON.stringify(mapped));
+      } catch {}
+      return mapped;
     }
-    return PRODUCTS.slice(0, 8);
-  } catch (error) {
-    console.warn('Backend unavailable, using authentic Sakshi catalog dataset:', error);
-    return PRODUCTS.slice(0, 8);
+    return getCachedNewArrivals();
+  } catch {
+    return getCachedNewArrivals();
   }
 };
 

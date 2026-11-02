@@ -5,7 +5,7 @@ import ProductCard from '../components/ProductCard';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronRight, SlidersHorizontal, SearchX, X, Sparkles, ShieldCheck, Truck, Filter } from 'lucide-react';
 import Skeleton from '../components/ui/Skeleton';
-import { fetchProducts, API_URL } from '../lib/api';
+import { fetchProducts, API_URL, getCachedProducts } from '../lib/api';
 import { PRODUCTS } from '../data/products';
 
 // Curated high-resolution realistic photography for categories & subcategories
@@ -37,10 +37,11 @@ const getSubCategoryImage = (subName: string) => {
 export const Category = () => {
   const { main, sub } = useParams<{ main: string; sub?: string }>();
   const navigate = useNavigate();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  // Instant 0ms startup
+  const [products, setProducts] = useState<Product[]>(getCachedProducts);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>(getCachedProducts);
   const [subcategories, setSubcategories] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 160000]);
   const [maxProductPrice, setMaxProductPrice] = useState(160000);
   const [sortBy, setSortBy] = useState('featured');

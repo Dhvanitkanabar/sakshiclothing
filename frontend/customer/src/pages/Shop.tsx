@@ -3,7 +3,7 @@ import { Product } from '../types';
 import ProductCard from '../components/ProductCard';
 import { motion, AnimatePresence } from 'motion/react';
 import Skeleton from '../components/ui/Skeleton';
-import { fetchProducts } from '../lib/api';
+import { fetchProducts, getCachedProducts } from '../lib/api';
 import { PRODUCTS } from '../data/products';
 import { SearchX, SlidersHorizontal, X, Sparkles } from 'lucide-react';
 import ProductFilmstripCarousel from '../components/ProductFilmstripCarousel';
@@ -16,9 +16,10 @@ export const Shop = () => {
   const categoryParam = searchParams.get('category');
   const subParam = searchParams.get('sub') || searchParams.get('subCategory');
   
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Instant 0ms startup
+  const [products, setProducts] = useState<Product[]>(getCachedProducts);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>(getCachedProducts);
+  const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(categoryParam || 'All');
   const [selectedSubCategory, setSelectedSubCategory] = useState(subParam || 'All');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 160000]);
@@ -34,9 +35,10 @@ export const Shop = () => {
   }, [categoryParam, subParam]);
 
   useEffect(() => {
+    let isMounted = true;
     const loadProducts = async () => {
-      setLoading(true);
       const data = await fetchProducts();
+      if (!isMounted) return;
       const validData = (data && data.length > 0) ? data : PRODUCTS;
       setProducts(validData);
       setFilteredProducts(validData);
@@ -53,6 +55,7 @@ export const Shop = () => {
       setLoading(false);
     };
     loadProducts();
+    return () => { isMounted = false; };
   }, []);
 
   useEffect(() => {

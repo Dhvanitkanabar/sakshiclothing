@@ -19,8 +19,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Analytics } from '@vercel/analytics/react';
 
-// Lazy loading pages for performance
-const Home = lazy(() => import('./pages/Home'));
+import Home from './pages/Home';
+// Lazy loading secondary routes
 const Shop = lazy(() => import('./pages/Shop'));
 const Category = lazy(() => import('./pages/Category'));
 const ProductDetails = lazy(() => import('./pages/ProductDetails'));

@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { Product } from '../types';
 import ProductCard from '../components/ProductCard';
-import { fetchProducts, fetchFeaturedProducts, fetchNewArrivals } from '../lib/api';
+import { fetchProducts, fetchFeaturedProducts, fetchNewArrivals, getCachedProducts, getCachedFeatured, getCachedNewArrivals } from '../lib/api';
 import { PRODUCTS } from '../data/products';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -44,11 +44,12 @@ export const Home: React.FC = () => {
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
-  const [newArrivals, setNewArrivals] = useState<Product[]>([]);
+  // Instant 0ms startup: Initialize immediately with cached/authentic dataset
+  const [products, setProducts] = useState<Product[]>(getCachedProducts);
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>(getCachedFeatured);
+  const [newArrivals, setNewArrivals] = useState<Product[]>(getCachedNewArrivals);
   const [activeTab, setActiveTab] = useState<'all' | 'bestsellers' | 'bridal' | 'men' | 'sarees' | 'jewellery'>('all');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // Global Page Scroll Progress for Fluid Velocity Indicator
   const { scrollYProgress } = useScroll();
@@ -109,8 +110,9 @@ export const Home: React.FC = () => {
     return () => clearInterval(timer);
   }, [heroSlides.length, isSlidePaused]);
 
-  // Load real store data from live API or fallback to authentic products dataset
+  // Non-blocking background sync: updates real-time store catalog without blocking initial page render
   useEffect(() => {
+    let isMounted = true;
     const loadStoreData = async () => {
       try {
         const [all, feat, arrivals] = await Promise.all([
@@ -119,22 +121,18 @@ export const Home: React.FC = () => {
           fetchNewArrivals()
         ]);
 
-        const allItems = (all && all.length > 0) ? all : PRODUCTS;
-        const featItems = (feat && feat.length > 0) ? feat : PRODUCTS.filter(p => p.featured);
-        const arrivalItems = (arrivals && arrivals.length > 0) ? arrivals : PRODUCTS.slice(0, 8);
-
-        setProducts(allItems);
-        setFeaturedProducts(featItems.length > 0 ? featItems : allItems);
-        setNewArrivals(arrivalItems.length > 0 ? arrivalItems : allItems);
+        if (!isMounted) return;
+        if (all && all.length > 0) setProducts(all);
+        if (feat && feat.length > 0) setFeaturedProducts(feat);
+        if (arrivals && arrivals.length > 0) setNewArrivals(arrivals);
       } catch (err) {
-        setProducts(PRODUCTS);
-        setFeaturedProducts(PRODUCTS.filter(p => p.featured));
-        setNewArrivals(PRODUCTS.slice(0, 8));
+        console.warn('Background store sync deferred to cached dataset:', err);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
     loadStoreData();
+    return () => { isMounted = false; };
   }, []);
 
   // Filter products by tab
