@@ -201,6 +201,14 @@ import { clerkMiddleware } from '@clerk/express';
 
 app.use(clerkMiddleware());
 
+app.get(['/health', '/api/health', '/api/v1/health'], (req, res) => {
+  res.status(200).json({ status: 'ok', uptime: process.uptime(), timestamp: new Date().toISOString() });
+});
+
+app.get('/', (req, res) => {
+  res.status(200).json({ status: 'ok', service: 'Sakshi Clothing API', active: true });
+});
+
 app.use('/api/v1/health', healthRouter);
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/products', productRouter);

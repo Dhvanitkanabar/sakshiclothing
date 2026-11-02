@@ -22,7 +22,7 @@ const variantSchema = z.object({
 
 export const createProductSchema = z.object({
   name: z.string().min(2),
-  slug: z.string().min(2),
+  slug: z.string().min(1).optional().or(z.literal('')),
   shortDescription: z.string().max(300).optional(),
   description: z.string().min(10),
   category: z.string(), // ObjectId string

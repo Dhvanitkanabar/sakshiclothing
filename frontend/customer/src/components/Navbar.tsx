@@ -23,7 +23,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useUser } from '@clerk/clerk-react';
 
 // Patron Profile Dropdown Menu with Frosted Glass Elevation
-const UserDropdownMenu = () => {
+const UserDropdownMenu = ({ isTransparent }: { isTransparent: boolean }) => {
   const { user, isSignedIn, logout } = useAuth();
   const { user: clerkUser } = useUser();
   const [isOpen, setIsOpen] = useState(false);
@@ -41,13 +41,17 @@ const UserDropdownMenu = () => {
       <button 
         onClick={() => setIsOpen(!isOpen)}
         onBlur={() => setTimeout(() => setIsOpen(false), 240)}
-        className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-stone-300/80 overflow-hidden hover:border-stone-900 transition-all bg-stone-100 flex items-center justify-center shrink-0 shadow-xs focus:outline-none hover:shadow-md"
+        className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden transition-all flex items-center justify-center shrink-0 shadow-xs focus:outline-none hover:shadow-md ${
+          isTransparent
+            ? 'border border-white/40 bg-white/10 hover:border-white text-white'
+            : 'border border-stone-300/80 bg-stone-100 hover:border-stone-900 text-stone-800'
+        }`}
         aria-label="User Account"
       >
         {displayAvatar ? (
           <img src={displayAvatar} alt={rawName} className="w-full h-full object-cover" />
         ) : (
-          <span className="text-xs font-bold text-stone-800">{displayInitial}</span>
+          <span className="text-xs font-bold">{displayInitial}</span>
         )}
       </button>
 
@@ -58,7 +62,7 @@ const UserDropdownMenu = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.95 }}
             transition={{ duration: 0.16, ease: "easeOut" }}
-            className="absolute right-0 top-full mt-2.5 w-64 bg-white/95 backdrop-blur-2xl rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-stone-200/90 overflow-hidden flex flex-col z-50 origin-top-right text-stone-900"
+            className="absolute right-0 top-full mt-2.5 w-64 bg-white/95 backdrop-blur-2xl rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.18)] border border-stone-200/90 overflow-hidden flex flex-col z-50 origin-top-right text-stone-900"
           >
             <div className="p-4 border-b border-stone-100 bg-stone-50/70">
               <div className="flex items-center gap-2">
@@ -113,6 +117,9 @@ export const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const isHome = location.pathname === '/';
+  const isTransparent = isHome && !isScrolled;
+
   const announcements = [
     "Free Express Delivery Across India on All Orders",
     "Handcrafted by Master Artisans in Jaipur & Varanasi",
@@ -130,9 +137,11 @@ export const Navbar = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 25);
+      const scrollPos = window.scrollY || document.documentElement.scrollTop || 0;
+      setIsScrolled(scrollPos > 25);
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -229,22 +238,24 @@ export const Navbar = () => {
 
   return (
     <>
-      {/* 1. Fixed Viewport Container for True Sticky Floating Navbar */}
+      {/* 1. Viewport Fixed Container */}
       <div className="fixed top-0 left-0 right-0 z-40 pointer-events-none transition-all duration-300">
         
-        {/* Luxury Top Announcement Ticker (collapses smoothly on scroll) */}
+        {/* Luxury Top Announcement Ticker */}
         <div 
-          className={`pointer-events-auto bg-stone-950 text-stone-200 px-3 sm:px-6 text-xs border-b border-stone-800/80 transition-all duration-300 overflow-hidden ${
+          className={`pointer-events-auto px-3 sm:px-6 text-xs transition-all duration-300 overflow-hidden ${
             isScrolled 
               ? 'max-h-0 opacity-0 py-0 border-transparent' 
-              : 'max-h-12 opacity-100 py-1.5 sm:py-2'
+              : isTransparent
+                ? 'max-h-12 opacity-100 py-1.5 sm:py-2 bg-black/45 backdrop-blur-md text-stone-200 border-b border-white/10'
+                : 'max-h-12 opacity-100 py-1.5 sm:py-2 bg-stone-950 text-stone-200 border-b border-stone-800/80'
           }`}
         >
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
-            <div className="hidden lg:flex items-center gap-2 text-[11px] text-stone-400 font-medium tracking-wider uppercase">
+            <div className="hidden lg:flex items-center gap-2 text-[11px] text-stone-300 font-medium tracking-wider uppercase">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               <span>Jaipur Atelier</span>
-              <span className="text-stone-700">•</span>
+              <span className="text-stone-500">•</span>
               <span>Worldwide Insured Shipping</span>
             </div>
 
@@ -256,7 +267,7 @@ export const Navbar = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -7 }}
                   transition={{ duration: 0.28 }}
-                  className="text-[11px] sm:text-xs text-amber-200/90 font-medium tracking-wide flex items-center justify-center gap-1.5"
+                  className="text-[11px] sm:text-xs text-amber-300 font-medium tracking-wide flex items-center justify-center gap-1.5"
                 >
                   <Sparkles size={11} className="text-amber-400 shrink-0 hidden sm:inline" />
                   <span>{announcements[tickerIndex]}</span>
@@ -264,12 +275,12 @@ export const Navbar = () => {
               </AnimatePresence>
             </div>
 
-            <div className="hidden sm:flex items-center gap-3.5 text-[11px] text-stone-400 font-medium">
+            <div className="hidden sm:flex items-center gap-3.5 text-[11px] text-stone-300 font-medium">
               <Link to="/track-order" className="hover:text-amber-200 transition-colors flex items-center gap-1">
                 <Truck size={12} className="text-stone-400" />
                 <span>Track Order</span>
               </Link>
-              <span className="text-stone-700">•</span>
+              <span className="text-stone-600">•</span>
               <a 
                 href="https://wa.me/919829012345" 
                 target="_blank" 
@@ -283,193 +294,235 @@ export const Navbar = () => {
           </div>
         </div>
 
-        {/* Floating Sticky Glassmorphism Island Navbar */}
-        <div className="w-full px-2.5 sm:px-6 lg:px-8 pt-2 sm:pt-3 transition-all duration-300">
+        {/* Floating Transparent / Glassmorphism Capsule Island */}
+        <div className="w-full px-2.5 sm:px-6 lg:px-8 pt-2.5 sm:pt-3.5 transition-all duration-300">
           <header 
             className={`pointer-events-auto mx-auto max-w-7xl rounded-2xl lg:rounded-full transition-all duration-300 ${
-              isScrolled
-                ? 'bg-white/92 backdrop-blur-2xl border border-stone-200/90 shadow-[0_12px_40px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.04)] py-2 sm:py-2.5 px-3.5 sm:px-6'
-                : 'bg-white/85 backdrop-blur-xl border border-stone-200/75 shadow-[0_8px_32px_rgba(0,0,0,0.06),0_1px_3px_rgba(0,0,0,0.02)] py-2.5 sm:py-3.5 px-4 sm:px-7'
+              isTransparent
+                ? 'bg-black/25 backdrop-blur-xl border border-white/25 shadow-none py-2.5 sm:py-3.5 px-4 sm:px-7 text-white hover:bg-black/35 hover:border-white/35'
+                : 'bg-white/92 backdrop-blur-2xl border border-stone-200/90 shadow-[0_12px_40px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.04)] py-2 sm:py-2.5 px-3.5 sm:px-6 text-stone-900'
             }`}
           >
-          <div className="flex items-center justify-between gap-2 sm:gap-6">
-            
-            {/* Left: Mobile Menu Trigger + Brand Logo */}
-            <div className="flex items-center gap-2 sm:gap-3.5">
-              <button
-                onClick={() => setIsMenuOpen(true)}
-                className="lg:hidden p-2 -ml-1 text-stone-700 hover:text-stone-950 rounded-xl hover:bg-stone-100/80 transition-colors active:scale-95"
-                aria-label="Open Navigation Menu"
-              >
-                <Menu size={20} />
-              </button>
-
-              {/* Brand Logo with Haute Couture Spark */}
-              <Link to="/" className="flex items-center gap-2 group focus:outline-none select-none">
-                <div className="relative flex items-center">
-                  <span className="font-sans text-xl sm:text-2xl font-black tracking-[0.2em] text-stone-950 group-hover:text-stone-700 transition-colors leading-none">
-                    SAKSHI
-                  </span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 ml-1.5 mb-1 group-hover:scale-125 transition-transform" />
-                </div>
-                <span className="hidden xl:inline-block text-[9px] uppercase tracking-[0.22em] text-stone-400 font-semibold pl-2.5 border-l border-stone-200">
-                  Couture
-                </span>
-              </Link>
-            </div>
-
-            {/* Center: Desktop Nav Links with Floating Pills and Dropdowns */}
-            <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
-              {navLinks.map((link) => {
-                const isHovered = hoveredNav === link.name;
-                return (
-                  <div
-                    key={link.name}
-                    className="relative"
-                    onMouseEnter={() => setHoveredNav(link.name)}
-                    onMouseLeave={() => setHoveredNav(null)}
-                  >
-                    <Link
-                      to={link.path}
-                      className={`px-3.5 py-1.5 rounded-full text-xs xl:text-sm font-semibold tracking-wide transition-all duration-200 flex items-center gap-1.5 ${
-                        isHovered
-                          ? 'bg-stone-100 text-stone-950 shadow-2xs'
-                          : 'text-stone-700 hover:text-stone-950 hover:bg-stone-100/70'
-                      }`}
-                    >
-                      <span>{link.name}</span>
-                      {link.badge && (
-                        <span className="px-1.5 py-0.2 text-[9px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 rounded-full border border-amber-200">
-                          {link.badge}
-                        </span>
-                      )}
-                      {link.isNew && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                      )}
-                      {link.dropdown && (
-                        <ChevronDown 
-                          size={12} 
-                          className={`transition-transform duration-200 text-stone-400 ${isHovered ? 'rotate-180 text-stone-900' : ''}`} 
-                        />
-                      )}
-                    </Link>
-
-                    {/* Floating Dropdown Card */}
-                    <AnimatePresence>
-                      {link.dropdown && isHovered && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 6, scale: 0.97 }}
-                          transition={{ duration: 0.16, ease: "easeOut" }}
-                          className="absolute top-full left-1/2 -translate-x-1/2 mt-2.5 w-60 bg-white/95 backdrop-blur-2xl border border-stone-200/90 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] p-2.5 z-50 text-stone-900 origin-top"
-                        >
-                          <div className="px-3 py-1.5 mb-1 border-b border-stone-100 flex items-center justify-between">
-                            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-stone-400">
-                              {link.name} Edit
-                            </span>
-                            <span className="text-[10px] text-amber-600 font-semibold">Handcrafted</span>
-                          </div>
-                          <ul className="space-y-0.5">
-                            {link.dropdown.map((sub) => (
-                              <li key={sub.label}>
-                                <Link
-                                  to={sub.path}
-                                  className="group flex items-center justify-between px-3 py-2 text-xs font-medium text-stone-700 hover:text-stone-950 hover:bg-stone-100/90 rounded-xl transition-all"
-                                >
-                                  <span>{sub.label}</span>
-                                  <ArrowRight size={12} className="opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-amber-600" />
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                );
-              })}
-            </nav>
-
-            {/* Right: Search, Wishlist, Cart, Sign In */}
-            <div className="flex items-center gap-1.5 sm:gap-2.5">
+            <div className="flex items-center justify-between gap-2 sm:gap-6">
               
-              {/* Search Pill Trigger (Desktop) */}
-              <button
-                onClick={() => setIsSearchOpen(true)}
-                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-stone-100/80 hover:bg-stone-100 text-stone-500 hover:text-stone-900 border border-stone-200/60 text-xs font-medium transition-all shadow-2xs group focus:outline-none"
-                aria-label="Search Collection"
-                title="Search collection (⌘K)"
-              >
-                <Search size={14} className="text-stone-400 group-hover:text-stone-900 transition-colors" />
-                <span className="text-stone-600 group-hover:text-stone-900 transition-colors">Search...</span>
-                <span className="flex items-center gap-0.5 text-[10px] font-semibold text-stone-400 bg-white px-1.5 py-0.5 rounded-md border border-stone-200 shadow-2xs">
-                  <Command size={10} /> K
-                </span>
-              </button>
-
-              {/* Mobile Search Icon Button */}
-              <button
-                onClick={() => setIsSearchOpen(true)}
-                className="md:hidden p-2 text-stone-700 hover:text-stone-950 hover:bg-stone-100/80 rounded-full transition-colors"
-                aria-label="Search"
-                title="Search collection"
-              >
-                <Search size={18} />
-              </button>
-
-              {/* Wishlist Link */}
-              <Link
-                to="/wishlist"
-                className="p-2 text-stone-700 hover:text-stone-950 hover:bg-stone-100/80 rounded-full transition-colors relative"
-                aria-label="Wishlist"
-                title="Saved items"
-              >
-                <Heart size={18} strokeWidth={2} />
-                {wishlist.length > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 bg-rose-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
-                    {wishlist.length}
-                  </span>
-                )}
-              </Link>
-
-              {/* Cart Trigger */}
-              <button
-                onClick={() => setIsCartOpen(true)}
-                className="p-2 text-stone-700 hover:text-stone-950 hover:bg-stone-100/80 rounded-full transition-colors relative"
-                aria-label="Shopping Bag"
-                title="Shopping bag"
-              >
-                <ShoppingBag size={18} strokeWidth={2} />
-                {cartCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 bg-stone-950 text-amber-300 text-[10px] font-bold px-1.5 py-0.2 rounded-full min-w-[18px] text-center shadow-xs border border-white/40">
-                    {cartCount}
-                  </span>
-                )}
-              </button>
-
-              <div className="h-4 w-px bg-stone-200 hidden sm:block mx-0.5" />
-
-              {/* User Profile / Sign In */}
-              {isSignedIn ? (
-                <UserDropdownMenu />
-              ) : (
-                <Link
-                  to="/login"
-                  className="hidden sm:inline-flex items-center gap-1.5 px-4 py-1.5 bg-stone-950 hover:bg-stone-800 text-white rounded-full text-xs font-semibold tracking-wide transition-all shadow-xs hover:shadow-md active:scale-95"
+              {/* Left: Mobile Menu Trigger + Brand Logo */}
+              <div className="flex items-center gap-2 sm:gap-3.5">
+                <button
+                  onClick={() => setIsMenuOpen(true)}
+                  className={`lg:hidden p-2 -ml-1 rounded-xl transition-colors active:scale-95 ${
+                    isTransparent 
+                      ? 'text-white hover:bg-white/15' 
+                      : 'text-stone-700 hover:text-stone-950 hover:bg-stone-100/80'
+                  }`}
+                  aria-label="Open Navigation Menu"
                 >
-                  <User size={13} />
-                  <span>Sign In</span>
-                </Link>
-              )}
-            </div>
-          </div>
-        </header>
-      </div>
-    </div>
+                  <Menu size={20} />
+                </button>
 
-    {/* Flow Spacer so content is never obscured by the fixed floating navbar */}
-    <div className="w-full h-24 sm:h-28 shrink-0 pointer-events-none" aria-hidden="true" />
+                {/* Brand Logo */}
+                <Link to="/" className="flex items-center gap-2 group focus:outline-none select-none">
+                  <div className="relative flex items-center">
+                    <span className={`font-sans text-xl sm:text-2xl font-black tracking-[0.2em] transition-colors leading-none ${
+                      isTransparent ? 'text-white group-hover:text-amber-200' : 'text-stone-950 group-hover:text-stone-700'
+                    }`}>
+                      SAKSHI
+                    </span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 ml-1.5 mb-1 group-hover:scale-125 transition-transform" />
+                  </div>
+                  <span className={`hidden xl:inline-block text-[9px] uppercase tracking-[0.22em] font-semibold pl-2.5 border-l ${
+                    isTransparent ? 'text-white/70 border-white/20' : 'text-stone-400 border-stone-200'
+                  }`}>
+                    Couture
+                  </span>
+                </Link>
+              </div>
+
+              {/* Center: Desktop Nav Links with Transparent / Frosted Pills */}
+              <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
+                {navLinks.map((link) => {
+                  const isHovered = hoveredNav === link.name;
+                  return (
+                    <div
+                      key={link.name}
+                      className="relative"
+                      onMouseEnter={() => setHoveredNav(link.name)}
+                      onMouseLeave={() => setHoveredNav(null)}
+                    >
+                      <Link
+                        to={link.path}
+                        className={`px-3.5 py-1.5 rounded-full text-xs xl:text-sm font-semibold tracking-wide transition-all duration-200 flex items-center gap-1.5 ${
+                          isTransparent
+                            ? isHovered
+                              ? 'bg-white/20 text-white shadow-2xs'
+                              : 'text-white/90 hover:text-white hover:bg-white/10'
+                            : isHovered
+                              ? 'bg-stone-100 text-stone-950 shadow-2xs'
+                              : 'text-stone-700 hover:text-stone-950 hover:bg-stone-100/70'
+                        }`}
+                      >
+                        <span>{link.name}</span>
+                        {link.badge && (
+                          <span className={`px-1.5 py-0.2 text-[9px] font-bold uppercase tracking-wider rounded-full border ${
+                            isTransparent 
+                              ? 'bg-amber-400/20 text-amber-200 border-amber-400/30' 
+                              : 'bg-amber-100 text-amber-800 border-amber-200'
+                          }`}>
+                            {link.badge}
+                          </span>
+                        )}
+                        {link.isNew && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                        )}
+                        {link.dropdown && (
+                          <ChevronDown 
+                            size={12} 
+                            className={`transition-transform duration-200 ${
+                              isTransparent ? 'text-white/70' : 'text-stone-400'
+                            } ${isHovered ? 'rotate-180 text-amber-400' : ''}`} 
+                          />
+                        )}
+                      </Link>
+
+                      {/* Floating Dropdown Card */}
+                      <AnimatePresence>
+                        {link.dropdown && isHovered && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 6, scale: 0.97 }}
+                            transition={{ duration: 0.16, ease: "easeOut" }}
+                            className="absolute top-full left-1/2 -translate-x-1/2 mt-2.5 w-60 bg-white/95 backdrop-blur-2xl border border-stone-200/90 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.16)] p-2.5 z-50 text-stone-900 origin-top"
+                          >
+                            <div className="px-3 py-1.5 mb-1 border-b border-stone-100 flex items-center justify-between">
+                              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-stone-400">
+                                {link.name} Edit
+                              </span>
+                              <span className="text-[10px] text-amber-600 font-semibold">Handcrafted</span>
+                            </div>
+                            <ul className="space-y-0.5">
+                              {link.dropdown.map((sub) => (
+                                <li key={sub.label}>
+                                  <Link
+                                    to={sub.path}
+                                    className="group flex items-center justify-between px-3 py-2 text-xs font-medium text-stone-700 hover:text-stone-950 hover:bg-stone-100/90 rounded-xl transition-all"
+                                  >
+                                    <span>{sub.label}</span>
+                                    <ArrowRight size={12} className="opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-amber-600" />
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
+              </nav>
+
+              {/* Right: Search, Wishlist, Cart, Sign In */}
+              <div className="flex items-center gap-1.5 sm:gap-2.5">
+                
+                {/* Search Pill Trigger (Desktop) */}
+                <button
+                  onClick={() => setIsSearchOpen(true)}
+                  className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all shadow-2xs group focus:outline-none ${
+                    isTransparent
+                      ? 'bg-white/15 hover:bg-white/25 text-white/90 border border-white/25'
+                      : 'bg-stone-100/80 hover:bg-stone-100 text-stone-600 hover:text-stone-900 border border-stone-200/60'
+                  }`}
+                  aria-label="Search Collection"
+                  title="Search collection (⌘K)"
+                >
+                  <Search size={14} className={isTransparent ? 'text-white/80 group-hover:text-white' : 'text-stone-400 group-hover:text-stone-900'} />
+                  <span>Search...</span>
+                  <span className={`flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md border shadow-2xs ${
+                    isTransparent ? 'bg-white/20 text-white border-white/30' : 'bg-white text-stone-500 border-stone-200'
+                  }`}>
+                    <Command size={10} /> K
+                  </span>
+                </button>
+
+                {/* Mobile Search Icon Button */}
+                <button
+                  onClick={() => setIsSearchOpen(true)}
+                  className={`md:hidden p-2 rounded-full transition-colors ${
+                    isTransparent ? 'text-white hover:bg-white/15' : 'text-stone-700 hover:text-stone-950 hover:bg-stone-100/80'
+                  }`}
+                  aria-label="Search"
+                  title="Search collection"
+                >
+                  <Search size={18} />
+                </button>
+
+                {/* Wishlist Link */}
+                <Link
+                  to="/wishlist"
+                  className={`p-2 rounded-full transition-colors relative ${
+                    isTransparent ? 'text-white hover:bg-white/15' : 'text-stone-700 hover:text-stone-950 hover:bg-stone-100/80'
+                  }`}
+                  aria-label="Wishlist"
+                  title="Saved items"
+                >
+                  <Heart size={18} strokeWidth={2} />
+                  {wishlist.length > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 bg-rose-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                      {wishlist.length}
+                    </span>
+                  )}
+                </Link>
+
+                {/* Cart Trigger */}
+                <button
+                  onClick={() => setIsCartOpen(true)}
+                  className={`p-2 rounded-full transition-colors relative ${
+                    isTransparent ? 'text-white hover:bg-white/15' : 'text-stone-700 hover:text-stone-950 hover:bg-stone-100/80'
+                  }`}
+                  aria-label="Shopping Bag"
+                  title="Shopping bag"
+                >
+                  <ShoppingBag size={18} strokeWidth={2} />
+                  {cartCount > 0 && (
+                    <span className={`absolute -top-0.5 -right-0.5 text-[10px] font-bold px-1.5 py-0.2 rounded-full min-w-[18px] text-center shadow-xs border ${
+                      isTransparent 
+                        ? 'bg-amber-400 text-stone-950 border-white/50 font-black' 
+                        : 'bg-stone-950 text-amber-300 border-white/40 font-bold'
+                    }`}>
+                      {cartCount}
+                    </span>
+                  )}
+                </button>
+
+                <div className={`h-4 w-px hidden sm:block mx-0.5 ${
+                  isTransparent ? 'bg-white/20' : 'bg-stone-200'
+                }`} />
+
+                {/* User Profile / Sign In */}
+                {isSignedIn ? (
+                  <UserDropdownMenu isTransparent={isTransparent} />
+                ) : (
+                  <Link
+                    to="/login"
+                    className={`hidden sm:inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all shadow-xs hover:shadow-md active:scale-95 ${
+                      isTransparent
+                        ? 'bg-white text-stone-950 hover:bg-stone-100 font-bold'
+                        : 'bg-stone-950 hover:bg-stone-800 text-white'
+                    }`}
+                  >
+                    <User size={13} />
+                    <span>Sign In</span>
+                  </Link>
+                )}
+              </div>
+            </div>
+          </header>
+        </div>
+      </div>
+
+      {/* 2. Flow Spacer ONLY for Non-Home Pages (Zero white gap on Home page!) */}
+      {!isHome && (
+        <div className="w-full h-24 sm:h-28 shrink-0 pointer-events-none" aria-hidden="true" />
+      )}
 
       {/* 3. Search Palette Modal with Keyboard Support */}
       <AnimatePresence>

@@ -30,7 +30,17 @@ const startServer = async () => {
     const server = app.listen(PORT, '0.0.0.0', () => {
       logger.info(`[Server] E-Commerce server running on port: ${PORT}`);
       logger.info(`[Server] Mode: ${process.env.NODE_ENV}`);
-      logger.info(`[Server] Health check target: http://0.0.0.0:${PORT}/api/health`);
+      logger.info(`[Server] Health check target: http://0.0.0.0:${PORT}/health`);
+
+      // Prevent Render instance from sleeping: Self-ping heartbeat every 10 minutes
+      const keepAliveUrl = process.env.RENDER_EXTERNAL_URL 
+        ? `${process.env.RENDER_EXTERNAL_URL}/health` 
+        : 'https://sakshi-clothing-backend.onrender.com/health';
+      setInterval(() => {
+        fetch(keepAliveUrl)
+          .then(r => logger.info(`[KeepAlive Heartbeat] Pinged ${keepAliveUrl} -> status ${r.status}`))
+          .catch(err => logger.warn(`[KeepAlive Heartbeat] Ping error: ${err.message}`));
+      }, 10 * 60 * 1000);
     });
 
     // Handle Unhandled Rejections
