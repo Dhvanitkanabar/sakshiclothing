@@ -1,3 +1,8 @@
+import dns from 'dns';
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
+
 import nodemailer from 'nodemailer';
 import mongoose from 'mongoose';
 import StoreSettings from '../models/StoreSettings.model.js';
@@ -43,6 +48,7 @@ export const getTransporter = async (customConfig = null, forcePort = null) => {
       host: 'smtp.gmail.com',
       port: effectivePort,
       secure: isSecure,
+      family: 4, // Force IPv4 to prevent ENETUNREACH on cloud environments like Render
       auth: {
         user: cleanUser,
         pass: cleanPass
@@ -60,6 +66,7 @@ export const getTransporter = async (customConfig = null, forcePort = null) => {
     host: cfg.host || 'smtp.gmail.com',
     port: effectivePort,
     secure: isSecure,
+    family: 4, // Force IPv4 to prevent ENETUNREACH on cloud environments like Render
     auth: {
       user: cleanUser,
       pass: cleanPass
