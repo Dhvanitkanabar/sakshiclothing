@@ -4,12 +4,13 @@ import AuthLayout from './layouts/AuthLayout';
 import DashboardLayout from './layouts/DashboardLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
-const Login = lazy(() => import('./pages/Login'));
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const ProductList = lazy(() => import('./pages/products/ProductList'));
-const ProductForm = lazy(() => import('./pages/products/ProductForm'));
-const CategoryList = lazy(() => import('./pages/categories/CategoryList'));
-const CategoryForm = lazy(() => import('./pages/categories/CategoryForm'));
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import ProductList from './pages/products/ProductList';
+import ProductForm from './pages/products/ProductForm';
+import CategoryList from './pages/categories/CategoryList';
+import CategoryForm from './pages/categories/CategoryForm';
+import OrderList from './pages/orders/OrderList';
 
 const HomepageManager = lazy(() => import('./pages/cms/HomepageManager'));
 const CartViewer = lazy(() => import('./pages/customers/CartViewer'));
@@ -22,8 +23,8 @@ const ReviewsModeration = lazy(() => import('./pages/marketing/ReviewsModeration
 const CustomerDetails = lazy(() => import('./pages/customers/CustomerDetails'));
 
 const PaymentsManager = lazy(() => import('./pages/payments/PaymentsManager'));
-const OrderList = lazy(() => import('./pages/orders/OrderList'));
 const OrderDetails = lazy(() => import('./pages/orders/OrderDetails'));
+
 
 import { AuthProvider } from './context/AuthContext';
 // Removed Clerk imports

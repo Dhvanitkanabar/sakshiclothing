@@ -5,15 +5,27 @@ import { adminFetch } from '../../lib/api';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
 export default function CategoryList() {
-  const [categories, setCategories] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<any[]>(() => {
+    try {
+      const stored = sessionStorage.getItem('admin_cached_categories');
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  const [loading, setLoading] = useState(!sessionStorage.getItem('admin_cached_categories'));
+
 
   const fetchCategories = async () => {
     try {
       const res = await adminFetch(`${API_URL}/categories`);
       const data = await res.json();
       if (data.success) {
-        setCategories(data.data || []);
+        const list = data.data || [];
+        setCategories(list);
+        try {
+          sessionStorage.setItem('admin_cached_categories', JSON.stringify(list));
+        } catch (e) {}
       }
     } catch (err) {
       console.error(err);
@@ -25,6 +37,7 @@ export default function CategoryList() {
   useEffect(() => {
     fetchCategories();
   }, []);
+
 
   const handleToggleStatus = async (id: string, currentStatus: boolean) => {
     try {

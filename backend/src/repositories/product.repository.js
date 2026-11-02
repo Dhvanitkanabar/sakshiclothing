@@ -7,12 +7,13 @@ class ProductRepository {
   }
 
   async findById(id) {
-    return await Product.findById(id).populate('category', 'name slug');
+    return await Product.findById(id).populate('category', 'name slug').lean();
   }
 
   async findBySlug(slug) {
     return await Product.findOne({ slug, status: { $ne: PRODUCT_STATUS.DELETED } })
-      .populate('category', 'name slug');
+      .populate('category', 'name slug')
+      .lean();
   }
 
   async slugExists(slug, excludeId = null) {
@@ -20,7 +21,6 @@ class ProductRepository {
     if (excludeId) query._id = { $ne: excludeId };
     return Boolean(await Product.exists(query));
   }
-
 
   async updateById(id, data) {
     return await Product.findByIdAndUpdate(id, data, { new: true, runValidators: true });
@@ -35,7 +35,7 @@ class ProductRepository {
   }
 
   async findAll(query, options = {}) {
-    const { page = 1, limit = 10, sort = '-createdAt' } = options;
+    const { page = 1, limit = 50, sort = '-createdAt' } = options;
     const skip = (page - 1) * limit;
 
     const [data, total] = await Promise.all([
@@ -43,7 +43,8 @@ class ProductRepository {
         .sort(sort)
         .skip(skip)
         .limit(limit)
-        .populate('category', 'name'),
+        .populate('category', 'name')
+        .lean(),
       Product.countDocuments(query)
     ]);
 
@@ -56,16 +57,17 @@ class ProductRepository {
   }
 
   async findFeatured() {
-    return await Product.find({ isFeatured: true, status: PRODUCT_STATUS.PUBLISHED }).limit(10);
+    return await Product.find({ isFeatured: true, status: PRODUCT_STATUS.PUBLISHED }).limit(10).lean();
   }
 
   async findTrending() {
-    return await Product.find({ isTrending: true, status: PRODUCT_STATUS.PUBLISHED }).limit(10);
+    return await Product.find({ isTrending: true, status: PRODUCT_STATUS.PUBLISHED }).limit(10).lean();
   }
 
   async findNewArrivals() {
-    return await Product.find({ isNewArrival: true, status: PRODUCT_STATUS.PUBLISHED }).sort('-createdAt').limit(10);
+    return await Product.find({ isNewArrival: true, status: PRODUCT_STATUS.PUBLISHED }).sort('-createdAt').limit(10).lean();
   }
 }
+
 
 export default new ProductRepository();

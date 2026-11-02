@@ -7,6 +7,9 @@ import {
   ChevronLeft, ChevronRight, X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { adminFetch } from '../lib/api';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
 interface SidebarProps {
   mobileMenuOpen?: boolean;
@@ -18,11 +21,23 @@ export default function Sidebar({ mobileMenuOpen = false, setMobileMenuOpen }: S
   const { logout, user } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
 
+  const handleLinkHover = (path: string) => {
+    if (path === '/products') {
+      adminFetch(`${API_URL}/products?limit=50`).catch(() => {});
+      adminFetch(`${API_URL}/categories`).catch(() => {});
+    } else if (path === '/categories') {
+      adminFetch(`${API_URL}/categories`).catch(() => {});
+    } else if (path === '/orders') {
+      adminFetch(`${API_URL}/orders?limit=50`).catch(() => {});
+    }
+  };
+
   const navGroups = [
     {
       title: 'Store Management',
       items: [
         { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+
         { path: '/products', label: 'Products', icon: ShoppingBag },
         { path: '/inventory', label: 'Inventory', icon: Layers },
         { path: '/categories', label: 'Categories', icon: Tag },
@@ -116,8 +131,10 @@ export default function Sidebar({ mobileMenuOpen = false, setMobileMenuOpen }: S
                       <Link
                         to={item.path}
                         onClick={handleLinkClick}
+                        onMouseEnter={() => handleLinkHover(item.path)}
                         title={!isExpanded ? item.label : undefined}
                         className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 group relative ${
+
                           isActive
                             ? 'bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent text-amber-300 font-semibold border-l-2 border-amber-400 shadow-xs'
                             : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/40'

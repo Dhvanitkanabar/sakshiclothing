@@ -11,7 +11,15 @@ export default function ProductForm() {
   const navigate = useNavigate();
   const isEdit = Boolean(id);
 
-  const [categories, setCategories] = useState<any[]>([]);
+  // Memory cache to load categories in 0ms
+  const [categories, setCategories] = useState<any[]>(() => {
+    try {
+      const stored = sessionStorage.getItem('admin_cached_categories');
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      return [];
+    }
+  });
 
   const [formData, setFormData] = useState({
     name: '',
@@ -30,12 +38,16 @@ export default function ProductForm() {
   const [tagInput, setTagInput] = useState('');
 
   useEffect(() => {
-    // Fetch categories
+    // Fetch categories with silent background update
     adminFetch(`${API_URL}/categories`)
       .then(res => res.json())
       .then(data => {
         if (data.success && data.data) {
           setCategories(data.data);
+          try {
+            sessionStorage.setItem('admin_cached_categories', JSON.stringify(data.data));
+          } catch (e) {}
+
           if (!isEdit) {
             const firstTopLevel = data.data.find((c: any) => !c.parentCategory);
             if (firstTopLevel) {
@@ -43,8 +55,10 @@ export default function ProductForm() {
             }
           }
         }
-      });
+      })
+      .catch(err => console.error('Error fetching categories:', err));
   }, [isEdit]);
+
 
 
   useEffect(() => {

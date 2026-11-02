@@ -5,30 +5,52 @@ import { adminFetch } from '../../lib/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
+// Instant module-level memory cache to eliminate 15s page load delay
+let cachedProductsList: any[] | null = null;
+try {
+  const stored = sessionStorage.getItem('admin_cached_products');
+  if (stored) cachedProductsList = JSON.parse(stored);
+} catch (e) {}
+
 export default function ProductList() {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<any[]>(cachedProductsList || []);
+  const [loading, setLoading] = useState<boolean>(!cachedProductsList || cachedProductsList.length === 0);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (showFullLoading = false) => {
     try {
-      setLoading(true);
+      if (showFullLoading) {
+        setLoading(true);
+      } else {
+        setIsRefreshing(true);
+      }
+
       const res = await adminFetch(`${API_URL}/products?limit=50`);
       const data = await res.json();
       if (data.success) {
-        setProducts(data.data.data || []);
+        const list = data.data.data || [];
+        setProducts(list);
+        cachedProductsList = list;
+        try {
+          sessionStorage.setItem('admin_cached_products', JSON.stringify(list));
+        } catch (e) {}
       }
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching products:', err);
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
   useEffect(() => {
-    fetchProducts();
+    // If we have cached products, display immediately and refresh in background silently
+    const hasCache = cachedProductsList && cachedProductsList.length > 0;
+    fetchProducts(!hasCache);
   }, []);
+
 
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this product?')) {
@@ -69,7 +91,16 @@ export default function ProductList() {
           <div className="flex items-center gap-2 text-amber-400 text-xs font-sans uppercase tracking-widest font-bold mb-1">
             <Sparkles size={14} /> Catalog Management
           </div>
-          <h1 className="text-3xl font-sans font-bold tracking-tight text-white">Maison Products</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-sans font-bold tracking-tight text-white flex items-center gap-2">
+              Maison Products
+              {isRefreshing && (
+                <span className="text-[11px] font-normal px-2.5 py-0.5 rounded-full bg-slate-700/80 text-amber-300 border border-amber-400/20 animate-pulse flex items-center gap-1">
+                  Syncing live data...
+                </span>
+              )}
+            </h1>
+          </div>
           <p className="text-sm text-slate-400 mt-1 font-sans">Manage luxury items, inventory levels, variants, and pricing.</p>
         </div>
         <Link
@@ -79,6 +110,7 @@ export default function ProductList() {
           <Plus size={18} /> Add New Product
         </Link>
       </div>
+
 
       {/* Filters Bar */}
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
