@@ -83,9 +83,62 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     [existingImages.length, uploads.length, maxFiles, folder]
   );
 
+// Fast client-side image optimization to compress multi-megabyte camera photos in milliseconds
+const compressImage = async (file: File): Promise<File> => {
+  if (!file.type.startsWith('image/') || file.size < 600 * 1024) {
+    return file;
+  }
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const maxDim = 1800;
+        let width = img.width;
+        let height = img.height;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return resolve(file);
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob || blob.size >= file.size) {
+              resolve(file);
+            } else {
+              const compressed = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
+                type: 'image/jpeg',
+                lastModified: Date.now(),
+              });
+              resolve(compressed);
+            }
+          },
+          'image/jpeg',
+          0.85
+        );
+      };
+      img.onerror = () => resolve(file);
+    };
+    reader.onerror = () => resolve(file);
+  });
+};
+
   const uploadFile = async (uploadItem: UploadProgress) => {
+    const fileToUpload = await compressImage(uploadItem.file);
     const formData = new FormData();
-    formData.append('image', uploadItem.file);
+    formData.append('image', fileToUpload);
     formData.append('folder', folder);
 
     try {

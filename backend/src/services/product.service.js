@@ -10,10 +10,10 @@ class ProductService {
       data.slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     }
 
-    // Ensure slug is unique
+    // Ensure slug is unique by auto-suffixing if duplicate found
     const existing = await ProductRepository.findBySlug(data.slug);
     if (existing) {
-      throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Product with this slug already exists');
+      data.slug = `${data.slug}-${Date.now().toString(36).slice(-4)}`;
     }
 
     if (data.subCategory) {
