@@ -113,7 +113,7 @@ export default function Sidebar({ mobileMenuOpen = false, setMobileMenuOpen }: S
         </div>
 
         {/* Navigation Groups */}
-        <nav className="flex-1 px-3 py-6 space-y-6 overflow-y-auto">
+        <nav className="flex-1 px-3 py-6 space-y-6 overflow-y-auto no-scrollbar scrollbar-none">
           {navGroups.map((group, idx) => (
             <div key={idx} className="space-y-1.5">
               {isExpanded && (
@@ -200,7 +200,7 @@ export default function Sidebar({ mobileMenuOpen = false, setMobileMenuOpen }: S
 
       {/* Mobile Drawer (Sliding Overlay) */}
       <aside
-        className={`fixed inset-y-0 left-0 w-72 bg-[#080d19] text-slate-300 z-50 lg:hidden shadow-2xl transform transition-transform duration-300 ease-in-out border-r border-slate-800/80 ${
+        className={`fixed inset-y-0 left-0 w-72 bg-[#080d19] text-slate-300 z-50 lg:hidden shadow-2xl transform transition-transform duration-300 ease-in-out border-r border-slate-800/80 overflow-hidden no-scrollbar ${
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -209,7 +209,7 @@ export default function Sidebar({ mobileMenuOpen = false, setMobileMenuOpen }: S
 
       {/* Desktop Sidebar */}
       <aside
-        className={`hidden lg:flex bg-[#080d19] text-slate-300 min-h-screen flex-col border-r border-slate-800/60 sticky top-0 h-screen overflow-y-auto select-none transition-all duration-300 z-40 ${
+        className={`hidden lg:flex bg-[#080d19] text-slate-300 min-h-screen flex-col border-r border-slate-800/60 sticky top-0 h-screen overflow-hidden select-none transition-all duration-300 z-40 no-scrollbar ${
           collapsed ? 'w-20' : 'w-72'
         }`}
       >
