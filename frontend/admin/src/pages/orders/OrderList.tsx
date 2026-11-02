@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Eye, Search, Filter, Download, Clock, History, PackageCheck } from 'lucide-react';
+import { Eye, Search, Filter, Download, Clock, History, PackageCheck, Printer } from 'lucide-react';
 import { adminFetch } from '../../lib/api';
+import { generateShippingInvoicePdf } from '../../utils/pdfGenerator';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
@@ -426,14 +427,33 @@ const OrderList = ({ defaultSection }: OrderListProps) => {
                     })()}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <Link
-                      to={`/orders/${order._id}`}
-                      onClick={e => e.stopPropagation()}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white hover:bg-gray-100 border border-gray-200 rounded-lg hover:text-black transition-all shadow-xs"
-                      title="Inspect address, live coordinates & update status"
-                    >
-                      <Eye size={13} className="text-gray-500" /> View
-                    </Link>
+                    <div className="flex items-center gap-1.5">
+                      <Link
+                        to={`/orders/${order._id}`}
+                        onClick={e => e.stopPropagation()}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white hover:bg-gray-100 border border-gray-200 rounded-lg hover:text-black transition-all shadow-xs"
+                        title="Inspect address, live coordinates & update status"
+                      >
+                        <Eye size={13} className="text-gray-500" /> View
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          try {
+                            const { filename } = generateShippingInvoicePdf(order, true);
+                            alert(`Downloaded Tax Invoice & Parcel Label (${filename})!`);
+                          } catch (err) {
+                            console.error(err);
+                            alert('Failed to generate shipping invoice PDF.');
+                          }
+                        }}
+                        className="p-1.5 text-gray-600 hover:text-black bg-white hover:bg-gray-100 border border-gray-200 rounded-lg transition-all shadow-xs"
+                        title="Download Meesho/Amazon Style Parcel Shipping Label & GST Invoice (PDF)"
+                      >
+                        <Printer size={13} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

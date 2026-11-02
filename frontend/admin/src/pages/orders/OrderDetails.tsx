@@ -21,9 +21,12 @@ import {
   Phone,
   Mail,
   Building,
-  Check
+  Check,
+  Printer,
+  FileText
 } from 'lucide-react';
 import { adminFetch } from '../../lib/api';
+import { generateShippingInvoicePdf } from '../../utils/pdfGenerator';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
@@ -190,10 +193,19 @@ const OrderDetails = () => {
       });
       const data = await res.json();
       if (data.success) {
-        setOrder(data.data);
-        broadcastOrderSync(data.data);
+        const approvedOrder = data.data || order;
+        setOrder(approvedOrder);
+        broadcastOrderSync(approvedOrder);
         setShowApprovalModal(false);
-        alert(`Order successfully verified & approved! Customer has been notified with estimated delivery: ${estimatedDeliveryInput}`);
+
+        // Automatically generate and download Meesho/Amazon-style Tax Invoice & Shipping Label PDF
+        try {
+          const { filename } = generateShippingInvoicePdf(approvedOrder, true);
+          alert(`Order successfully verified & approved!\n\nOfficial Shipping Label sticker & GST Tax Invoice PDF (${filename}) has been automatically generated and downloaded. Affix the top portion to the customer parcel.`);
+        } catch (pdfErr) {
+          console.error('Auto PDF generation error:', pdfErr);
+          alert(`Order successfully verified & approved! Customer has been notified with estimated delivery: ${estimatedDeliveryInput}`);
+        }
       } else {
         alert(data.message || 'Failed to accept order');
       }
@@ -455,6 +467,25 @@ const OrderDetails = () => {
 
         {/* Primary Action Controls */}
         <div className="flex items-center gap-3 flex-wrap">
+          {/* Print/Download Tax Invoice & Shipping Slip PDF Button */}
+          <button
+            type="button"
+            onClick={() => {
+              try {
+                const { filename } = generateShippingInvoicePdf(order, true);
+                alert(`Downloaded Tax Invoice & Shipping Slip (${filename})!\n\nTop half: Ready-to-stick parcel shipping label with barcode & customer address.\nBottom half: Official GST tax invoice.`);
+              } catch (e) {
+                console.error(e);
+                alert('Failed to generate shipping slip PDF.');
+              }
+            }}
+            className="px-4 py-2.5 bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-xs flex items-center gap-2"
+            title="Download printable shipping label sticker with barcode & official GST tax invoice"
+          >
+            <Printer size={15} />
+            <span>Tax Invoice & Shipping Slip</span>
+          </button>
+
           {!isApproved && !isCancelled && (
             <button
               onClick={() => setShowApprovalModal(true)}
@@ -1059,6 +1090,14 @@ const OrderDetails = () => {
                   className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-black"
                 />
               </div>
+
+              {/* Auto PDF Generation Notice */}
+              <div className="p-3 bg-amber-50/90 border border-amber-200/80 rounded-xl flex items-start gap-2.5">
+                <FileText size={16} className="text-amber-700 shrink-0 mt-0.5" />
+                <p className="text-[11px] text-amber-900 leading-snug">
+                  <strong>Automatic Invoice & Shipping Label:</strong> Confirming approval will automatically generate and download the printable Shipping Slip sticker (complete with customer address, order barcode, COD/Prepaid status) and the official GST Tax Invoice (with 5% Clothing / 3% Jewellery tax breakdown).
+                </p>
+              </div>
             </div>
 
             <div className="flex gap-3 pt-2">
@@ -1075,7 +1114,7 @@ const OrderDetails = () => {
                 disabled={approving || !estimatedDeliveryInput.trim()}
                 className="flex-1 py-3 text-xs font-extrabold uppercase tracking-wider text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-lg shadow-emerald-600/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                <CheckCircle2 size={16} /> {approving ? 'Notifying Customer…' : 'Approve & Notify Customer'}
+                <CheckCircle2 size={16} /> {approving ? 'Generating Invoice…' : 'Approve & Generate Invoice'}
               </button>
             </div>
           </div>
