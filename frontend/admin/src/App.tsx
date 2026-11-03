@@ -11,6 +11,7 @@ import ProductForm from './pages/products/ProductForm';
 import CategoryList from './pages/categories/CategoryList';
 import CategoryForm from './pages/categories/CategoryForm';
 import OrderList from './pages/orders/OrderList';
+import OrderDetails from './pages/orders/OrderDetails';
 
 const HomepageManager = lazy(() => import('./pages/cms/HomepageManager'));
 const CartViewer = lazy(() => import('./pages/customers/CartViewer'));
@@ -24,7 +25,6 @@ const SubscribersBroadcast = lazy(() => import('./pages/marketing/SubscribersBro
 const CustomerDetails = lazy(() => import('./pages/customers/CustomerDetails'));
 
 const PaymentsManager = lazy(() => import('./pages/payments/PaymentsManager'));
-const OrderDetails = lazy(() => import('./pages/orders/OrderDetails'));
 
 
 import { AuthProvider } from './context/AuthContext';
