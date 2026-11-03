@@ -148,11 +148,9 @@ export const generateInvoiceHTML = (order) => {
       </table>
 
       <div class="gst-section">
-        <div class="gst-title">GST Breakdown (18%)</div>
+        <div class="gst-title">GST Tax Summary</div>
         <div class="gst-row"><span>Taxable Amount</span><span>${fmt(baseAmount)}</span></div>
-        <div class="gst-row"><span>CGST (9%)</span><span>${fmt(cgst)}</span></div>
-        <div class="gst-row"><span>SGST (9%)</span><span>${fmt(sgst)}</span></div>
-        <div class="gst-row"><span>Total Tax</span><span>${fmt(taxes || (cgst + sgst))}</span></div>
+        <div class="gst-row"><span>GST (${Math.round(gstRate * 100)}%)</span><span>${fmt(taxes || (itemsTotal - baseAmount))}</span></div>
       </div>
 
       <div class="totals">

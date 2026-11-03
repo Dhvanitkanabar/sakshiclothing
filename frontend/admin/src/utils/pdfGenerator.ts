@@ -664,8 +664,6 @@ export const generateShippingInvoicePdf = (order: any, autoDownload = true) => {
 
   let totalQty = 0;
   let totalBase = 0;
-  let totalCgst = 0;
-  let totalSgst = 0;
   let totalGstAmount = 0;
 
   const invoiceRows: any[] = [];
@@ -678,12 +676,8 @@ export const generateShippingInvoicePdf = (order: any, autoDownload = true) => {
     const itemSubtotal = Number(item.subtotal || (Number(item.price || 0) * qty));
     const base = Number((itemSubtotal / (1 + rate)).toFixed(2));
     const gst = Number((itemSubtotal - base).toFixed(2));
-    const cgst = Number((gst / 2).toFixed(2));
-    const sgst = Number((gst - cgst).toFixed(2));
 
     totalBase += base;
-    totalCgst += cgst;
-    totalSgst += sgst;
     totalGstAmount += gst;
 
     const hsn = categoryType === 'Jewellery' ? '7113' : '6204';
@@ -697,8 +691,7 @@ export const generateShippingInvoicePdf = (order: any, autoDownload = true) => {
       `Rs. ${(base / qty).toFixed(2)}`,
       `Rs. ${base.toFixed(2)}`,
       `${categoryType}\n(${ratePercent})`,
-      `Rs. ${cgst.toFixed(2)}\n(${categoryType === 'Jewellery' ? '1.5%' : '2.5%'})`,
-      `Rs. ${sgst.toFixed(2)}\n(${categoryType === 'Jewellery' ? '1.5%' : '2.5%'})`,
+      `Rs. ${gst.toFixed(2)}\n(${ratePercent})`,
       `Rs. ${itemSubtotal.toFixed(2)}`
     ]);
   });
@@ -707,12 +700,8 @@ export const generateShippingInvoicePdf = (order: any, autoDownload = true) => {
     const rate = 0.05;
     const base = Number((rawGrandTotal / (1 + rate)).toFixed(2));
     const gst = Number((rawGrandTotal - base).toFixed(2));
-    const cgst = Number((gst / 2).toFixed(2));
-    const sgst = Number((gst - cgst).toFixed(2));
     totalQty = 1;
     totalBase = base;
-    totalCgst = cgst;
-    totalSgst = sgst;
     totalGstAmount = gst;
 
     invoiceRows.push([
@@ -723,8 +712,7 @@ export const generateShippingInvoicePdf = (order: any, autoDownload = true) => {
       `Rs. ${base.toFixed(2)}`,
       `Rs. ${base.toFixed(2)}`,
       'Clothing (5%)',
-      `Rs. ${cgst.toFixed(2)}`,
-      `Rs. ${sgst.toFixed(2)}`,
+      `Rs. ${gst.toFixed(2)}\n(5%)`,
       `Rs. ${rawGrandTotal.toFixed(2)}`
     ]);
   }
@@ -947,7 +935,7 @@ export const generateShippingInvoicePdf = (order: any, autoDownload = true) => {
   doc.setFontSize(7.5);
   doc.setTextColor(110, 110, 110);
   doc.text(
-    '(Issued under Section 31 of CGST Act, 2017 read with Rule 46 of CGST Rules, 2017)',
+    '(Issued under Section 31 of the Goods and Services Tax Act, 2017)',
     pageWidth / 2,
     invY + 22,
     { align: 'center' }
@@ -978,7 +966,7 @@ export const generateShippingInvoicePdf = (order: any, autoDownload = true) => {
   // Itemized Tax Table via autoTable
   const taxTableY = metaBoxY + 54;
   const taxHeaders = [
-    ['#', 'Item Description', 'HSN', 'Qty', 'Unit Price', 'Taxable Val', 'Category', 'CGST', 'SGST', 'Total']
+    ['#', 'Item Description', 'HSN', 'Qty', 'Unit Price', 'Taxable Val', 'Category', 'GST', 'Total']
   ];
 
   invoiceRows.push([
@@ -989,8 +977,7 @@ export const generateShippingInvoicePdf = (order: any, autoDownload = true) => {
     '',
     `Rs. ${totalBase.toFixed(2)}`,
     'GST Total',
-    `Rs. ${totalCgst.toFixed(2)}`,
-    `Rs. ${totalSgst.toFixed(2)}`,
+    `Rs. ${totalGstAmount.toFixed(2)}`,
     `Rs. ${rawGrandTotal.toFixed(2)}`
   ]);
 
@@ -1015,16 +1002,15 @@ export const generateShippingInvoicePdf = (order: any, autoDownload = true) => {
       fillColor: [252, 251, 249]
     },
     columnStyles: {
-      0: { cellWidth: 18, halign: 'center' },
-      1: { cellWidth: 150 },
-      2: { cellWidth: 38, halign: 'center' },
-      3: { cellWidth: 26, halign: 'center' },
-      4: { cellWidth: 52, halign: 'right' },
-      5: { cellWidth: 58, halign: 'right' },
-      6: { cellWidth: 54, halign: 'center' },
-      7: { cellWidth: 46, halign: 'right' },
-      8: { cellWidth: 46, halign: 'right' },
-      9: { cellWidth: 63, halign: 'right', fontStyle: 'bold' }
+      0: { cellWidth: 20, halign: 'center' },
+      1: { cellWidth: 175 },
+      2: { cellWidth: 40, halign: 'center' },
+      3: { cellWidth: 28, halign: 'center' },
+      4: { cellWidth: 55, halign: 'right' },
+      5: { cellWidth: 62, halign: 'right' },
+      6: { cellWidth: 56, halign: 'center' },
+      7: { cellWidth: 52, halign: 'right' },
+      8: { cellWidth: 64, halign: 'right', fontStyle: 'bold' }
     },
     didParseCell: (data) => {
       if (data.row.index === invoiceRows.length - 1) {
@@ -1073,17 +1059,14 @@ export const generateShippingInvoicePdf = (order: any, autoDownload = true) => {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(80, 80, 80);
-  doc.text('Total Taxable Value:', sumX + 8, sumY + 14);
-  doc.text(`Rs. ${totalBase.toFixed(2)}`, sumX + sumW - 8, sumY + 14, { align: 'right' });
+  doc.text('Total Taxable Value:', sumX + 8, sumY + 18);
+  doc.text(`Rs. ${totalBase.toFixed(2)}`, sumX + sumW - 8, sumY + 18, { align: 'right' });
 
-  doc.text('Total CGST Amount:', sumX + 8, sumY + 26);
-  doc.text(`Rs. ${totalCgst.toFixed(2)}`, sumX + sumW - 8, sumY + 26, { align: 'right' });
+  doc.text('Total GST Amount:', sumX + 8, sumY + 32);
+  doc.text(`Rs. ${totalGstAmount.toFixed(2)}`, sumX + sumW - 8, sumY + 32, { align: 'right' });
 
-  doc.text('Total SGST Amount:', sumX + 8, sumY + 38);
-  doc.text(`Rs. ${totalSgst.toFixed(2)}`, sumX + sumW - 8, sumY + 38, { align: 'right' });
-
-  doc.text('Shipping & Handling:', sumX + 8, sumY + 50);
-  doc.text('Rs. 0.00 (FREE)', sumX + sumW - 8, sumY + 50, { align: 'right' });
+  doc.text('Shipping & Handling:', sumX + 8, sumY + 46);
+  doc.text('Rs. 0.00 (FREE)', sumX + sumW - 8, sumY + 46, { align: 'right' });
 
   doc.setFillColor(28, 25, 23);
   doc.rect(sumX, sumY + 54, sumW, 20, 'F');
