@@ -884,7 +884,7 @@ export const generateShippingInvoicePdf = (order: any, autoDownload = true) => {
     'GSTIN: 24AAACS1234F1Z8',
     'Support Email: sakshiclothing2025@gmail.com',
     'Client Helpline: +91 9316533660',
-    'Policy: STRICT NO-RETURN POLICY'
+    'Return if undelivered'
   ];
 
   let curSellerY = addrY + 41;
