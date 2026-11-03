@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { adminFetch } from '../../lib/api';
 import { generateShippingInvoicePdf } from '../../utils/pdfGenerator';
+import { toast } from 'sonner';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
@@ -69,8 +70,8 @@ const OrderDetails = () => {
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [estimatedDeliveryInput, setEstimatedDeliveryInput] = useState('2 to 3 Business Days');
   const [approvalStatusChoice, setApprovalStatusChoice] = useState<'confirmed' | 'packed'>('confirmed');
-  const [courierChoice, setCourierChoice] = useState('Sakshi Priority Express');
-  const [approvalNote, setApprovalNote] = useState('Order verified genuine. Maison atelier has initiated packing.');
+  const [courierChoice, setCourierChoice] = useState('');
+  const [approvalNote, setApprovalNote] = useState('Order verified. Maison atelier has initiated handcrafting.');
   const [approving, setApproving] = useState(false);
 
   // Live Checkpoint Quick Form
@@ -175,11 +176,12 @@ const OrderDetails = () => {
 
   const handleConfirmApproval = async () => {
     if (!estimatedDeliveryInput.trim()) {
-      alert('Please enter an estimated delivery time.');
+      toast.error('Please enter an estimated delivery window.');
       return;
     }
 
     setApproving(true);
+    const toastId = toast.loading('Approving order & preparing shipping label...');
     try {
       const res = await adminFetch(`${API_URL}/orders/admin/${id}/accept`, {
         method: 'POST',
@@ -198,19 +200,25 @@ const OrderDetails = () => {
         broadcastOrderSync(approvedOrder);
         setShowApprovalModal(false);
 
-        // Automatically generate and download Meesho/Amazon-style Tax Invoice & Shipping Label PDF
+        // Automatically generate and download Tax Invoice & Shipping Label PDF
         try {
           const { filename } = generateShippingInvoicePdf(approvedOrder, true);
-          alert(`Order successfully verified & approved!\n\nOfficial Shipping Label sticker & GST Tax Invoice PDF (${filename}) has been automatically generated and downloaded. Affix the top portion to the customer parcel.`);
+          toast.success('Order Approved & Verified!', {
+            id: toastId,
+            description: `Tax invoice & shipping label (${filename}) downloaded.`
+          });
         } catch (pdfErr) {
           console.error('Auto PDF generation error:', pdfErr);
-          alert(`Order successfully verified & approved! Customer has been notified with estimated delivery: ${estimatedDeliveryInput}`);
+          toast.success('Order Approved Successfully!', {
+            id: toastId,
+            description: `Delivery estimate set to ${estimatedDeliveryInput}.`
+          });
         }
       } else {
-        alert(data.message || 'Failed to accept order');
+        toast.error(data.message || 'Failed to accept order', { id: toastId });
       }
     } catch {
-      alert('Network error approving order');
+      toast.error('Network error approving order', { id: toastId });
     } finally {
       setApproving(false);
     }
@@ -977,134 +985,184 @@ const OrderDetails = () => {
         </div>
       </div>
 
-      {/* APPROVAL & PACKING MODAL */}
+      {/* ─── LUXURY ATELIER ORDER APPROVAL & DISPATCH MODAL ────────── */}
       {showApprovalModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-8 shadow-2xl border border-gray-100 space-y-6 animate-in fade-in zoom-in duration-200">
-            <div className="flex justify-between items-start">
-              <div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 flex items-center gap-1.5">
-                  <ShieldCheck size={14} /> Verification Passed
-                </span>
-                <h3 className="text-xl font-black text-gray-900 mt-1">Approve Order & Dispatch to Atelier</h3>
+        <div className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-stone-200/90 overflow-hidden flex flex-col my-auto transition-all animate-in fade-in zoom-in-95 duration-200">
+            
+            {/* 1. Header Bar */}
+            <div className="px-6 sm:px-8 pt-7 pb-5 border-b border-stone-100 flex items-start justify-between bg-stone-50/50">
+              <div className="space-y-1.5">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/70 text-[10px] font-bold uppercase tracking-wider">
+                  <ShieldCheck size={13} className="text-emerald-600" />
+                  <span>Payment Verified &bull; Ready for Atelier</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-serif font-normal text-stone-900 tracking-tight">
+                  Approve Order #{order.orderNumber}
+                </h3>
+                <p className="text-xs text-stone-500 font-sans">
+                  Consignee: <strong className="text-stone-800">{order.shippingAddress?.fullName || order.customer?.fullName || 'Customer'}</strong> &bull; Total: <span className="font-semibold text-stone-900">₹{(order.totals?.grandTotal || 0).toLocaleString('en-IN')}</span>
+                </p>
               </div>
               <button
+                type="button"
                 onClick={() => setShowApprovalModal(false)}
-                className="p-1 rounded-xl text-gray-400 hover:text-black hover:bg-gray-100 transition-colors"
+                className="p-2 rounded-xl text-stone-400 hover:text-stone-900 hover:bg-stone-200/60 transition-colors"
+                title="Close"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
-            <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 text-xs text-emerald-900 space-y-1">
-              <p className="font-bold">Order #{order.orderNumber} for {order.shippingAddress?.fullName || order.customer?.fullName}</p>
-              <p className="text-emerald-800">
-                Approving this order will automatically notify the customer and provide them with live tracking updates.
-              </p>
-            </div>
+            {/* 2. Modal Body */}
+            <div className="p-6 sm:p-8 space-y-6 max-h-[72vh] overflow-y-auto">
+              
+              {/* Delivery Window Selection */}
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold uppercase tracking-wider text-stone-700 flex items-center gap-1.5">
+                    <Calendar size={13} className="text-stone-500" />
+                    <span>Estimated Delivery Window <span className="text-rose-500">*</span></span>
+                  </label>
+                  <span className="text-[10px] font-medium text-stone-400">Notified to customer</span>
+                </div>
 
-            <div className="space-y-4">
-              {/* Estimated Delivery Time Input (Critical Requirement) */}
-              <div>
-                <label className="block text-xs font-bold text-gray-800 mb-2">
-                  Rough Estimated Delivery Time <span className="text-red-500">*</span>
-                </label>
-                <p className="text-[11px] text-gray-500 mb-2">
-                  The customer will receive this delivery estimate immediately upon approval:
-                </p>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {DELIVERY_PRESETS.map((preset) => (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { label: '2–3 Days', value: '2 to 3 Business Days' },
+                    { label: '3–5 Days', value: '3 to 5 Business Days' },
+                    { label: 'Within 24h', value: 'Within 24 Hours (Same Day)' },
+                    { label: '4–7 Days', value: '4 to 7 Business Days' }
+                  ].map((preset) => (
                     <button
-                      key={preset}
+                      key={preset.value}
                       type="button"
-                      onClick={() => setEstimatedDeliveryInput(preset)}
-                      className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
-                        estimatedDeliveryInput === preset
-                          ? 'bg-black text-white shadow-sm'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      onClick={() => setEstimatedDeliveryInput(preset.value)}
+                      className={`px-3 py-2 rounded-xl text-xs font-bold text-center transition-all ${
+                        estimatedDeliveryInput === preset.value
+                          ? 'bg-stone-900 text-white shadow-sm ring-2 ring-stone-900'
+                          : 'bg-stone-100/80 text-stone-700 hover:bg-stone-200/70 border border-stone-200/60'
                       }`}
                     >
-                      {preset}
+                      {preset.label}
                     </button>
                   ))}
                 </div>
+
                 <input
                   type="text"
                   value={estimatedDeliveryInput}
-                  onChange={e => setEstimatedDeliveryInput(e.target.value)}
-                  placeholder="e.g. 2 to 3 Business Days, or By Friday 28th Oct"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 text-xs font-bold text-gray-900 focus:outline-none focus:border-black"
+                  onChange={(e) => setEstimatedDeliveryInput(e.target.value)}
+                  placeholder="e.g. 2 to 3 Business Days, or By Friday"
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-xs font-semibold text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 transition-all font-sans"
                   required
                 />
               </div>
 
-              {/* Status Selection */}
-              <div>
-                <label className="block text-xs font-bold text-gray-800 mb-1.5">Initial Status</label>
-                <div className="grid grid-cols-2 gap-3">
+              {/* Initial Production Stage Selection */}
+              <div className="space-y-2.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-stone-700 block">
+                  Initial Workflow Stage
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setApprovalStatusChoice('confirmed')}
-                    className={`p-3 rounded-xl text-xs font-bold border text-left transition-all ${
+                    className={`p-3.5 rounded-2xl border text-left transition-all flex items-start gap-3 ${
                       approvalStatusChoice === 'confirmed'
-                        ? 'border-black bg-black text-white'
-                        : 'border-gray-200 bg-gray-50 text-gray-700'
+                        ? 'border-stone-900 bg-stone-900 text-white shadow-sm ring-2 ring-stone-900'
+                        : 'border-stone-200 bg-stone-50/40 text-stone-700 hover:border-stone-300'
                     }`}
                   >
-                    Confirmed & Approved
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                      approvalStatusChoice === 'confirmed' ? 'bg-white/15 text-amber-300' : 'bg-stone-200/60 text-stone-600'
+                    }`}>
+                      <Sparkles size={16} />
+                    </div>
+                    <div>
+                      <span className="font-bold text-xs block">Confirmed & In Production</span>
+                      <span className={`text-[11px] block mt-0.5 leading-snug ${
+                        approvalStatusChoice === 'confirmed' ? 'text-stone-300' : 'text-stone-500'
+                      }`}>
+                        Atelier initiates fabric cut & handloom tailoring
+                      </span>
+                    </div>
                   </button>
+
                   <button
                     type="button"
                     onClick={() => setApprovalStatusChoice('packed')}
-                    className={`p-3 rounded-xl text-xs font-bold border text-left transition-all ${
+                    className={`p-3.5 rounded-2xl border text-left transition-all flex items-start gap-3 ${
                       approvalStatusChoice === 'packed'
-                        ? 'border-black bg-black text-white'
-                        : 'border-gray-200 bg-gray-50 text-gray-700'
+                        ? 'border-stone-900 bg-stone-900 text-white shadow-sm ring-2 ring-stone-900'
+                        : 'border-stone-200 bg-stone-50/40 text-stone-700 hover:border-stone-300'
                     }`}
                   >
-                    Packed & Ready
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                      approvalStatusChoice === 'packed' ? 'bg-white/15 text-emerald-300' : 'bg-stone-200/60 text-stone-600'
+                    }`}>
+                      <Package size={16} />
+                    </div>
+                    <div>
+                      <span className="font-bold text-xs block">Packed & Ready</span>
+                      <span className={`text-[11px] block mt-0.5 leading-snug ${
+                        approvalStatusChoice === 'packed' ? 'text-stone-300' : 'text-stone-500'
+                      }`}>
+                        Sealed in eco-bag, ready for courier pickup
+                      </span>
+                    </div>
                   </button>
                 </div>
               </div>
 
-              {/* Courier Partner */}
-              <div>
-                <label className="block text-xs font-bold text-gray-800 mb-1">Courier / Carrier Partner</label>
-                <input
-                  type="text"
-                  value={courierChoice}
-                  onChange={e => setCourierChoice(e.target.value)}
-                  placeholder="e.g. Sakshi Priority Express, BlueDart, Delhivery"
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-xs font-semibold focus:outline-none focus:border-black"
-                />
+              {/* Courier & Dispatch Note Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-stone-700 flex items-center gap-1.5">
+                    <Truck size={13} className="text-stone-500" />
+                    <span>Courier / Carrier (Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={courierChoice}
+                    onChange={(e) => setCourierChoice(e.target.value)}
+                    placeholder="e.g. BlueDart, Delhivery, Self"
+                    className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-xs font-semibold text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 transition-all font-sans"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-stone-700 flex items-center gap-1.5">
+                    <Send size={12} className="text-stone-500" />
+                    <span>Customer Note</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={approvalNote}
+                    onChange={(e) => setApprovalNote(e.target.value)}
+                    placeholder="Personalized note in tracking view..."
+                    className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-xs font-semibold text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 transition-all font-sans"
+                  />
+                </div>
               </div>
 
-              {/* Message to Customer */}
-              <div>
-                <label className="block text-xs font-bold text-gray-800 mb-1">Notification Message to Customer</label>
-                <textarea
-                  rows={2}
-                  value={approvalNote}
-                  onChange={e => setApprovalNote(e.target.value)}
-                  placeholder="Personalized message that appears in customer's live tracking..."
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-black"
-                />
+              {/* Automation Callout Strip */}
+              <div className="p-3.5 bg-stone-50 border border-stone-200/70 rounded-2xl flex items-start gap-3 text-xs text-stone-600">
+                <FileText size={16} className="text-stone-800 shrink-0 mt-0.5" />
+                <div className="leading-relaxed">
+                  <strong className="text-stone-900 block font-bold">Automated Dispatch Document:</strong>
+                  Tax invoice & shipping label sticker will automatically download upon confirmation, and customer tracking will be updated live.
+                </div>
               </div>
 
-              {/* Auto PDF Generation Notice */}
-              <div className="p-3 bg-amber-50/90 border border-amber-200/80 rounded-xl flex items-start gap-2.5">
-                <FileText size={16} className="text-amber-700 shrink-0 mt-0.5" />
-                <p className="text-[11px] text-amber-900 leading-snug">
-                  <strong>Automatic Invoice & Shipping Label:</strong> Confirming approval will automatically generate and download the printable Shipping Slip sticker (complete with customer address, order barcode, COD/Prepaid status) and the official GST Tax Invoice (with 5% Clothing / 3% Jewellery tax breakdown).
-                </p>
-              </div>
             </div>
 
-            <div className="flex gap-3 pt-2">
+            {/* 3. Action Footer Bar */}
+            <div className="px-6 sm:px-8 py-4 bg-stone-50 border-t border-stone-100 flex items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setShowApprovalModal(false)}
-                className="flex-1 py-3 text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+                className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 rounded-xl transition-all"
               >
                 Cancel
               </button>
@@ -1112,11 +1170,22 @@ const OrderDetails = () => {
                 type="button"
                 onClick={handleConfirmApproval}
                 disabled={approving || !estimatedDeliveryInput.trim()}
-                className="flex-1 py-3 text-xs font-extrabold uppercase tracking-wider text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-lg shadow-emerald-600/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className="px-6 py-2.5 bg-stone-900 hover:bg-black text-white text-xs font-bold uppercase tracking-widest rounded-xl shadow-md transition-all disabled:opacity-50 flex items-center gap-2"
               >
-                <CheckCircle2 size={16} /> {approving ? 'Generating Invoice…' : 'Approve & Generate Invoice'}
+                {approving ? (
+                  <>
+                    <Clock size={14} className="animate-spin" />
+                    <span>Processing…</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 size={15} className="text-emerald-400" />
+                    <span>Approve & Generate Invoice</span>
+                  </>
+                )}
               </button>
             </div>
+
           </div>
         </div>
       )}
