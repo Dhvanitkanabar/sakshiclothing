@@ -906,7 +906,7 @@ export const generateShippingInvoicePdf = (order: any, autoDownload = true) => {
   doc.setTextColor(50, 50, 50);
   doc.text(`TOTAL PIECES: ${totalQty} Item(s)`, labelX + 12, labelY + 308);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Dimensions: 34 x 26 x 6 cm  |  Weight: 0.85 kg  |  Origin: Surat Atelier`, labelX + 130, labelY + 308);
+  doc.text(`Origin: Surat Atelier`, labelX + labelW - 12, labelY + 308, { align: 'right' });
 
   // Return Notice
   doc.setFontSize(7.5);
