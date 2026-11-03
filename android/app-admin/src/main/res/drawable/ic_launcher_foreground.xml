@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <group
+        android:pivotX="54"
+        android:pivotY="54">
+
+        <!-- Outer executive diamond accent hairline -->
+        <path
+            android:strokeColor="#25F59E0B"
+            android:strokeWidth="1"
+            android:pathData="M54,20 L84,54 L54,88 L24,54 Z" />
+
+        <!-- Atelier Geometric Crown Crest (Top) -->
+        <path
+            android:fillColor="#F59E0B"
+            android:pathData="M42,27 L42,22 L49,25 L54,19 L59,25 L66,22 L66,27 Z" />
+        <path
+            android:fillColor="#FEF08A"
+            android:pathData="M42,21 A1.5,1.5 0 1,1 42,18 A1.5,1.5 0 1,1 42,21 Z" />
+        <path
+            android:fillColor="#FEF08A"
+            android:pathData="M54,18 A2,2 0 1,1 54,14 A2,2 0 1,1 54,18 Z" />
+        <path
+            android:fillColor="#FEF08A"
+            android:pathData="M66,21 A1.5,1.5 0 1,1 66,18 A1.5,1.5 0 1,1 66,21 Z" />
+
+        <!-- Signature Haute Couture S Monogram (Scaled for Admin) -->
+        <path
+            android:fillColor="#F59E0B"
+            android:pathData="M64,43 C62,39 58,36.5 53,36.5 C44.5,36.5 38,42 38,49.5 C38,57.5 45,61 54,63.5 C63,66 69,69 69,77.5 C69,85.5 62,91 53,91 C43,91 37,84.5 35,79 L42.5,75.5 C44,79 47.5,83 53,83 C57.5,83 61,80.5 61,77 C61,70.5 54,67.5 45,64.5 C37,61.5 30,57.5 30,48.5 C30,37.5 39.5,29 53,29 C62,29 69,33.5 71.5,40.5 Z" />
+
+        <!-- Warm Gold Highlight on S -->
+        <path
+            android:fillColor="#FEF08A"
+            android:pathData="M62,43 C60.5,40 57,37.5 53,37.5 C45.5,37.5 40,42.5 40,49 C40,52 42,54.5 45.5,56.5 C44,53.5 45.5,50 49,47 C52.5,44.5 57.5,43.5 62,43 Z" />
+
+        <!-- ATELIER Executive Plaque Capsule (Bottom) -->
+        <path
+            android:fillColor="#0F172A"
+            android:strokeColor="#F59E0B"
+            android:strokeWidth="0.8"
+            android:pathData="M34,83 h40 a3,3 0 0,1 3,3 v3 a3,3 0 0,1 -3,3 h-40 a3,3 0 0,1 -3,-3 v-3 a3,3 0 0,1 3,-3 Z" />
+
+        <!-- Golden dot insignia inside badge -->
+        <path
+            android:fillColor="#FEF08A"
+            android:pathData="M38,87.5 A1.2,1.2 0 1,1 38,85.1 A1.2,1.2 0 1,1 38,87.5 Z" />
+        <path
+            android:fillColor="#FEF08A"
+            android:pathData="M70,87.5 A1.2,1.2 0 1,1 70,85.1 A1.2,1.2 0 1,1 70,87.5 Z" />
+
+    </group>
+</vector>

@@ -2,7 +2,6 @@ package store.sakshiclothing.admin
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -14,18 +13,26 @@ class AdminBridge(private val context: Context) {
 
     @JavascriptInterface
     fun showToast(message: String) {
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        try {
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        } catch (_: Throwable) {}
     }
 
     @JavascriptInterface
     fun shareInvoice(orderId: String, invoiceUrl: String) {
-        val sendIntent = Intent().apply {
-            action = Intent.ACTION_SEND
-            putExtra(Intent.EXTRA_TEXT, "Invoice for Order #$orderId: $invoiceUrl")
-            type = "text/plain"
+        try {
+            val sendIntent = Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_TEXT, "Invoice for Order #$orderId: $invoiceUrl")
+                type = "text/plain"
+            }
+            val shareIntent = Intent.createChooser(sendIntent, "Share Invoice").apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(shareIntent)
+        } catch (t: Throwable) {
+            Toast.makeText(context, "Unable to share invoice", Toast.LENGTH_SHORT).show()
         }
-        val shareIntent = Intent.createChooser(sendIntent, "Share Invoice")
-        context.startActivity(shareIntent)
     }
 
     @JavascriptInterface
@@ -44,6 +51,6 @@ class AdminBridge(private val context: Context) {
                     vibrator?.vibrate(25)
                 }
             }
-        } catch (_: Exception) {}
+        } catch (_: Throwable) {}
     }
 }

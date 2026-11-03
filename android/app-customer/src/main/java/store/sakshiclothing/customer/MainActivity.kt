@@ -9,7 +9,9 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.webkit.CookieManager
 import android.webkit.ValueCallback
@@ -31,19 +33,29 @@ import store.sakshiclothing.customer.databinding.ActivityMainBinding
  */
 class MainActivity : AppCompatActivity() {
 
+    companion object {
+        private const val TAG = "SakshiCustomerApp"
+    }
+
     private lateinit var binding: ActivityMainBinding
     private var fileUploadCallback: ValueCallback<Array<Uri>>? = null
     private var connectivityManager: ConnectivityManager? = null
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
+    private var isNetworkCallbackRegistered = false
 
     private val filePickerLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == RESULT_OK) {
-            val data = result.data
-            val results = WebChromeClient.FileChooserParams.parseResult(result.resultCode, data)
-            fileUploadCallback?.onReceiveValue(results)
-        } else {
+        try {
+            if (result.resultCode == RESULT_OK) {
+                val data = result.data
+                val results = WebChromeClient.FileChooserParams.parseResult(result.resultCode, data)
+                fileUploadCallback?.onReceiveValue(results)
+            } else {
+                fileUploadCallback?.onReceiveValue(null)
+            }
+        } catch (t: Throwable) {
+            Log.e(TAG, "File picker result error", t)
             fileUploadCallback?.onReceiveValue(null)
         }
         fileUploadCallback = null
@@ -51,47 +63,82 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
 
-        setupHardwareBackHandler()
-        setupSwipeRefresh()
-        setupOfflineRetry()
-        setupNetworkObserver()
-        setupWebView()
+        // Install uncaught exception safeguard
+        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            Log.e(TAG, "Uncaught exception intercepted in $thread", throwable)
+            defaultHandler?.uncaughtException(thread, throwable)
+        }
 
-        // Load production customer store or deep-link URI
-        val targetUrl = intent?.dataString ?: getString(R.string.customer_store_url)
-        binding.webView.loadUrl(targetUrl)
+        try {
+            binding = ActivityMainBinding.inflate(layoutInflater)
+            setContentView(binding.root)
+
+            setupHardwareBackHandler()
+            setupSwipeRefresh()
+            setupOfflineRetry()
+            setupNetworkObserver()
+            setupWebView()
+
+            // Load production customer store or deep-link URI
+            val targetUrl = intent?.dataString ?: getString(R.string.customer_store_url)
+            loadCustomerUrl(targetUrl)
+        } catch (t: Throwable) {
+            Log.e(TAG, "Fatal error during Activity onCreate", t)
+            showFatalErrorView()
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        CookieManager.getInstance().flush()
+        safeFlushCookies()
     }
 
     override fun onPause() {
         super.onPause()
-        // Guarantee all authentication cookies (Clerk tokens, session cookies) are persisted to disk
-        CookieManager.getInstance().flush()
+        safeFlushCookies()
     }
 
     override fun onStop() {
         super.onStop()
-        CookieManager.getInstance().flush()
+        safeFlushCookies()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        networkCallback?.let { connectivityManager?.unregisterNetworkCallback(it) }
+        unregisterNetworkObserver()
+    }
+
+    private fun safeFlushCookies() {
+        try {
+            CookieManager.getInstance().flush()
+        } catch (t: Throwable) {
+            Log.w(TAG, "CookieManager.flush non-fatal error: ${t.message}")
+        }
+    }
+
+    private fun loadCustomerUrl(url: String) {
+        try {
+            binding.progressBar.visibility = View.VISIBLE
+            binding.webView.loadUrl(url)
+        } catch (t: Throwable) {
+            Log.e(TAG, "Failed to load URL: $url", t)
+            showOfflineView()
+        }
     }
 
     private fun setupHardwareBackHandler() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (binding.webView.canGoBack()) {
-                    binding.webView.goBack()
-                } else {
+                try {
+                    if (binding.webView.canGoBack()) {
+                        binding.webView.goBack()
+                    } else {
+                        isEnabled = false
+                        onBackPressedDispatcher.onBackPressed()
+                    }
+                } catch (t: Throwable) {
                     isEnabled = false
                     onBackPressedDispatcher.onBackPressed()
                 }
@@ -100,17 +147,26 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupSwipeRefresh() {
-        binding.swipeRefreshLayout.setColorSchemeResources(
-            R.color.atelier_amber,
-            R.color.atelier_dark
-        )
-        binding.swipeRefreshLayout.setOnRefreshListener {
-            binding.webView.reload()
-        }
+        try {
+            binding.swipeRefreshLayout.setColorSchemeResources(
+                R.color.atelier_amber,
+                R.color.atelier_dark
+            )
+            binding.swipeRefreshLayout.setOnRefreshListener {
+                try {
+                    binding.webView.reload()
+                } catch (t: Throwable) {
+                    binding.swipeRefreshLayout.isRefreshing = false
+                }
+            }
 
-        // Prevent swipe-refresh from triggering when user is scrolling downward inside PDP or category list
-        binding.webView.viewTreeObserver.addOnScrollChangedListener {
-            binding.swipeRefreshLayout.isEnabled = binding.webView.scrollY == 0
+            binding.webView.viewTreeObserver.addOnScrollChangedListener {
+                try {
+                    binding.swipeRefreshLayout.isEnabled = (binding.webView.scrollY == 0)
+                } catch (_: Throwable) {}
+            }
+        } catch (t: Throwable) {
+            Log.w(TAG, "SwipeRefresh setup non-fatal error: ${t.message}")
         }
     }
 
@@ -118,61 +174,127 @@ class MainActivity : AppCompatActivity() {
         binding.btnRetry.setOnClickListener {
             binding.offlineContainer.visibility = View.GONE
             binding.webView.visibility = View.VISIBLE
-            binding.webView.reload()
+            try {
+                binding.webView.reload()
+            } catch (t: Throwable) {
+                val targetUrl = intent?.dataString ?: getString(R.string.customer_store_url)
+                loadCustomerUrl(targetUrl)
+            }
         }
     }
 
-    private fun setupNetworkObserver() {
-        connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
-        val request = NetworkRequest.Builder()
-            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-            .build()
+    private fun showOfflineView() {
+        binding.progressBar.visibility = View.GONE
+        binding.swipeRefreshLayout.isRefreshing = false
+        binding.webView.visibility = View.GONE
+        binding.offlineContainer.visibility = View.VISIBLE
+    }
 
-        networkCallback = object : ConnectivityManager.NetworkCallback() {
-            override fun onAvailable(network: Network) {
-                runOnUiThread {
-                    // Auto-reconnect if currently showing offline fallback
-                    if (binding.offlineContainer.visibility == View.VISIBLE) {
-                        binding.offlineContainer.visibility = View.GONE
-                        binding.webView.visibility = View.VISIBLE
-                        binding.webView.reload()
+    private fun showFatalErrorView() {
+        try {
+            binding.progressBar.visibility = View.GONE
+            binding.webView.visibility = View.GONE
+            binding.offlineContainer.visibility = View.VISIBLE
+        } catch (_: Throwable) {}
+    }
+
+    private fun setupNetworkObserver() {
+        try {
+            connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+            if (connectivityManager == null) return
+
+            networkCallback = object : ConnectivityManager.NetworkCallback() {
+                override fun onAvailable(network: Network) {
+                    runOnUiThread {
+                        try {
+                            if (binding.offlineContainer.visibility == View.VISIBLE) {
+                                binding.offlineContainer.visibility = View.GONE
+                                binding.webView.visibility = View.VISIBLE
+                                binding.webView.reload()
+                            }
+                        } catch (t: Throwable) {
+                            Log.w(TAG, "Network auto-reconnect error: ${t.message}")
+                        }
                     }
                 }
             }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                connectivityManager?.registerDefaultNetworkCallback(networkCallback as ConnectivityManager.NetworkCallback)
+                isNetworkCallbackRegistered = true
+            } else {
+                val request = NetworkRequest.Builder()
+                    .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                    .build()
+                connectivityManager?.registerNetworkCallback(request, networkCallback as ConnectivityManager.NetworkCallback)
+                isNetworkCallbackRegistered = true
+            }
+        } catch (t: Throwable) {
+            Log.w(TAG, "NetworkCallback registration non-fatal error: ${t.message}")
+            isNetworkCallbackRegistered = false
         }
-        connectivityManager?.registerNetworkCallback(request, networkCallback as ConnectivityManager.NetworkCallback)
+    }
+
+    private fun unregisterNetworkObserver() {
+        if (isNetworkCallbackRegistered && networkCallback != null) {
+            try {
+                connectivityManager?.unregisterNetworkCallback(networkCallback!!)
+            } catch (t: Throwable) {
+                Log.w(TAG, "NetworkCallback unregister error: ${t.message}")
+            } finally {
+                isNetworkCallbackRegistered = false
+                networkCallback = null
+            }
+        }
     }
 
     @SuppressLint("SetJavaScriptEnabled")
     private fun setupWebView() {
         val webView = binding.webView
 
-        // 1. Cookie & Session Persistence (Synchronized with single MongoDB database)
-        val cookieManager = CookieManager.getInstance()
-        cookieManager.setAcceptCookie(true)
-        cookieManager.setAcceptThirdPartyCookies(webView, true)
+        // 1. Safe Cookie & Session Persistence
+        try {
+            val cookieManager = CookieManager.getInstance()
+            cookieManager.setAcceptCookie(true)
+            cookieManager.setAcceptThirdPartyCookies(webView, true)
+        } catch (t: Throwable) {
+            Log.w(TAG, "CookieManager init warning: ${t.message}")
+        }
 
         // 2. WebSettings
-        webView.settings.apply {
-            javaScriptEnabled = true
-            domStorageEnabled = true
-            databaseEnabled = true
-            loadWithOverviewMode = true
-            useWideViewPort = true
-            builtInZoomControls = false
-            displayZoomControls = false
-            setSupportZoom(false)
-            setSupportMultipleWindows(true)
-            javaScriptCanOpenWindowsAutomatically = true
-            allowFileAccess = true
-            allowContentAccess = true
-            mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-            cacheMode = WebSettings.LOAD_DEFAULT
-            userAgentString = "${userAgentString} SakshiClothingAndroidApp/1.0.0"
+        try {
+            webView.settings.apply {
+                javaScriptEnabled = true
+                domStorageEnabled = true
+                databaseEnabled = true
+                loadWithOverviewMode = true
+                useWideViewPort = true
+                builtInZoomControls = false
+                displayZoomControls = false
+                setSupportZoom(false)
+                // Disabling multiple windows prevents child-parent attachment crash
+                setSupportMultipleWindows(false)
+                javaScriptCanOpenWindowsAutomatically = true
+                allowFileAccess = true
+                allowContentAccess = true
+                mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                cacheMode = WebSettings.LOAD_DEFAULT
+
+                val currentUa = userAgentString ?: ""
+                if (!currentUa.contains("SakshiClothingAndroidApp")) {
+                    userAgentString = "$currentUa SakshiClothingAndroidApp/1.0.0"
+                }
+            }
+        } catch (t: Throwable) {
+            Log.e(TAG, "WebSettings setup error", t)
         }
 
         // 3. Native JavaScript Interface Bridge
-        webView.addJavascriptInterface(WebAppInterface(this), "SakshiNativeApp")
+        try {
+            webView.addJavascriptInterface(WebAppInterface(this), "SakshiNativeApp")
+        } catch (t: Throwable) {
+            Log.e(TAG, "JavaScript interface registration error", t)
+        }
 
         // 4. WebChromeClient for File Upload & Window Popups
         webView.webChromeClient = FileUploadChromeClient(
@@ -187,7 +309,9 @@ class MainActivity : AppCompatActivity() {
             try {
                 filePickerLauncher.launch(intent)
                 true
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
+                Log.e(TAG, "FilePicker launch error", e)
+                fileUploadCallback?.onReceiveValue(null)
                 fileUploadCallback = null
                 false
             }
@@ -201,10 +325,12 @@ class MainActivity : AppCompatActivity() {
                 // Native WhatsApp Intent
                 if (url.startsWith("whatsapp://") || url.contains("wa.me") || url.contains("api.whatsapp.com")) {
                     return try {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
                         startActivity(intent)
                         true
-                    } catch (e: Exception) {
+                    } catch (e: Throwable) {
                         false
                     }
                 }
@@ -212,10 +338,12 @@ class MainActivity : AppCompatActivity() {
                 // Native UPI & Payment Apps Intent (GPay, PhonePe, Paytm, BHIM)
                 if (url.startsWith("upi://") || url.startsWith("phonepe://") || url.startsWith("paytmmp://") || url.startsWith("tez://")) {
                     return try {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
                         startActivity(intent)
                         true
-                    } catch (e: Exception) {
+                    } catch (e: Throwable) {
                         false
                     }
                 }
@@ -223,10 +351,12 @@ class MainActivity : AppCompatActivity() {
                 // Phone dialer & Email
                 if (url.startsWith("tel:") || url.startsWith("mailto:")) {
                     return try {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
                         startActivity(intent)
                         true
-                    } catch (e: Exception) {
+                    } catch (e: Throwable) {
                         false
                     }
                 }
@@ -246,16 +376,13 @@ class MainActivity : AppCompatActivity() {
                 binding.swipeRefreshLayout.isRefreshing = false
                 binding.offlineContainer.visibility = View.GONE
                 binding.webView.visibility = View.VISIBLE
-                CookieManager.getInstance().flush()
+                safeFlushCookies()
             }
 
             override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
                 super.onReceivedError(view, request, error)
                 if (request?.isForMainFrame == true) {
-                    binding.progressBar.visibility = View.GONE
-                    binding.swipeRefreshLayout.isRefreshing = false
-                    binding.webView.visibility = View.GONE
-                    binding.offlineContainer.visibility = View.VISIBLE
+                    showOfflineView()
                 }
             }
         }

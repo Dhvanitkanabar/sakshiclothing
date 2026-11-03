@@ -14,27 +14,37 @@ class WebAppInterface(private val context: Context) {
 
     @JavascriptInterface
     fun showToast(message: String) {
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        try {
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        } catch (_: Throwable) {}
     }
 
     @JavascriptInterface
     fun shareOrder(orderNumber: String, trackingUrl: String) {
-        val sendIntent = Intent().apply {
-            action = Intent.ACTION_SEND
-            putExtra(Intent.EXTRA_TEXT, "Track my Sakshi Clothing atelier order #$orderNumber here: $trackingUrl")
-            type = "text/plain"
+        try {
+            val sendIntent = Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_TEXT, "Track my Sakshi Clothing atelier order #$orderNumber here: $trackingUrl")
+                type = "text/plain"
+            }
+            val shareIntent = Intent.createChooser(sendIntent, "Share Order Details").apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(shareIntent)
+        } catch (t: Throwable) {
+            Toast.makeText(context, "Unable to share order", Toast.LENGTH_SHORT).show()
         }
-        val shareIntent = Intent.createChooser(sendIntent, "Share Order Details")
-        context.startActivity(shareIntent)
     }
 
     @JavascriptInterface
     fun openWhatsApp(message: String) {
         try {
             val url = "https://api.whatsapp.com/send?phone=919825440058&text=" + Uri.encode(message)
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
             context.startActivity(intent)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Toast.makeText(context, "WhatsApp is not installed on this device", Toast.LENGTH_SHORT).show()
         }
     }
@@ -55,6 +65,6 @@ class WebAppInterface(private val context: Context) {
                     vibrator?.vibrate(20)
                 }
             }
-        } catch (_: Exception) {}
+        } catch (_: Throwable) {}
     }
 }

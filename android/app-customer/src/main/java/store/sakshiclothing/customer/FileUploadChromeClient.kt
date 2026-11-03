@@ -16,12 +16,14 @@ class FileUploadChromeClient(
 
     override fun onProgressChanged(view: WebView?, newProgress: Int) {
         super.onProgressChanged(view, newProgress)
-        if (newProgress < 100) {
-            progressBar.visibility = View.VISIBLE
-            progressBar.progress = newProgress
-        } else {
-            progressBar.visibility = View.GONE
-        }
+        try {
+            if (newProgress < 100) {
+                progressBar.visibility = View.VISIBLE
+                progressBar.progress = newProgress
+            } else {
+                progressBar.visibility = View.GONE
+            }
+        } catch (_: Throwable) {}
     }
 
     override fun onShowFileChooser(
@@ -29,7 +31,12 @@ class FileUploadChromeClient(
         filePathCallback: ValueCallback<Array<Uri>>?,
         fileChooserParams: FileChooserParams?
     ): Boolean {
-        return onFileChooseCallback(filePathCallback, fileChooserParams)
+        return try {
+            onFileChooseCallback(filePathCallback, fileChooserParams)
+        } catch (_: Throwable) {
+            filePathCallback?.onReceiveValue(null)
+            false
+        }
     }
 
     override fun onCreateWindow(
@@ -38,10 +45,15 @@ class FileUploadChromeClient(
         isUserGesture: Boolean,
         resultMsg: Message?
     ): Boolean {
-        // Allow popups (e.g. Razorpay payment redirects) to load inside the active webview
-        val transport = resultMsg?.obj as? WebView.WebViewTransport ?: return false
-        transport.webView = view
-        resultMsg.sendToTarget()
-        return true
+        // Prevent fatal Chromium crash caused by assigning parent view to transport.webView
+        try {
+            val href = view?.handler?.obtainMessage()
+            view?.requestFocusNodeHref(href)
+            val url = href?.data?.getString("url")
+            if (!url.isNullOrBlank()) {
+                view.loadUrl(url)
+            }
+        } catch (_: Throwable) {}
+        return false
     }
 }
