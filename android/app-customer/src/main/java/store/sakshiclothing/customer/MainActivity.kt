@@ -1,8 +1,13 @@
 package store.sakshiclothing.customer
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
@@ -19,10 +24,17 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import store.sakshiclothing.customer.databinding.ActivityMainBinding
 
+/**
+ * Sakshi Clothing Customer Android Application
+ * Unified single-source-of-truth container with persistent session synchronization,
+ * hardware acceleration, native Razorpay & UPI intent handling, and offline auto-reconnect.
+ */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private var fileUploadCallback: ValueCallback<Array<Uri>>? = null
+    private var connectivityManager: ConnectivityManager? = null
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
 
     private val filePickerLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -45,11 +57,33 @@ class MainActivity : AppCompatActivity() {
         setupHardwareBackHandler()
         setupSwipeRefresh()
         setupOfflineRetry()
+        setupNetworkObserver()
         setupWebView()
 
-        // Load customer store or deep-link URI
+        // Load production customer store or deep-link URI
         val targetUrl = intent?.dataString ?: getString(R.string.customer_store_url)
         binding.webView.loadUrl(targetUrl)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        CookieManager.getInstance().flush()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Guarantee all authentication cookies (Clerk tokens, session cookies) are persisted to disk
+        CookieManager.getInstance().flush()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        CookieManager.getInstance().flush()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        networkCallback?.let { connectivityManager?.unregisterNetworkCallback(it) }
     }
 
     private fun setupHardwareBackHandler() {
@@ -88,11 +122,32 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupNetworkObserver() {
+        connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+        val request = NetworkRequest.Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .build()
+
+        networkCallback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                runOnUiThread {
+                    // Auto-reconnect if currently showing offline fallback
+                    if (binding.offlineContainer.visibility == View.VISIBLE) {
+                        binding.offlineContainer.visibility = View.GONE
+                        binding.webView.visibility = View.VISIBLE
+                        binding.webView.reload()
+                    }
+                }
+            }
+        }
+        connectivityManager?.registerNetworkCallback(request, networkCallback as ConnectivityManager.NetworkCallback)
+    }
+
     @SuppressLint("SetJavaScriptEnabled")
     private fun setupWebView() {
         val webView = binding.webView
 
-        // 1. Cookie & Session Persistence
+        // 1. Cookie & Session Persistence (Synchronized with single MongoDB database)
         val cookieManager = CookieManager.getInstance()
         cookieManager.setAcceptCookie(true)
         cookieManager.setAcceptThirdPartyCookies(webView, true)
@@ -191,6 +246,7 @@ class MainActivity : AppCompatActivity() {
                 binding.swipeRefreshLayout.isRefreshing = false
                 binding.offlineContainer.visibility = View.GONE
                 binding.webView.visibility = View.VISIBLE
+                CookieManager.getInstance().flush()
             }
 
             override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {

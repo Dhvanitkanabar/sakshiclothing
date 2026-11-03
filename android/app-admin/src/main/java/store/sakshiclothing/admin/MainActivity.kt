@@ -5,6 +5,10 @@ import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
@@ -24,10 +28,17 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import store.sakshiclothing.admin.databinding.ActivityMainBinding
 
+/**
+ * Sakshi Clothing Admin Atelier Android Application
+ * Unified single-source-of-truth management container with persistent session synchronization,
+ * DownloadManager for tax invoices & CSV exports, and multi-image garment uploader.
+ */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private var fileUploadCallback: ValueCallback<Array<Uri>>? = null
+    private var connectivityManager: ConnectivityManager? = null
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
 
     private val filePickerLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -50,10 +61,31 @@ class MainActivity : AppCompatActivity() {
         setupHardwareBackHandler()
         setupSwipeRefresh()
         setupOfflineRetry()
+        setupNetworkObserver()
         setupWebView()
 
         val targetUrl = intent?.dataString ?: getString(R.string.admin_dashboard_url)
         binding.webView.loadUrl(targetUrl)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        CookieManager.getInstance().flush()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        CookieManager.getInstance().flush()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        CookieManager.getInstance().flush()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        networkCallback?.let { connectivityManager?.unregisterNetworkCallback(it) }
     }
 
     private fun setupHardwareBackHandler() {
@@ -89,6 +121,26 @@ class MainActivity : AppCompatActivity() {
             binding.webView.visibility = View.VISIBLE
             binding.webView.reload()
         }
+    }
+
+    private fun setupNetworkObserver() {
+        connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+        val request = NetworkRequest.Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .build()
+
+        networkCallback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                runOnUiThread {
+                    if (binding.offlineContainer.visibility == View.VISIBLE) {
+                        binding.offlineContainer.visibility = View.GONE
+                        binding.webView.visibility = View.VISIBLE
+                        binding.webView.reload()
+                    }
+                }
+            }
+        }
+        connectivityManager?.registerNetworkCallback(request, networkCallback as ConnectivityManager.NetworkCallback)
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -141,7 +193,6 @@ class MainActivity : AppCompatActivity() {
                 dm.enqueue(request)
                 Toast.makeText(this, "Downloading report/invoice...", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
-                // Fallback: Open in external browser
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                 startActivity(intent)
             }
@@ -195,6 +246,7 @@ class MainActivity : AppCompatActivity() {
                 binding.swipeRefreshLayout.isRefreshing = false
                 binding.offlineContainer.visibility = View.GONE
                 binding.webView.visibility = View.VISIBLE
+                CookieManager.getInstance().flush()
             }
 
             override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
