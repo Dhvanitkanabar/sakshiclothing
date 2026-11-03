@@ -115,15 +115,14 @@ export const Shop = () => {
     
     let result = [...products];
 
-    // Search Query Filter
+    // Multi-term Smart Search Filter
     if (query) {
-      const q = query.toLowerCase();
-      result = result.filter(p => 
-        p.name.toLowerCase().includes(q) || 
-        p.category.toLowerCase().includes(q) || 
-        p.subCategory?.toLowerCase().includes(q) ||
-        p.description?.toLowerCase().includes(q)
-      );
+      const cleanQ = query.trim().toLowerCase();
+      const terms = cleanQ.split(/\s+/).filter(Boolean);
+      result = result.filter(p => {
+        const fullText = `${p.name} ${p.category} ${p.subCategory || ''} ${p.description || ''}`.toLowerCase();
+        return fullText.includes(cleanQ) || (terms.length > 0 && terms.every(t => fullText.includes(t))) || (terms.length > 0 && terms.some(t => fullText.includes(t)));
+      });
     }
 
     if (mood) {
@@ -179,26 +178,44 @@ export const Shop = () => {
 
   return (
     <div className="bg-[#FAF8F5] min-h-screen text-stone-900 selection:bg-amber-400 selection:text-black pb-28 lg:pb-16">
-      {/* Category Header */}
-      <header className="pt-14 sm:pt-20 pb-8 sm:pb-12 px-5 sm:px-8 max-w-7xl mx-auto text-center">
-        <motion.div
-          key={selectedCategory}
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="space-y-3 sm:space-y-4"
-        >
-          <span className="text-[10px] font-sans uppercase tracking-[0.3em] text-amber-900 font-bold block">
-            {categoryMeta.badge}
-          </span>
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-sans font-light text-stone-900 tracking-tight">
-            {query ? `Search: "${query}"` : mood ? `${mood} Edit` : categoryMeta.title}
-          </h1>
-          <p className="text-stone-600 text-xs sm:text-sm md:text-base font-light max-w-2xl mx-auto leading-relaxed">
-            {categoryMeta.description}
-          </p>
-        </motion.div>
-      </header>
+      {/* Category or Search Header */}
+      {query ? (
+        <header className="pt-6 sm:pt-8 pb-4 sm:pb-6 px-5 sm:px-8 max-w-7xl mx-auto">
+          <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 border-b border-stone-200/80 pb-4">
+            <div>
+              <span className="text-[10px] font-sans uppercase tracking-[0.25em] text-amber-700 font-bold block mb-1">
+                Atelier Search Archive
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-sans font-semibold text-stone-900 tracking-tight flex items-baseline gap-2">
+                Search: <span className="font-serif italic font-normal text-stone-800">"{query}"</span>
+              </h1>
+            </div>
+            <p className="text-stone-500 text-xs sm:text-sm font-medium">
+              {filteredProducts.length} {filteredProducts.length === 1 ? 'creation' : 'creations'} found
+            </p>
+          </div>
+        </header>
+      ) : (
+        <header className="pt-12 sm:pt-16 pb-8 sm:pb-10 px-5 sm:px-8 max-w-7xl mx-auto text-center">
+          <motion.div
+            key={selectedCategory}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-3"
+          >
+            <span className="text-[10px] font-sans uppercase tracking-[0.3em] text-amber-900 font-bold block">
+              {categoryMeta.badge}
+            </span>
+            <h1 className="text-3xl sm:text-5xl font-sans font-light text-stone-900 tracking-tight">
+              {mood ? `${mood} Edit` : categoryMeta.title}
+            </h1>
+            <p className="text-stone-600 text-xs sm:text-sm font-light max-w-2xl mx-auto leading-relaxed">
+              {categoryMeta.description}
+            </p>
+          </motion.div>
+        </header>
+      )}
 
       {/* Horizontal Filter Chips & Filter Drawer Trigger */}
       <div className="sticky top-14 sm:top-16 z-30 bg-[#FAF8F5]/90 backdrop-blur-xl border-y border-stone-200/80 py-3 sm:py-4 px-4 sm:px-8">
