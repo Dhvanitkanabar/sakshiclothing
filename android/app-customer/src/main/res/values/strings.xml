@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Sakshi Clothing</string>
+    <string name="customer_store_url">https://www.sakshiclothing.store</string>
+    <string name="offline_title">You Are Currently Offline</string>
+    <string name="offline_message">Please check your internet or Wi-Fi connection and tap retry to continue browsing our atelier collection.</string>
+    <string name="retry_button">Retry Connection</string>
+</resources>

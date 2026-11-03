@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="atelier_dark">#FF0F0E0C</color>
+    <color name="atelier_amber">#FFF59E0B</color>
+    <color name="atelier_stone_bg">#FFFAF8F5</color>
+    <color name="atelier_stone_border">#FFE7E5E4</color>
+    <color name="status_bar_color">#FF0F0E0C</color>
+</resources>

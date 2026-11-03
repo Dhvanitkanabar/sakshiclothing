@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Sakshi Admin Atelier</string>
+    <string name="admin_dashboard_url">https://admin.sakshiclothing.store</string>
+    <string name="offline_title">Atelier Offline</string>
+    <string name="offline_message">Unable to connect to the Sakshi admin server. Please check your connectivity and retry.</string>
+    <string name="retry_button">Reconnect Dashboard</string>
+</resources>

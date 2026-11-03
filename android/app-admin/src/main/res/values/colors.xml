@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="admin_slate_dark">#FF0F172A</color>
+    <color name="admin_amber">#FFF59E0B</color>
+    <color name="admin_bg">#FFF8FAFC</color>
+    <color name="status_bar_color">#FF0F172A</color>
+</resources>
