@@ -795,12 +795,10 @@ export const generateShippingInvoicePdf = (order: any, autoDownload = true) => {
   doc.setFontSize(9);
   doc.setTextColor(20, 20, 20);
   const awbStr = order.tracking?.trackingNumber || `AWB-SC-${orderNum}`;
-  const courierStr = order.tracking?.courierName || 'BlueDart Express / Delhivery Surface';
-  doc.text(`TRACKING AWB: ${awbStr}`, labelX + 215, barY + 14);
+  doc.text(`TRACKING AWB: ${awbStr}`, labelX + 215, barY + 16);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
-  doc.text(`Courier Partner: ${courierStr}`, labelX + 215, barY + 26);
-  doc.text(`Order Ref: #${orderNum} | Date: ${orderDate}`, labelX + 215, barY + 38);
+  doc.text(`Order Ref: #${orderNum} | Date: ${orderDate}`, labelX + 215, barY + 30);
 
   // Large Pincode Routing Hub Box (Like Delhivery)
   const pinBoxX = labelX + labelW - 110;
