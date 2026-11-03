@@ -16,22 +16,35 @@ import {
   RefreshCw,
   Bell,
   ArrowRight,
-  ExternalLink
+  ExternalLink,
+  Copy,
+  Check,
+  MessageCircle,
+  ShoppingBag,
+  FileText
 } from 'lucide-react';
 import { API_URL } from '../lib/api';
+import { toast } from 'sonner';
+
+/**
+ * Design Read: Customer Live Order Tracking for Sakshi Clothing couture patrons,
+ * with an airy luxury atelier layout, high information density, horizontal progress tracking,
+ * and compact smart search.
+ * Dials: VARIANCE 7 / MOTION 6 / DENSITY 6.
+ */
 
 const STATUS_STEPS = [
-  { key: 'pending_approval', label: 'Order Placed' },
-  { key: 'confirmed', label: 'Order Accepted & Verified' },
-  { key: 'packed', label: 'Artisanal Packing' },
-  { key: 'dispatched', label: 'Dispatched to Courier' },
-  { key: 'in_transit', label: 'In Transit' },
-  { key: 'out_for_delivery', label: 'Out for Delivery' },
-  { key: 'delivered', label: 'Delivered' }
+  { key: 'pending_approval', label: 'Order Placed', shortLabel: 'Placed' },
+  { key: 'confirmed', label: 'Order Accepted & In Prep', shortLabel: 'In Prep' },
+  { key: 'packed', label: 'Artisanal Packaging', shortLabel: 'Packed' },
+  { key: 'dispatched', label: 'Dispatched to Courier', shortLabel: 'Dispatched' },
+  { key: 'in_transit', label: 'In Transit', shortLabel: 'In Transit' },
+  { key: 'out_for_delivery', label: 'Out for Delivery', shortLabel: 'Out for Delivery' },
+  { key: 'delivered', label: 'Delivered', shortLabel: 'Delivered' }
 ];
 
 const TrackOrder = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [orderId, setOrderId] = useState('');
   const [emailOrPhone, setEmailOrPhone] = useState('');
   const [order, setOrder] = useState<any>(null);
@@ -39,6 +52,8 @@ const TrackOrder = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const [copiedAwb, setCopiedAwb] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
 
   const fetchTracking = useCallback(async (targetId: string, isSilent = false) => {
     const cleanTargetId = targetId.trim().replace(/^#+/, '').trim();
@@ -64,6 +79,7 @@ const TrackOrder = () => {
       if (data.success && data.data) {
         setOrder(data.data);
         setLastRefreshed(new Date());
+        setError(null);
       } else {
         if (!isSilent) {
           setError(data.message || 'No order found with the provided details.');
@@ -80,7 +96,7 @@ const TrackOrder = () => {
     }
   }, [emailOrPhone]);
 
-  // Read URL query params on mount (e.g. ?orderId=ORDERSC4)
+  // Read URL query params on mount (e.g. ?orderId=ORDERSC1)
   useEffect(() => {
     const paramId = searchParams.get('orderId') || searchParams.get('id');
     if (paramId) {
@@ -121,9 +137,19 @@ const TrackOrder = () => {
 
   const handleTrackSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const clean = orderId.trim().replace(/^#+/, '');
+    const clean = orderId.trim().replace(/^#+/, '').toUpperCase();
+    if (!clean) return;
     setOrderId(clean);
+    setSearchParams({ orderId: clean });
     fetchTracking(clean);
+    setShowSearchModal(false);
+  };
+
+  const handleCopyAwb = (awbText: string) => {
+    navigator.clipboard.writeText(awbText);
+    setCopiedAwb(true);
+    toast.success('AWB copied to clipboard');
+    setTimeout(() => setCopiedAwb(false), 2000);
   };
 
   const getStepStatus = (stepKey: string) => {
@@ -146,7 +172,7 @@ const TrackOrder = () => {
     return 'upcoming';
   };
 
-  // High-precision formatted destination address & GPS coordinates
+  // Coordinates & Map logic
   const coords = order?.shippingAddress?.coordinates;
   const hasExactCoords = Boolean(
     coords &&
@@ -157,275 +183,285 @@ const TrackOrder = () => {
     (coords.lat !== 0 || coords.lng !== 0)
   );
 
-  const cleanDestTokens: string[] = [];
-  const addDestToken = (str?: string) => {
-    if (!str) return;
-    const trimmed = str.trim();
-    if (!trimmed) return;
-    const lower = trimmed.toLowerCase();
-    if (!cleanDestTokens.some(t => t.toLowerCase() === lower || lower.includes(t.toLowerCase()))) {
-      cleanDestTokens.push(trimmed);
-    }
-  };
-
-  addDestToken(order?.shippingAddress?.houseNumber);
-  addDestToken(order?.shippingAddress?.street);
-  addDestToken(order?.shippingAddress?.area);
-  addDestToken(order?.shippingAddress?.landmark);
-  addDestToken(order?.shippingAddress?.city);
-  addDestToken(order?.shippingAddress?.state);
-  addDestToken(order?.shippingAddress?.pincode);
-  addDestToken(order?.shippingAddress?.country || 'India');
-
   const destinationCity = order?.shippingAddress?.city || 'India';
+  const destinationState = order?.shippingAddress?.state || '';
   const destinationPincode = order?.shippingAddress?.pincode || '';
-  const fullDest = cleanDestTokens.join(', ');
-  const mapQuery = encodeURIComponent(fullDest || `${destinationCity}, Gujarat, India`);
+  const fullAddress = [
+    order?.shippingAddress?.houseNumber,
+    order?.shippingAddress?.street,
+    order?.shippingAddress?.area,
+    destinationCity,
+    destinationState,
+    destinationPincode
+  ].filter(Boolean).join(', ');
 
+  const mapQuery = encodeURIComponent(fullAddress || `${destinationCity}, Gujarat, India`);
   const mapEmbedUrl = hasExactCoords
-    ? `https://maps.google.com/maps?q=${coords.lat},${coords.lng}&hl=en&z=18&output=embed`
-    : `https://maps.google.com/maps?q=${mapQuery}&t=&z=17&ie=UTF8&iwloc=&output=embed`;
+    ? `https://maps.google.com/maps?q=${coords.lat},${coords.lng}&hl=en&z=17&output=embed`
+    : `https://maps.google.com/maps?q=${mapQuery}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
 
   const mapExternalUrl = hasExactCoords
     ? `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`
     : `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
 
+  const currentAwb = order?.tracking?.trackingNumber || `AWB-SC-${order?.orderNumber || '001'}`;
+
   return (
-    <div className="bg-stone-50/60 min-h-screen pt-36 pb-28 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-4xl mx-auto space-y-10">
-        {/* Editorial Title */}
-        <div className="text-center space-y-4">
-          <span className="text-[10px] font-sans font-bold uppercase tracking-[0.3em] text-amber-800 flex items-center justify-center gap-2">
-            <Sparkles size={12} /> Live Fulfillment & Order Dispatch
-          </span>
-          <h1 className="text-4xl md:text-6xl font-sans font-medium text-stone-900 tracking-tight">
-            Track Your Order
-          </h1>
-          <p className="text-stone-500 text-xs md:text-sm max-w-xl mx-auto font-sans leading-relaxed">
-            Enter your order reference code below to view real-time atelier updates, genuine order verification, and your estimated arrival time.
-          </p>
-        </div>
-
-        {/* Search / Lookup Card */}
-        <div className="bg-white p-8 md:p-10 rounded-3xl shadow-xl shadow-stone-200/50 border border-stone-200/80 space-y-6">
-          <form onSubmit={handleTrackSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label className="block text-[10px] font-sans font-bold uppercase tracking-widest text-stone-500 mb-2">
-                  Order ID <span className="text-amber-800">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. ORDERSC3 or #ORDERSC3"
-                  value={orderId}
-                  onChange={(e) => setOrderId(e.target.value.replace(/^#+/, '').toUpperCase())}
-                  className="w-full bg-stone-50 border border-stone-200 px-5 py-3.5 rounded-2xl text-sm font-sans font-bold text-stone-900 focus:outline-none focus:border-stone-900 transition-colors uppercase"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-sans font-bold uppercase tracking-widest text-stone-500 mb-2">
-                  Email or Phone (Optional Verification)
-                </label>
-                <input
-                  type="text"
-                  placeholder="Optional email / phone"
-                  value={emailOrPhone}
-                  onChange={(e) => setEmailOrPhone(e.target.value)}
-                  className="w-full bg-stone-50 border border-stone-200 px-5 py-3.5 rounded-2xl text-sm font-semibold text-stone-900 focus:outline-none focus:border-stone-900 transition-colors"
-                />
-              </div>
+    <div className="bg-[#FAF8F5] min-h-screen pt-8 sm:pt-12 pb-24 px-4 sm:px-6 lg:px-8 font-sans text-stone-900">
+      <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
+        
+        {/* ─── 1. TOP HEADER & COMPACT SEARCH BAR ───────────────────────── */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-stone-200/80">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-stone-100 text-stone-700 text-[11px] font-bold uppercase tracking-widest mb-1.5 border border-stone-200/70">
+              <Sparkles size={11} className="text-amber-700" />
+              <span>Surat Atelier Live Fulfillment</span>
             </div>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-normal text-stone-900 tracking-tight">
+              {order ? `Order #${order.orderNumber}` : 'Track Your Order'}
+            </h1>
+          </div>
 
+          {/* Compact Smart Search Form */}
+          <form onSubmit={handleTrackSubmit} className="flex items-center gap-2 max-w-md w-full md:w-auto">
+            <div className="relative flex-1 md:w-64">
+              <input
+                type="text"
+                placeholder="Enter Order # (e.g. ORDERSC1)"
+                value={orderId}
+                onChange={(e) => setOrderId(e.target.value.replace(/^#+/, '').toUpperCase())}
+                className="w-full bg-white border border-stone-200 px-4 py-2.5 rounded-xl text-xs font-bold text-stone-900 focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 transition-all uppercase placeholder:normal-case font-mono"
+              />
+            </div>
             <button
               type="submit"
               disabled={loading || !orderId.trim()}
-              className="w-full py-4 bg-stone-900 hover:bg-stone-800 text-white rounded-2xl text-xs font-sans font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50"
+              className="px-5 py-2.5 bg-stone-900 hover:bg-black text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-xs disabled:opacity-50 shrink-0"
             >
-              {loading ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Connecting to Atelier Live Sync…</span>
-                </div>
-              ) : (
-                <>
-                  <Search size={15} /> Track Live Order
-                </>
-              )}
+              {loading ? <RefreshCw size={13} className="animate-spin" /> : <Search size={13} />}
+              <span>Track</span>
             </button>
           </form>
         </div>
 
-        {/* Error Alert */}
+        {/* ─── 2. ERROR STATE (IF ANY) ─────────────────────────────────── */}
         {error && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-6 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl flex items-center gap-4 text-xs font-semibold"
+            className="p-5 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl flex items-center gap-3.5 text-xs font-semibold"
           >
-            <AlertCircle size={20} className="shrink-0 text-rose-600" />
-            <span>{error}</span>
+            <AlertCircle size={18} className="shrink-0 text-rose-600" />
+            <div className="flex-1">
+              <p className="font-bold">{error}</p>
+              <p className="text-[11px] text-rose-600 mt-0.5">Please verify your Order Reference ID or contact our atelier support.</p>
+            </div>
           </motion.div>
         )}
 
-        {/* Tracked Order Details */}
+        {/* ─── 3. EMPTY STATE (BEFORE SEARCHING) ───────────────────────── */}
+        {!order && !loading && !error && (
+          <div className="bg-white rounded-3xl p-8 sm:p-12 border border-stone-200/90 shadow-sm text-center max-w-xl mx-auto space-y-5 my-8">
+            <div className="w-14 h-14 rounded-full bg-stone-100 flex items-center justify-center mx-auto text-stone-700">
+              <Package size={26} />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-serif font-medium text-stone-900">Enter Your Order Reference</h2>
+              <p className="text-xs text-stone-500 max-w-sm mx-auto leading-relaxed">
+                Enter your order number (found in your confirmation email or SMS) above to monitor atelier craftsmanship, courier dispatch, and live location.
+              </p>
+            </div>
+            <div className="pt-2">
+              <Link
+                to="/profile"
+                className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-stone-900 hover:text-amber-800 border-b border-stone-900 pb-0.5 transition-colors"
+              >
+                <span>View Recent Orders in Account</span>
+                <ArrowRight size={13} />
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* ─── 4. ACTIVE ORDER TRACKING INTERFACE ──────────────────────── */}
         {order && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="space-y-8"
+            transition={{ duration: 0.6 }}
+            className="space-y-6 sm:space-y-8"
           >
-            {/* Live Sync Status Bar */}
-            <div className="flex items-center justify-between text-xs text-stone-500 px-2">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="font-sans text-[11px] font-bold text-stone-700">Maison Live Sync Active</span>
-                {lastRefreshed && (
-                  <span className="text-[10px] text-stone-400">
-                    • Refreshed {lastRefreshed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                  </span>
-                )}
-              </div>
-              <button
-                onClick={() => fetchTracking(orderId, true)}
-                disabled={refreshing}
-                className="text-[11px] font-sans uppercase tracking-widest text-amber-800 hover:text-stone-950 flex items-center gap-1.5 transition-colors"
-              >
-                <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} /> Refresh Status
-              </button>
-            </div>
+            
+            {/* ── Status Spotlight Ribbon ── */}
+            <div className="bg-stone-900 text-stone-100 rounded-3xl p-6 sm:p-8 shadow-xl border border-stone-800 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
-            {/* ORDER ACCEPTANCE & ESTIMATED DELIVERY TIME HERO BANNER */}
-            {order.approvalStatus === 'approved' ? (
-              <div className="bg-gradient-to-br from-stone-900 via-stone-950 to-stone-900 text-white rounded-3xl p-8 md:p-10 shadow-2xl space-y-6 relative overflow-hidden border border-amber-900/30">
-                <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-
-                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400">
-                      <ShieldCheck size={22} />
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-sans uppercase tracking-[0.25em] text-emerald-400 font-bold block">
-                        Verified & Approved by Admin
-                      </span>
-                      <h3 className="text-xl md:text-2xl font-sans font-bold text-white mt-0.5">
-                        Order #{order.orderNumber} Accepted
-                      </h3>
-                    </div>
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-stone-800">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-11 h-11 rounded-2xl bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center text-emerald-400 shrink-0">
+                    <ShieldCheck size={24} />
                   </div>
-                  <span className="px-3.5 py-1.5 rounded-full bg-white/10 text-stone-200 text-xs font-sans font-bold tracking-wider uppercase border border-white/15">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] uppercase tracking-widest text-emerald-400 font-bold">
+                        Verified Atelier Order
+                      </span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                    </div>
+                    <h2 className="text-lg sm:text-xl font-sans font-bold text-white mt-0.5">
+                      {order.orderStatus === 'rejected'
+                        ? 'Order Cancelled'
+                        : order.approvalStatus === 'approved'
+                        ? 'Approved & Dispatched to Atelier'
+                        : 'Order Placed — Awaiting Atelier Review'}
+                    </h2>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span className="px-3 py-1.5 rounded-full bg-stone-800 text-stone-200 text-xs font-bold tracking-wider uppercase border border-stone-700">
                     {order.orderStatus.replace(/_/g, ' ')}
                   </span>
-                </div>
-
-                {/* Estimated Delivery Time Spotlight */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                  <div className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-1.5">
-                    <span className="text-[10px] font-sans uppercase tracking-[0.2em] text-amber-300 font-bold flex items-center gap-1.5">
-                      <Clock size={13} /> Estimated Time of Arrival
-                    </span>
-                    <p className="text-2xl md:text-3xl font-sans font-bold text-white">
-                      {order.tracking?.estimatedDeliveryTime || '2 to 3 Business Days'}
-                    </p>
-                    <p className="text-xs text-stone-400">
-                      Provided directly by the Maison dispatch manager upon order acceptance.
-                    </p>
-                  </div>
-
-                  <div className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-1.5">
-                    <span className="text-[10px] font-sans uppercase tracking-[0.2em] text-stone-400 font-bold flex items-center gap-1.5">
-                      <Navigation size={13} /> Current Checkpoint & Location
-                    </span>
-                    <p className="text-lg font-sans font-bold text-stone-200">
-                      {order.tracking?.currentLocation || 'Sakshi Maison Atelier — Packaging Desk'}
-                    </p>
-                    {order.tracking?.liveStatusNote && (
-                      <p className="text-xs text-amber-200/90 font-medium italic">
-                        "{order.tracking.liveStatusNote}"
-                      </p>
-                    )}
-                  </div>
+                  <button
+                    onClick={() => fetchTracking(orderId, true)}
+                    disabled={refreshing}
+                    className="p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 transition-colors"
+                    title="Refresh live updates"
+                  >
+                    <RefreshCw size={13} className={refreshing ? 'animate-spin' : ''} />
+                  </button>
                 </div>
               </div>
-            ) : order.orderStatus === 'rejected' ? (
-              <div className="p-8 bg-rose-50 border border-rose-200 rounded-3xl space-y-3">
-                <div className="flex items-center gap-3 text-rose-800 font-bold text-base">
-                  <XCircle size={24} className="text-rose-600" /> Order Cancelled / Rejected
+
+              {/* 3 Metrics Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6">
+                
+                {/* 1. ETA */}
+                <div className="p-4 rounded-2xl bg-stone-800/60 border border-stone-700/60">
+                  <span className="text-[10px] uppercase tracking-wider text-amber-300 font-bold flex items-center gap-1.5 mb-1">
+                    <Clock size={12} /> Estimated Delivery
+                  </span>
+                  <p className="text-lg sm:text-xl font-bold text-white">
+                    {order.tracking?.estimatedDeliveryTime || '2 to 3 Business Days'}
+                  </p>
+                  <p className="text-[11px] text-stone-400 mt-0.5">Free Express Delivery</p>
                 </div>
-                <p className="text-xs text-rose-700 leading-relaxed">
-                  <span className="font-bold">Reason:</span> {order.rejectionReason || 'Order could not be approved by the atelier.'}
-                </p>
-              </div>
-            ) : (
-              <div className="p-6 md:p-8 bg-amber-50/80 border border-amber-200/80 rounded-3xl flex items-center gap-4 text-xs font-semibold text-amber-900">
-                <Clock size={24} className="text-amber-700 shrink-0" />
-                <div>
-                  <h4 className="font-bold text-sm text-stone-900">Order Placed — Awaiting Admin Verification</h4>
-                  <p className="text-xs text-stone-600 mt-1">
-                    The admin is reviewing order authenticity and shipping details. Once accepted, your estimated delivery time will appear here.
+
+                {/* 2. Current Location */}
+                <div className="p-4 rounded-2xl bg-stone-800/60 border border-stone-700/60">
+                  <span className="text-[10px] uppercase tracking-wider text-stone-400 font-bold flex items-center gap-1.5 mb-1">
+                    <Navigation size={12} /> Current Station
+                  </span>
+                  <p className="text-sm font-bold text-stone-200 truncate">
+                    {order.tracking?.currentLocation || 'Sakshi Surat Atelier'}
+                  </p>
+                  <p className="text-[11px] text-amber-200/90 italic truncate mt-0.5">
+                    {order.tracking?.liveStatusNote || 'Tailoring & quality inspection'}
                   </p>
                 </div>
-              </div>
-            )}
 
-            {/* Visual Timeline Stepper */}
+                {/* 3. AWB / Courier */}
+                <div className="p-4 rounded-2xl bg-stone-800/60 border border-stone-700/60 flex flex-col justify-between">
+                  <span className="text-[10px] uppercase tracking-wider text-stone-400 font-bold flex items-center gap-1.5 mb-1">
+                    <Truck size={12} /> Tracking AWB
+                  </span>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-mono font-bold text-white tracking-wider">
+                      {currentAwb}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyAwb(currentAwb)}
+                      className="p-1 rounded-md text-stone-400 hover:text-white hover:bg-stone-700 transition-colors"
+                      title="Copy AWB"
+                    >
+                      {copiedAwb ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-stone-400 mt-0.5">
+                    {order.tracking?.courierName || 'Priority Express Carrier'}
+                  </p>
+                </div>
+
+              </div>
+            </div>
+
+            {/* ── Horizontal Modern Progress Stepper ── */}
             {order.orderStatus !== 'rejected' && order.orderStatus !== 'cancelled' && (
-              <div className="bg-white p-8 md:p-10 rounded-3xl shadow-xl shadow-stone-200/50 border border-stone-200/80 space-y-8">
-                <div className="flex justify-between items-center border-b border-stone-100 pb-4">
-                  <h3 className="text-xs font-sans font-bold uppercase tracking-[0.25em] text-stone-900 flex items-center gap-2">
-                    <Truck size={14} className="text-amber-800" /> Fulfillment Stages
+              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-stone-200/90 shadow-sm space-y-6">
+                <div className="flex items-center justify-between pb-3 border-b border-stone-100">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-stone-800 flex items-center gap-2">
+                    <Truck size={14} className="text-stone-700" />
+                    <span>Fulfillment Journey</span>
                   </h3>
-                  <span className="text-[11px] font-sans text-stone-500">
-                    Ordered: {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  <span className="text-[11px] text-stone-500 font-mono">
+                    Ordered on {new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                   </span>
                 </div>
 
-                <div className="space-y-6">
+                {/* Desktop Stepper */}
+                <div className="hidden md:flex items-center justify-between relative px-2">
+                  <div className="absolute top-4 left-6 right-6 h-0.5 bg-stone-100 -z-0" />
+                  
                   {STATUS_STEPS.map((step, idx) => {
                     const statusState = getStepStatus(step.key);
-                    const isCurrent = statusState === 'current';
                     const isDone = statusState === 'completed';
+                    const isCurrent = statusState === 'current';
 
                     return (
-                      <div key={step.key} className="flex items-start gap-5 group">
-                        <div className="flex flex-col items-center">
-                          <div className={`w-9 h-9 rounded-2xl flex items-center justify-center text-xs font-bold transition-all duration-300 ${
-                            isDone ? 'bg-emerald-600 text-white' :
-                            isCurrent ? 'bg-stone-900 text-white ring-4 ring-amber-500/20 scale-105' :
-                            'bg-stone-100 text-stone-400'
+                      <div key={step.key} className="flex flex-col items-center relative z-10 space-y-2">
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                            isDone
+                              ? 'bg-emerald-600 text-white shadow-xs'
+                              : isCurrent
+                              ? 'bg-stone-900 text-white ring-4 ring-amber-500/20 scale-110 shadow-sm'
+                              : 'bg-stone-100 text-stone-400 border border-stone-200/70'
+                          }`}
+                        >
+                          {isDone ? '✓' : idx + 1}
+                        </div>
+                        <div className="text-center max-w-[90px]">
+                          <span className={`text-[11px] font-bold block leading-tight ${
+                            isCurrent ? 'text-stone-900 font-extrabold' : isDone ? 'text-stone-700' : 'text-stone-400'
                           }`}>
-                            {isDone ? '✓' : idx + 1}
-                          </div>
-                          {idx < STATUS_STEPS.length - 1 && (
-                            <div className={`w-0.5 h-10 ${isDone ? 'bg-emerald-600' : 'bg-stone-100'}`} />
+                            {step.shortLabel}
+                          </span>
+                          {isCurrent && (
+                            <span className="text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded mt-0.5 inline-block">
+                              Active
+                            </span>
                           )}
                         </div>
+                      </div>
+                    );
+                  })}
+                </div>
 
-                        <div className="pt-1.5 flex-1">
-                          <div className="flex items-center gap-3">
-                            <p className={`text-sm font-bold tracking-tight ${
-                              isCurrent ? 'text-stone-900 font-black' : isDone ? 'text-stone-800' : 'text-stone-400'
-                            }`}>
-                              {step.label}
-                            </p>
-                            {isCurrent && (
-                              <span className="px-2.5 py-0.5 bg-amber-100 text-amber-800 text-[9px] font-sans font-bold uppercase tracking-wider rounded-md">
-                                In Progress
-                              </span>
-                            )}
-                          </div>
+                {/* Mobile Stepper */}
+                <div className="md:hidden space-y-4">
+                  {STATUS_STEPS.map((step, idx) => {
+                    const statusState = getStepStatus(step.key);
+                    const isDone = statusState === 'completed';
+                    const isCurrent = statusState === 'current';
 
-                          {/* Show admin timeline notes matching this step */}
-                          {order.timeline?.filter((e: any) => e.status === step.key).map((event: any, i: number) => (
-                            <p key={i} className="text-xs text-stone-500 mt-1 leading-relaxed">
-                              {event.note}
-                              <span className="text-[10px] text-stone-400 ml-2">
-                                ({new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
-                              </span>
-                            </p>
-                          ))}
+                    return (
+                      <div key={step.key} className="flex items-center gap-3">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                          isDone ? 'bg-emerald-600 text-white' :
+                          isCurrent ? 'bg-stone-900 text-white ring-2 ring-amber-400' :
+                          'bg-stone-100 text-stone-400'
+                        }`}>
+                          {isDone ? '✓' : idx + 1}
                         </div>
+                        <span className={`text-xs ${isCurrent ? 'font-bold text-stone-900' : isDone ? 'text-stone-700 font-medium' : 'text-stone-400'}`}>
+                          {step.label}
+                        </span>
+                        {isCurrent && (
+                          <span className="text-[9px] font-bold uppercase text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded ml-auto">
+                            In Progress
+                          </span>
+                        )}
                       </div>
                     );
                   })}
@@ -433,82 +469,155 @@ const TrackOrder = () => {
               </div>
             )}
 
-            {/* Destination Location & Interactive Map */}
-            <div className="bg-white p-8 md:p-10 rounded-3xl shadow-xl shadow-stone-200/50 border border-stone-200/80 space-y-6">
-              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-100 pb-4">
-                <div>
-                  <span className="text-[10px] font-sans font-bold uppercase tracking-[0.25em] text-amber-800 flex items-center gap-1.5">
-                    <MapPin size={13} /> Destination Pinpoint
-                  </span>
-                  <h3 className="text-lg font-sans font-bold text-stone-900 mt-0.5">
-                    Delivery Destination: {destinationCity} {destinationPincode ? `(${destinationPincode})` : ''}
-                  </h3>
-                </div>
-                <a
-                  href={mapExternalUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2 bg-stone-50 hover:bg-stone-100 text-stone-800 text-xs font-sans font-bold uppercase tracking-wider rounded-xl border border-stone-200 flex items-center gap-2 transition-colors"
-                >
-                  <ExternalLink size={12} /> View Map in Fullscreen
-                </a>
+            {/* ── 2-Column Responsive Body ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
+              
+              {/* Left Column (7 cols): Order Items & Live Checkpoints */}
+              <div className="lg:col-span-7 space-y-6">
+                
+                {/* 1. Ordered Pieces Manifest */}
+                {order.products && order.products.length > 0 && (
+                  <div className="bg-white p-6 sm:p-7 rounded-3xl border border-stone-200/90 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between pb-3 border-b border-stone-100">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-stone-800 flex items-center gap-2">
+                        <ShoppingBag size={14} className="text-stone-700" />
+                        <span>Pieces in this Shipment ({order.products.length})</span>
+                      </h3>
+                      <span className="text-xs font-bold text-stone-900">
+                        Total: ₹{(order.totals?.grandTotal || 0).toLocaleString('en-IN')}
+                      </span>
+                    </div>
+
+                    <div className="divide-y divide-stone-100">
+                      {order.products.map((item: any, idx: number) => {
+                        const imgUrl = item.product?.thumbnail?.url || item.product?.images?.[0]?.url || item.image;
+                        return (
+                          <div key={idx} className="py-3 flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                              {imgUrl ? (
+                                <img
+                                  src={imgUrl}
+                                  alt={item.name}
+                                  className="w-12 h-14 object-cover rounded-xl border border-stone-200 shrink-0"
+                                />
+                              ) : (
+                                <div className="w-12 h-14 bg-stone-100 rounded-xl flex items-center justify-center text-stone-400 shrink-0">
+                                  <Package size={18} />
+                                </div>
+                              )}
+                              <div>
+                                <h4 className="text-xs font-bold text-stone-900 leading-snug">{item.name}</h4>
+                                <div className="flex items-center gap-2 text-[11px] text-stone-500 mt-0.5">
+                                  {item.size && <span>Size: <strong>{item.size}</strong></span>}
+                                  <span>&bull;</span>
+                                  <span>Qty: <strong>{item.quantity}</strong></span>
+                                </div>
+                              </div>
+                            </div>
+                            <span className="text-xs font-semibold text-stone-900 shrink-0">
+                              ₹{(Number(item.price || 0) * Number(item.quantity || 1)).toLocaleString('en-IN')}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. Checkpoints History */}
+                {order.timeline && order.timeline.length > 0 && (
+                  <div className="bg-white p-6 sm:p-7 rounded-3xl border border-stone-200/90 shadow-sm space-y-4">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-800 flex items-center gap-2 pb-3 border-b border-stone-100">
+                      <Clock size={14} className="text-stone-700" />
+                      <span>Atelier Checkpoint Logs</span>
+                    </h3>
+
+                    <div className="space-y-3.5">
+                      {order.timeline.map((event: any, idx: number) => (
+                        <div key={idx} className="flex items-start gap-3 text-xs">
+                          <div className="w-2 h-2 rounded-full bg-stone-400 mt-1.5 shrink-0" />
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-bold text-stone-900">{event.note || event.status}</span>
+                              <span className="text-[10px] text-stone-400 font-mono">
+                                {new Date(event.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}{' '}
+                                {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
               </div>
 
-              {/* Embedded Live Route Map */}
-              <div className="relative rounded-2xl overflow-hidden border border-stone-200 h-64 bg-stone-100">
-                <iframe
-                  title="Destination Pinpoint"
-                  className="w-full h-full border-0"
-                  src={mapEmbedUrl}
-                  loading="lazy"
-                />
-                <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-xl shadow-md border border-stone-200/60 text-xs font-bold text-stone-900 flex items-center gap-2">
-                  <span className={`w-2.5 h-2.5 rounded-full ${hasExactCoords ? 'bg-emerald-500 animate-ping' : 'bg-amber-500 animate-pulse'}`} />
-                  <span className="flex items-center gap-1.5 flex-wrap">
-                    <span className="font-extrabold text-stone-900">
-                      {hasExactCoords ? '📍 Exact Receiver Pin:' : 'Destination:'}
+              {/* Right Column (5 cols): Destination Map & Concierge Support */}
+              <div className="lg:col-span-5 space-y-6">
+                
+                {/* 1. Destination Card & Map */}
+                <div className="bg-white p-6 sm:p-7 rounded-3xl border border-stone-200/90 shadow-sm space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-stone-100">
+                    <span className="text-xs font-bold uppercase tracking-wider text-stone-800 flex items-center gap-1.5">
+                      <MapPin size={13} className="text-amber-700" /> Destination
                     </span>
-                    <span>
-                      {order.shippingAddress?.houseNumber || order.shippingAddress?.street || destinationCity}
-                    </span>
-                    {hasExactCoords && (
-                      <span className="font-sans text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded border border-emerald-300 font-bold">
-                        GPS: {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}
-                      </span>
-                    )}
-                  </span>
+                    <a
+                      href={mapExternalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] font-bold text-stone-600 hover:text-stone-900 flex items-center gap-1 transition-colors"
+                    >
+                      <ExternalLink size={11} /> Open Map
+                    </a>
+                  </div>
+
+                  <div>
+                    <strong className="text-xs text-stone-900 block font-bold">
+                      {order.shippingAddress?.fullName || order.customer?.fullName || 'Consignee'}
+                    </strong>
+                    <p className="text-xs text-stone-500 mt-1 leading-relaxed">
+                      {fullAddress || `${destinationCity}, India`}
+                    </p>
+                  </div>
+
+                  {/* Compact Map Preview */}
+                  <div className="relative rounded-2xl overflow-hidden border border-stone-200 h-44 bg-stone-100">
+                    <iframe
+                      title="Destination Pinpoint"
+                      className="w-full h-full border-0"
+                      src={mapEmbedUrl}
+                      loading="lazy"
+                    />
+                  </div>
                 </div>
+
+                {/* 2. Concierge Atelier WhatsApp Support */}
+                <div className="bg-white p-6 sm:p-7 rounded-3xl border border-stone-200/90 shadow-sm space-y-3.5">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-stone-900">
+                    Need Immediate Assistance?
+                  </h4>
+                  <p className="text-xs text-stone-500 leading-relaxed">
+                    Have a question regarding custom measurements, delivery adjustments, or packaging? Our Surat concierge is available.
+                  </p>
+                  <a
+                    href={`https://wa.me/919825440058?text=${encodeURIComponent(`Hi Sakshi Clothing! I am tracking Order #${order.orderNumber} and would like an update.`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3 px-4 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 text-emerald-800 text-xs font-bold uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2"
+                  >
+                    <MessageCircle size={15} className="text-emerald-600" />
+                    <span>WhatsApp Atelier Concierge</span>
+                  </a>
+                </div>
+
               </div>
+
             </div>
 
-            {/* Live Notifications Feed for this Order */}
-            {order.notifications && order.notifications.length > 0 && (
-              <div className="bg-white p-8 md:p-10 rounded-3xl shadow-xl shadow-stone-200/50 border border-stone-200/80 space-y-4">
-                <h3 className="text-xs font-sans font-bold uppercase tracking-[0.25em] text-stone-900 flex items-center gap-2">
-                  <Bell size={14} className="text-amber-800" /> Live Atelier Notification Feed
-                </h3>
-                <div className="space-y-3">
-                  {order.notifications.map((notif: any, idx: number) => (
-                    <div key={idx} className="p-4 rounded-2xl bg-stone-50 border border-stone-100 flex items-start gap-3.5 text-xs">
-                      <div className="w-7 h-7 rounded-xl bg-amber-100 text-amber-900 flex items-center justify-center shrink-0 mt-0.5">
-                        <Sparkles size={14} />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="font-bold text-stone-900">{notif.title}</p>
-                          <span className="text-[10px] font-sans text-stone-400">
-                            {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-                        <p className="text-stone-600 mt-1 leading-relaxed">{notif.message}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </motion.div>
         )}
+
       </div>
     </div>
   );
