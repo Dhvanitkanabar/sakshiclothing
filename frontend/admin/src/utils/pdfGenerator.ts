@@ -88,11 +88,9 @@ export const processOrderTax = (order: any): ProcessedOrderTax => {
       const qty = Number(item.quantity) || 1;
       const itemSubtotal = Number(item.subtotal || (Number(item.price || 0) * qty));
 
-      // Calculate Base and GST
-      // If catalog price is base: base = subtotal, gst = subtotal * rate, final = base + gst
-      // To strictly reconcile with stored grandTotal:
-      const basePrice = Math.round(itemSubtotal / (1 + rate));
-      const gstAmount = itemSubtotal - basePrice;
+      // Calculate Base and GST with exact 2-decimal paise precision
+      const basePrice = Number((itemSubtotal / (1 + rate)).toFixed(2));
+      const gstAmount = Number((itemSubtotal - basePrice).toFixed(2));
       const finalPrice = itemSubtotal;
 
       if (categoryType === 'Jewellery') {
@@ -116,13 +114,13 @@ export const processOrderTax = (order: any): ProcessedOrderTax => {
   } else {
     // Fallback if no items array exists, classify as Clothing 5%
     const rate = 0.05;
-    clothingBase = Math.round(rawGrandTotal / (1 + rate));
-    clothingGst = rawGrandTotal - clothingBase;
+    clothingBase = Number((rawGrandTotal / (1 + rate)).toFixed(2));
+    clothingGst = Number((rawGrandTotal - clothingBase).toFixed(2));
   }
 
-  const totalBasePrice = clothingBase + jewelleryBase;
-  const totalGst = clothingGst + jewelleryGst;
-  const finalPrice = rawGrandTotal || (totalBasePrice + totalGst);
+  const totalBasePrice = Number((clothingBase + jewelleryBase).toFixed(2));
+  const totalGst = Number((clothingGst + jewelleryGst).toFixed(2));
+  const finalPrice = rawGrandTotal || Number((totalBasePrice + totalGst).toFixed(2));
 
   const itemsSummary = processedItems.map(p => `${p.name} [${p.categoryType} ${p.rate * 100}%] (x${p.quantity})`).join(', ') || 'N/A';
 
@@ -678,10 +676,10 @@ export const generateShippingInvoicePdf = (order: any, autoDownload = true) => {
     totalQty += qty;
 
     const itemSubtotal = Number(item.subtotal || (Number(item.price || 0) * qty));
-    const base = Math.round(itemSubtotal / (1 + rate));
-    const gst = itemSubtotal - base;
-    const cgst = Math.round(gst / 2);
-    const sgst = gst - cgst;
+    const base = Number((itemSubtotal / (1 + rate)).toFixed(2));
+    const gst = Number((itemSubtotal - base).toFixed(2));
+    const cgst = Number((gst / 2).toFixed(2));
+    const sgst = Number((gst - cgst).toFixed(2));
 
     totalBase += base;
     totalCgst += cgst;
@@ -696,38 +694,38 @@ export const generateShippingInvoicePdf = (order: any, autoDownload = true) => {
       `${item.name || 'Product Item'}\nSKU: ${item.sku || 'N/A'} | Size: ${item.size || 'STD'} | Color: ${item.color || 'Standard'}`,
       hsn,
       String(qty),
-      `Rs. ${Math.round(base / qty).toLocaleString('en-IN')}`,
-      `Rs. ${base.toLocaleString('en-IN')}`,
+      `Rs. ${(base / qty).toFixed(2)}`,
+      `Rs. ${base.toFixed(2)}`,
       `${categoryType}\n(${ratePercent})`,
-      `Rs. ${cgst.toLocaleString('en-IN')}\n(${categoryType === 'Jewellery' ? '1.5%' : '2.5%'})`,
-      `Rs. ${sgst.toLocaleString('en-IN')}\n(${categoryType === 'Jewellery' ? '1.5%' : '2.5%'})`,
-      `Rs. ${itemSubtotal.toLocaleString('en-IN')}`
+      `Rs. ${cgst.toFixed(2)}\n(${categoryType === 'Jewellery' ? '1.5%' : '2.5%'})`,
+      `Rs. ${sgst.toFixed(2)}\n(${categoryType === 'Jewellery' ? '1.5%' : '2.5%'})`,
+      `Rs. ${itemSubtotal.toFixed(2)}`
     ]);
   });
 
   if (items.length === 0) {
     const rate = 0.05;
-    const base = Math.round(rawGrandTotal / (1 + rate));
-    const gst = rawGrandTotal - base;
-    const cgst = Math.round(gst / 2);
-    const sgst = gst - cgst;
+    const base = Number((rawGrandTotal / (1 + rate)).toFixed(2));
+    const gst = Number((rawGrandTotal - base).toFixed(2));
+    const cgst = Number((gst / 2).toFixed(2));
+    const sgst = Number((gst - cgst).toFixed(2));
     totalQty = 1;
     totalBase = base;
     totalCgst = cgst;
     totalSgst = sgst;
-    totalGstAmount += gst;
+    totalGstAmount = gst;
 
     invoiceRows.push([
       '1',
       'Artisanal Bespoke Order',
       '6204',
       '1',
-      `Rs. ${base.toLocaleString('en-IN')}`,
-      `Rs. ${base.toLocaleString('en-IN')}`,
+      `Rs. ${base.toFixed(2)}`,
+      `Rs. ${base.toFixed(2)}`,
       'Clothing (5%)',
-      `Rs. ${cgst.toLocaleString('en-IN')}`,
-      `Rs. ${sgst.toLocaleString('en-IN')}`,
-      `Rs. ${rawGrandTotal.toLocaleString('en-IN')}`
+      `Rs. ${cgst.toFixed(2)}`,
+      `Rs. ${sgst.toFixed(2)}`,
+      `Rs. ${rawGrandTotal.toFixed(2)}`
     ]);
   }
 
@@ -989,11 +987,11 @@ export const generateShippingInvoicePdf = (order: any, autoDownload = true) => {
     '',
     String(totalQty),
     '',
-    `Rs. ${totalBase.toLocaleString('en-IN')}`,
+    `Rs. ${totalBase.toFixed(2)}`,
     'GST Total',
-    `Rs. ${totalCgst.toLocaleString('en-IN')}`,
-    `Rs. ${totalSgst.toLocaleString('en-IN')}`,
-    `Rs. ${rawGrandTotal.toLocaleString('en-IN')}`
+    `Rs. ${totalCgst.toFixed(2)}`,
+    `Rs. ${totalSgst.toFixed(2)}`,
+    `Rs. ${rawGrandTotal.toFixed(2)}`
   ]);
 
   autoTable(doc, {
@@ -1076,13 +1074,13 @@ export const generateShippingInvoicePdf = (order: any, autoDownload = true) => {
   doc.setFontSize(8);
   doc.setTextColor(80, 80, 80);
   doc.text('Total Taxable Value:', sumX + 8, sumY + 14);
-  doc.text(`Rs. ${totalBase.toLocaleString('en-IN')}`, sumX + sumW - 8, sumY + 14, { align: 'right' });
+  doc.text(`Rs. ${totalBase.toFixed(2)}`, sumX + sumW - 8, sumY + 14, { align: 'right' });
 
   doc.text('Total CGST Amount:', sumX + 8, sumY + 26);
-  doc.text(`Rs. ${totalCgst.toLocaleString('en-IN')}`, sumX + sumW - 8, sumY + 26, { align: 'right' });
+  doc.text(`Rs. ${totalCgst.toFixed(2)}`, sumX + sumW - 8, sumY + 26, { align: 'right' });
 
   doc.text('Total SGST Amount:', sumX + 8, sumY + 38);
-  doc.text(`Rs. ${totalSgst.toLocaleString('en-IN')}`, sumX + sumW - 8, sumY + 38, { align: 'right' });
+  doc.text(`Rs. ${totalSgst.toFixed(2)}`, sumX + sumW - 8, sumY + 38, { align: 'right' });
 
   doc.text('Shipping & Handling:', sumX + 8, sumY + 50);
   doc.text('Rs. 0.00 (FREE)', sumX + sumW - 8, sumY + 50, { align: 'right' });
@@ -1093,7 +1091,7 @@ export const generateShippingInvoicePdf = (order: any, autoDownload = true) => {
   doc.setFontSize(9.5);
   doc.setTextColor(255, 255, 255);
   doc.text('GRAND TOTAL:', sumX + 8, sumY + 67);
-  doc.text(`Rs. ${rawGrandTotal.toLocaleString('en-IN')}`, sumX + sumW - 8, sumY + 67, { align: 'right' });
+  doc.text(`Rs. ${rawGrandTotal.toFixed(2)}`, sumX + sumW - 8, sumY + 67, { align: 'right' });
 
   // Authorized Signature Seal (Far Right)
   const sigY = sumY + 82;
