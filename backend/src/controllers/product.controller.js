@@ -58,7 +58,7 @@ class ProductController {
     const allowedFields = [
       'name', 'slug', 'description', 'shortDescription', 'category', 'subCategory', 'brand',
       'pricing', 'inventory', 'variants', 'tags', 'images', 'isFeatured',
-      'isTrending', 'isNewArrival', 'status', 'seo'
+      'isTrending', 'isNewArrival', 'status', 'seo', 'craftAndFabric'
     ];
     const data = {};
     for (const field of allowedFields) {
@@ -79,7 +79,7 @@ class ProductController {
     const allowedFields = [
       'name', 'slug', 'description', 'shortDescription', 'category', 'subCategory', 'brand',
       'pricing', 'inventory', 'variants', 'tags', 'images', 'isFeatured',
-      'isTrending', 'isNewArrival', 'status', 'seo'
+      'isTrending', 'isNewArrival', 'status', 'seo', 'craftAndFabric'
     ];
     const data = {};
     for (const field of allowedFields) {

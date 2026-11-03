@@ -11,6 +11,7 @@ export interface Product {
   description: string;
   featured?: boolean;
   rating?: number;
+  craftAndFabric?: string[] | string;
 }
 
 export interface User {

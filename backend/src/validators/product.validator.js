@@ -26,7 +26,9 @@ export const createProductSchema = z.object({
   shortDescription: z.string().max(300).optional(),
   description: z.string().min(10),
   category: z.string(), // ObjectId string
+  subCategory: z.string().optional().or(z.literal('')),
   brand: z.string().optional(),
+  craftAndFabric: z.union([z.array(z.string()), z.string()]).optional(),
   tags: z.array(z.string()).optional(),
   images: z.array(imageSchema).optional(),
   thumbnail: imageSchema.optional(),

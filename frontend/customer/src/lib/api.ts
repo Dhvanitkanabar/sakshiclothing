@@ -69,7 +69,8 @@ export const mapBackendProductToFrontend = (backendProduct: any): Product => {
     images: imagesList.length > 0 ? imagesList : [mainImageUrl],
     description: backendProduct.description || backendProduct.shortDescription || '',
     featured: backendProduct.isFeatured || false,
-    rating: backendProduct.averageRating || 5
+    rating: backendProduct.averageRating || 5,
+    craftAndFabric: backendProduct.craftAndFabric || []
   };
 };
 

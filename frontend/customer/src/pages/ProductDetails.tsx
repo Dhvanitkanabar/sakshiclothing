@@ -326,8 +326,7 @@ export const ProductDetails = () => {
               <div className="flex gap-6 border-b border-stone-200 pb-2">
                 {[
                   { id: 'craft', label: 'Craft & Fabric' },
-                  { id: 'delivery', label: 'Insured Delivery' },
-                  { id: 'care', label: 'Handloom Care' }
+                  { id: 'delivery', label: 'Insured Delivery' }
                 ].map(tab => (
                   <button
                     key={tab.id}
@@ -347,20 +346,32 @@ export const ProductDetails = () => {
               <div className="text-xs text-stone-600 font-light leading-relaxed pt-2">
                 {activeTab === 'craft' && (
                   <ul className="space-y-2 font-sans text-[11px]">
-                    <li className="flex items-center gap-2">✦ 100% Premium Certified Fabric & Tailored Fit</li>
-                    <li className="flex items-center gap-2">✦ Authentic 24K real gold/silver metallic dabka and zardozi</li>
-                    <li className="flex items-center gap-2">✦ Tailored with Italian canvas interlining and breathable mulmul cotton</li>
-                    <li className="flex items-center gap-2">✦ Hand-dyed using organic wild botanical infusions in Jaipur</li>
+                    {Array.isArray(product.craftAndFabric) && product.craftAndFabric.length > 0 ? (
+                      product.craftAndFabric.map((point: string, idx: number) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <span className="text-amber-800 shrink-0 mt-0.5">✦</span>
+                          <span className="text-stone-700">{point.replace(/^[✦•\-\*]\s*/, '')}</span>
+                        </li>
+                      ))
+                    ) : typeof (product as any).craftAndFabric === 'string' && (product as any).craftAndFabric.trim() ? (
+                      (product as any).craftAndFabric.split('\n').filter(Boolean).map((point: string, idx: number) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <span className="text-amber-800 shrink-0 mt-0.5">✦</span>
+                          <span className="text-stone-700">{point.replace(/^[✦•\-\*]\s*/, '')}</span>
+                        </li>
+                      ))
+                    ) : (
+                      <>
+                        <li className="flex items-center gap-2">✦ 100% Premium Certified Fabric & Tailored Fit</li>
+                        <li className="flex items-center gap-2">✦ Handcrafted by master artisans with generational heritage</li>
+                        <li className="flex items-center gap-2">✦ Tailored with breathable premium interlining for utmost comfort</li>
+                      </>
+                    )}
                   </ul>
                 )}
                 {activeTab === 'delivery' && (
                   <p>
                     Complimentary insured white-glove express courier across India. Dispatched in our velvet-lined archival keepsake box with serialized authenticity card. Please note: Due to bespoke made-to-measure craftsmanship, all orders follow our strict No Return Policy.
-                  </p>
-                )}
-                {activeTab === 'care' && (
-                  <p>
-                    Dry clean exclusively by heritage textile specialists. Store draped in muslin cloth with cedarwood chips to preserve the real metallic zari luster.
                   </p>
                 )}
               </div>

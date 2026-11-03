@@ -92,6 +92,10 @@ const productSchema = new Schema(
         value: String
       }
     ],
+    craftAndFabric: {
+      type: [String],
+      default: []
+    },
     shippingInfo: {
       weight: Number,
       dimensions: {

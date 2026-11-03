@@ -32,7 +32,8 @@ export default function ProductForm() {
     inventory: { totalStock: 0 },
     variants: [] as any[],
     status: 'published',
-    images: [] as { url: string; publicId: string }[]
+    images: [] as { url: string; publicId: string }[],
+    craftAndFabric: ''
   });
 
   const [tagInput, setTagInput] = useState('');
@@ -86,12 +87,17 @@ export default function ProductForm() {
               }
             }
 
+            const craftAndFabricVal = Array.isArray(raw.craftAndFabric)
+              ? raw.craftAndFabric.join('\n')
+              : (raw.craftAndFabric || '');
+
             setFormData(prev => ({
               ...prev,
               ...raw,
               category: raw.category?._id || raw.category || '',
               subCategory: raw.subCategory?._id || raw.subCategory || '',
-              images: parsedImages
+              images: parsedImages,
+              craftAndFabric: craftAndFabricVal
             }));
           }
         });
@@ -226,10 +232,18 @@ export default function ProductForm() {
         return item;
       });
 
+      const craftLines = typeof formData.craftAndFabric === 'string'
+        ? formData.craftAndFabric
+            .split('\n')
+            .map(line => line.trim())
+            .filter(Boolean)
+        : (Array.isArray(formData.craftAndFabric) ? formData.craftAndFabric : []);
+
       const payload: any = {
         name: formData.name.trim(),
         slug: formData.slug ? formData.slug.trim().toLowerCase() : formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
         description: formData.description.trim(),
+        craftAndFabric: craftLines,
         category: formData.category,
         subCategory: formData.subCategory && formData.subCategory.trim() ? formData.subCategory.trim() : undefined,
         status: formData.status || 'published',
@@ -394,6 +408,22 @@ export default function ProductForm() {
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">Description</label>
             <textarea name="description" value={formData.description} onChange={handleChange} className="w-full border-gray-200 border p-3 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all outline-none min-h-[120px]" required />
+          </div>
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-semibold text-gray-700">Craft & Fabric Details</label>
+              <span className="text-xs text-gray-400">One bullet point per line</span>
+            </div>
+            <textarea 
+              name="craftAndFabric" 
+              value={formData.craftAndFabric} 
+              onChange={handleChange} 
+              placeholder={"e.g.\n100% Premium Certified Silk & Tailored Fit\nAuthentic 24K real gold/silver metallic dabka and zardozi\nTailored with breathable pure cotton interlining\nHand-dyed using organic wild botanical infusions"}
+              className="w-full border-gray-200 border p-3 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all outline-none min-h-[120px] text-xs leading-relaxed" 
+            />
+            <p className="text-[11px] text-gray-400 mt-1">
+              Enter each craft/fabric highlight on a new line. These will display as bullet points in the "Craft & Fabric" tab on the product page.
+            </p>
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">Subcategories / Tags</label>
