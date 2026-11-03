@@ -11,7 +11,7 @@ export default function DashboardLayout() {
       <Sidebar mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar onOpenMobileMenu={() => setMobileMenuOpen(true)} />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+        <main className="flex-1 p-3 sm:p-6 lg:p-8 overflow-y-auto min-w-0">
           <Suspense fallback={
             <div className="py-20 text-center">
               <div className="animate-spin w-8 h-8 border-3 border-amber-500 border-t-transparent rounded-full mx-auto mb-3" />
