@@ -63,8 +63,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, dark = false 
     }
   };
 
-  const fallbackImage = "https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=1200&auto=format&fit=crop";
-  const displayImage = product.image || fallbackImage;
+  const displayImage = product.image || '';
   const secondaryImage = (product.images && product.images.length > 1) ? product.images[1] : displayImage;
 
   return (
@@ -94,12 +93,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, dark = false 
             loading="lazy"
             className="h-full w-full object-cover object-center transition-all duration-700 group-hover:scale-105"
             referrerPolicy="no-referrer"
-            onError={(e) => {
-              const target = e.currentTarget;
-              if (target.src !== fallbackImage) {
-                target.src = fallbackImage;
-              }
-            }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </Link>

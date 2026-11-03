@@ -236,13 +236,6 @@ const compressImage = async (file: File): Promise<File> => {
                   alt="Upload" 
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
                   referrerPolicy="no-referrer" 
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    const fallback = "https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=600&auto=format&fit=crop";
-                    if (target.src !== fallback) {
-                      target.src = fallback;
-                    }
-                  }}
                 />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3">
                   <div className="flex justify-between items-start">

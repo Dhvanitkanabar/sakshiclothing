@@ -69,15 +69,21 @@ export default function ProductForm() {
         .then(data => {
           if (data.success && data.data) {
             const raw = data.data;
-            const parsedImages = (raw.images || []).map((img: any) => {
-              if (typeof img === 'string') return { url: img, publicId: img };
-              if (typeof img === 'object') return { url: img.url || img.secureUrl || '', publicId: img.publicId || img.url || '' };
-              return null;
-            }).filter(Boolean);
+            const DEAD_GHOST_IMAGES = ['image-1793650768360-508253073.jpeg'];
+            const parsedImages = (raw.images || [])
+              .map((img: any) => {
+                if (typeof img === 'string') return { url: img, publicId: img };
+                if (typeof img === 'object') return { url: img.url || img.secureUrl || '', publicId: img.publicId || img.url || '' };
+                return null;
+              })
+              .filter(Boolean)
+              .filter((img: any) => !DEAD_GHOST_IMAGES.some(d => (img.publicId && img.publicId.includes(d)) || (img.url && img.url.includes(d))));
 
             if (parsedImages.length === 0 && raw.thumbnail) {
               const thumbUrl = typeof raw.thumbnail === 'string' ? raw.thumbnail : raw.thumbnail?.url;
-              if (thumbUrl) parsedImages.push({ url: thumbUrl, publicId: raw.thumbnail?.publicId || thumbUrl });
+              if (thumbUrl && !DEAD_GHOST_IMAGES.some(d => thumbUrl.includes(d))) {
+                parsedImages.push({ url: thumbUrl, publicId: raw.thumbnail?.publicId || thumbUrl });
+              }
             }
 
             setFormData(prev => ({

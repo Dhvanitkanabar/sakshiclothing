@@ -37,11 +37,13 @@ export const normalizeImageUrl = (url: string): string => {
 };
 
 export const mapBackendProductToFrontend = (backendProduct: any): Product => {
+  const DEAD_IMAGES = ['image-1793650768360-508253073.jpeg'];
   const parseImageUrl = (img: any): string => {
     if (!img) return '';
     let raw = '';
     if (typeof img === 'string') raw = img;
     else if (typeof img === 'object' && img.url) raw = img.url;
+    if (DEAD_IMAGES.some(d => raw.includes(d))) return '';
     return normalizeImageUrl(raw);
   };
 
@@ -50,10 +52,10 @@ export const mapBackendProductToFrontend = (backendProduct: any): Product => {
     : [];
 
   const mainImageUrl =
+    imagesList[0] ||
     parseImageUrl(backendProduct.thumbnail) ||
     parseImageUrl(backendProduct.image) ||
-    imagesList[0] ||
-    'https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=1200&auto=format&fit=crop';
+    '';
 
   return {
     id: backendProduct._id || backendProduct.id,

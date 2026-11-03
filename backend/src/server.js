@@ -45,6 +45,34 @@ const startServer = async () => {
       logger.warn(`[Server] Auto-seed notice: ${seedErr.message}`);
     }
 
+    // Auto-clean any wiped legacy image references from products so only real admin-uploaded images remain
+    try {
+      const Product = (await import('./models/Product.model.js')).default;
+      const deadId = 'image-1793650768360-508253073.jpeg';
+      const productsWithDeadImg = await Product.find({
+        $or: [
+          { 'images.publicId': deadId },
+          { 'images.url': { $regex: deadId } },
+          { 'thumbnail.url': { $regex: deadId } }
+        ]
+      });
+
+      for (const prod of productsWithDeadImg) {
+        prod.images = prod.images.filter(img => img.publicId !== deadId && !img.url?.includes(deadId));
+        if (prod.images.length > 0) {
+          prod.images[0].isPrimary = true;
+          prod.images[0].displayOrder = 0;
+          prod.thumbnail = prod.images[0];
+        } else {
+          prod.thumbnail = undefined;
+        }
+        await prod.save();
+        logger.info(`[Server] Successfully purged ghost image reference from product: ${prod.name}`);
+      }
+    } catch (cleanErr) {
+      logger.warn(`[Server] Product image cleanup notice: ${cleanErr.message}`);
+    }
+
     // 2. Start listening on the specified port
 
     const server = app.listen(PORT, '0.0.0.0', () => {

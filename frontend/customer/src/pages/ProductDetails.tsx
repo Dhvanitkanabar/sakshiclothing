@@ -46,7 +46,10 @@ export const ProductDetails = () => {
         } else {
           setSelectedSize('Standard');
         }
-        setMainImage(chosen.image);
+        const DEAD_IMG_LIST = ['image-1793650768360-508253073.jpeg'];
+        const validImgs = (chosen.images || []).map((i: any) => typeof i === 'string' ? i : i.url).filter((u: string) => u && !DEAD_IMG_LIST.some(d => u.includes(d)));
+        const primary = validImgs[0] || (chosen.image && !DEAD_IMG_LIST.some(d => chosen.image.includes(d)) ? chosen.image : '');
+        setMainImage(primary);
         
         // Fetch related pieces
         const related = await fetchProducts({ category: chosen.category, limit: 4 });
@@ -105,11 +108,12 @@ export const ProductDetails = () => {
     return '';
   };
 
+  const DEAD_IMAGES = ['image-1793650768360-508253073.jpeg'];
   const allImages = Array.from(
     new Set([
       parseUrl(product.image),
       ...(product.images || []).map(parseUrl)
-    ].filter(Boolean))
+    ].filter(img => img && !DEAD_IMAGES.some(d => img.includes(d))))
   );
 
   const handleAddToCart = async () => {
@@ -145,17 +149,10 @@ export const ProductDetails = () => {
           <div className="lg:col-span-7 space-y-4">
             <div className="w-full aspect-[4/5] max-h-[640px] rounded-3xl overflow-hidden bg-stone-100 border border-stone-200/90 shadow-md relative group">
               <img 
-                src={mainImage || product.image || "https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=1200&auto=format&fit=crop"} 
+                src={mainImage || allImages[0] || product.image} 
                 alt={product.name} 
                 className="w-full h-full object-cover rounded-3xl" 
                 referrerPolicy="no-referrer" 
-                onError={(e) => {
-                  const target = e.currentTarget;
-                  const fallback = "https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=1200&auto=format&fit=crop";
-                  if (target.src !== fallback) {
-                    target.src = fallback;
-                  }
-                }}
               />
               <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-md text-[9px] font-sans tracking-widest uppercase font-bold text-stone-900">
                 {product.category} · {product.subCategory || 'HAUTE COUTURE'}
@@ -178,13 +175,6 @@ export const ProductDetails = () => {
                       alt={`Thumbnail ${idx + 1}`} 
                       className="w-full h-full object-cover" 
                       referrerPolicy="no-referrer" 
-                      onError={(e) => {
-                        const target = e.currentTarget;
-                        const fallback = "https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=600&auto=format&fit=crop";
-                        if (target.src !== fallback) {
-                          target.src = fallback;
-                        }
-                      }}
                     />
                   </button>
                 ))}

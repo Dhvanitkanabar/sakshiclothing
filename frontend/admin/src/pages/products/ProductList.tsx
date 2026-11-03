@@ -176,13 +176,6 @@ export default function ProductList() {
                             src={product.thumbnail.url} 
                             alt="" 
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
-                            onError={(e) => {
-                              const target = e.currentTarget;
-                              const fallback = "https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=300&auto=format&fit=crop";
-                              if (target.src !== fallback) {
-                                target.src = fallback;
-                              }
-                            }}
                           />
                         </div>
                       ) : (

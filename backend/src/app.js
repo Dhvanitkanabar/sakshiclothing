@@ -203,7 +203,7 @@ app.get(['/uploads/:filename(*)', '/api/v1/uploads/file/:filename(*)'], async (r
   const filename = path.basename(rawParam);
 
   if (!filename) {
-    return res.redirect(302, 'https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=1200&auto=format&fit=crop');
+    return res.status(404).send('Not Found');
   }
 
   const localCandidates = [
@@ -246,8 +246,16 @@ app.get(['/uploads/:filename(*)', '/api/v1/uploads/file/:filename(*)'], async (r
     console.error('[Upload Persistent Handler Error]:', err.message);
   }
 
-  // If the file was lost due to legacy ephemeral deployment, redirect seamlessly to luxury placeholder
-  return res.redirect(302, 'https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=1200&auto=format&fit=crop');
+  // If the file does not exist, return a neutral brand SVG placeholder instead of redirecting to an external photo
+  const neutralSvg = 
+    `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800">` +
+    `<rect width="100%" height="100%" fill="#f4ece1"/>` +
+    `<text x="50%" y="48%" dominant-baseline="middle" text-anchor="middle" fill="#78716c" font-family="system-ui, sans-serif" font-size="20" font-weight="600" letter-spacing="4">SAKSHI</text>` +
+    `<text x="50%" y="53%" dominant-baseline="middle" text-anchor="middle" fill="#a8a29e" font-family="system-ui, sans-serif" font-size="12" letter-spacing="2">ATELIER</text>` +
+    `</svg>`;
+  res.setHeader('Content-Type', 'image/svg+xml');
+  res.setHeader('Cache-Control', 'no-cache');
+  return res.status(200).send(neutralSvg);
 });
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
