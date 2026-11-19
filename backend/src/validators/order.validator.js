@@ -10,7 +10,9 @@ export const checkoutSchema = z.object({
   shippingAddressId: z.string().min(1, 'Shipping address is required'),
   isFromCart: z.boolean().optional(),
   items: z.array(orderItemSchema).optional(),
-  couponCode: z.string().optional()
+  couponCode: z.string().optional(),
+  paymentMethod: z.enum(['cod', 'razorpay', 'stripe']).optional(),
+  payment: z.record(z.any()).optional()
 });
 
 export const buyNowSchema = z.object({

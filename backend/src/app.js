@@ -93,9 +93,16 @@ import rateLimit from 'express-rate-limit';
 // Global Middlewares Setup
 // =========================================================================
 
-// Set security HTTP headers
+// Set security HTTP headers with strict policies
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  frameguard: { action: 'sameorigin' },
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
@@ -188,7 +195,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Data sanitization against NoSQL query injection
-app.use(mongoSanitize());
+app.use(mongoSanitize({
+  replaceWith: '_'
+}));
 
 // Custom XSS protection middleware using xss
 app.use((req, res, next) => {

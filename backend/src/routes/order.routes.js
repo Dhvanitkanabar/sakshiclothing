@@ -17,16 +17,35 @@ import {
   updateOrderCoordinates
 } from '../controllers/order.controller.js';
 import { verifyJWT, authorizeRoles, optionalAuth } from '../middlewares/auth.middleware.js';
+import { validateRequest } from '../middlewares/validateRequest.js';
+import { checkoutSchema } from '../validators/order.validator.js';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
 
+const trackingLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many tracking attempts. Please try again after 15 minutes.' }
+});
+
+const checkoutLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many checkout attempts. Please try again shortly.' }
+});
+
 // Public / Verification Tracking Route (optional auth for seamless owner lookup)
-router.get('/track', optionalAuth, trackOrderPublic);
+router.get('/track', trackingLimiter, optionalAuth, trackOrderPublic);
 
 // Customer Routes (auth required)
-router.post('/initiate', verifyJWT, initiateCheckout);
-router.post('/checkout', verifyJWT, checkout);
-router.post('/buy-now', verifyJWT, buyNow);
+router.post('/initiate', checkoutLimiter, verifyJWT, validateRequest(checkoutSchema), initiateCheckout);
+router.post('/checkout', checkoutLimiter, verifyJWT, validateRequest(checkoutSchema), checkout);
+router.post('/buy-now', checkoutLimiter, verifyJWT, buyNow);
 router.get('/', verifyJWT, getUserOrders);
 router.get('/:id', verifyJWT, getOrderById);
 router.patch('/:id/cancel', verifyJWT, cancelOrder);

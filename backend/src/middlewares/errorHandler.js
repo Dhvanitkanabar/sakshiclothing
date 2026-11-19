@@ -8,8 +8,16 @@ import logger from '../utils/logger.js';
 const errorHandler = (err, req, res, next) => {
   let error = err;
 
-  // Handle MongoDB Duplicate Key (E11000)
-  if (err.code === 11000) {
+  // Handle Multer upload errors
+  if (err.name === 'MulterError') {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      error = new ApiError(400, 'File upload size limit exceeded (maximum 5MB allowed)');
+    } else {
+      error = new ApiError(400, `File upload error: ${err.message}`);
+    }
+  } else if (err.message && err.message.includes('Invalid file type')) {
+    error = new ApiError(400, err.message);
+  } else if (err.code === 11000) {
     const field = Object.keys(err.keyValue || {})[0] || 'field';
     const value = err.keyValue ? err.keyValue[field] : '';
     error = new ApiError(409, `A record with ${field} "${value}" already exists. Please choose a different ${field}.`);

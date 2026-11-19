@@ -196,9 +196,9 @@ class AuthController {
 
   checkEmailExists = asyncHandler(async (req, res) => {
     const { email } = req.body;
-    if (!email) {
+    if (!email || typeof email !== 'string') {
       return res.status(HTTP_STATUS.BAD_REQUEST).json(
-        new ApiResponse(HTTP_STATUS.BAD_REQUEST, null, 'Email is required')
+        new ApiResponse(HTTP_STATUS.BAD_REQUEST, null, 'Valid email string is required')
       );
     }
     
