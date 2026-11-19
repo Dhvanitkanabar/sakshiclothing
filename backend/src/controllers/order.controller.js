@@ -6,6 +6,28 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { generateInvoiceHTML } from '../utils/invoiceGenerator.js';
 
+export const initiateCheckout = asyncHandler(async (req, res) => {
+  const { shippingAddressId, items, isFromCart, couponCode } = req.body;
+
+  let orderItems = items;
+  if (isFromCart) {
+    const guestId = req.cookies?.guestId;
+    let cart = await cartService.getCart(req.user._id, guestId);
+    if (cart && cart.items && cart.items.length > 0) {
+      orderItems = cart.items.map(item => ({
+        productId: item.product?._id || item.product,
+        variantId: item.variantId,
+        quantity: item.quantity
+      }));
+    } else if (!items || items.length === 0) {
+      throw new ApiError(400, 'Order items cannot be empty');
+    }
+  }
+
+  const result = await orderService.initiateCheckout(req.user._id, orderItems, shippingAddressId, couponCode);
+  return res.status(201).json(new ApiResponse(201, result, 'Order initiated in pending_payment state'));
+});
+
 export const checkout = asyncHandler(async (req, res) => {
   const { shippingAddressId, items, isFromCart, paymentMethod = 'cod', payment, couponCode } = req.body;
 

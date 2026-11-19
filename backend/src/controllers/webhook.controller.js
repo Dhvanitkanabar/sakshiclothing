@@ -3,14 +3,26 @@ import paymentService from '../services/payment.service.js';
 export const handleRazorpayWebhook = async (req, res) => {
   try {
     const signature = req.headers['x-razorpay-signature'];
-    const secret = process.env.RAZORPAY_WEBHOOK_SECRET || 'test_webhook_secret';
-    const body = req.rawBody || JSON.stringify(req.body);
+    const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+
+    if (!signature) {
+      return res.status(400).json({ success: false, error: 'Missing x-razorpay-signature header' });
+    }
+
+    if (!secret) {
+      console.error('RAZORPAY_WEBHOOK_SECRET is not configured in backend environment.');
+      return res.status(500).json({ success: false, error: 'Webhook secret is not configured' });
+    }
+
+    const body = req.rawBody 
+      ? req.rawBody.toString('utf8') 
+      : (typeof req.body === 'string' ? req.body : JSON.stringify(req.body));
 
     await paymentService.processWebhook('razorpay', body, signature, secret);
-    res.status(200).json({ status: 'ok' });
+    return res.status(200).json({ status: 'ok', success: true });
   } catch (error) {
-    console.error('Razorpay Webhook Error:', error);
-    res.status(400).send(`Webhook Error: ${error.message}`);
+    console.error('Razorpay Webhook Error:', error.message);
+    return res.status(400).json({ success: false, error: `Webhook Error: ${error.message}` });
   }
 };
 

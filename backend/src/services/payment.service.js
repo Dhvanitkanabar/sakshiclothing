@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import mongoose from 'mongoose';
 import razorpayAdapter from './adapters/razorpay.adapter.js';
 import stripeAdapter from './adapters/stripe.adapter.js';
 import Payment from '../models/Payment.model.js';
@@ -120,53 +121,122 @@ class PaymentService {
   }
 
   async handlePaymentSuccess(gatewayOrderId, gatewayPaymentId, gateway, rawPayload) {
+    let order = null;
     let payment = await Payment.findOne({ gatewayOrderId, gateway });
-    if (!payment && rawPayload?.orderId) {
-      payment = await Payment.findOne({ order: rawPayload.orderId });
+
+    if (payment && payment.order) {
+      order = await Order.findById(payment.order);
     }
-    if (!payment && rawPayload?.orderNumber) {
-      const orderMatch = await Order.findOne({ orderNumber: rawPayload.orderNumber });
-      if (orderMatch) {
-        payment = await Payment.findOne({ order: orderMatch._id });
+
+    if (!order) {
+      const orConditions = [{ 'payment.gatewayOrderId': gatewayOrderId }];
+      const orderId = rawPayload?.payload?.payment?.entity?.notes?.orderId || rawPayload?.orderId;
+      if (orderId && mongoose.isValidObjectId(orderId)) {
+        orConditions.push({ _id: orderId });
+      }
+      const orderNumber = rawPayload?.payload?.payment?.entity?.notes?.orderNumber || rawPayload?.orderNumber;
+      if (orderNumber) {
+        orConditions.push({ orderNumber });
+      }
+      order = await Order.findOne({ $or: orConditions });
+    }
+
+    if (!order) {
+      console.warn(`[Payment Webhook Warning]: No order matching gatewayOrderId ${gatewayOrderId}`);
+      return;
+    }
+
+    // Idempotency: If already finalized, acknowledge and exit
+    if (order.paymentStatus === PAYMENT_STATUS.COMPLETED) {
+      return;
+    }
+
+    // Amount match check
+    const entity = rawPayload?.payload?.payment?.entity || rawPayload;
+    if (entity && entity.amount) {
+      const chargedPaise = Number(entity.amount);
+      const expectedPaise = Math.round(order.totals.grandTotal * 100);
+      if (chargedPaise !== expectedPaise) {
+        console.error(`[Webhook Fraud Alert]: Gateway amount ₹${chargedPaise / 100} does not match server expected ₹${order.totals.grandTotal}`);
+        order.paymentStatus = PAYMENT_STATUS.FAILED;
+        order.timeline.push({ status: 'payment_failed', note: 'Payment amount mismatch rejected.' });
+        await order.save();
+        return;
       }
     }
 
-    if (!payment) {
-      console.warn(`Payment not found for ${gateway} order: ${gatewayOrderId}. Attempting direct order update fallback.`);
-      const directId = rawPayload?.orderId || rawPayload?.order_id;
-      if (directId) {
-        const order = (await Order.findById(directId).catch(() => null)) || (await Order.findOne({ orderNumber: directId }).catch(() => null));
-        if (order) {
-          order.paymentStatus = PAYMENT_STATUS.COMPLETED;
-          if (order.orderStatus === 'pending') {
-            order.orderStatus = 'processing';
-            order.timeline.push({ status: 'processing', note: 'Payment received and verified successfully.' });
+    // Finalize order
+    order.paymentStatus = PAYMENT_STATUS.COMPLETED;
+    order.orderStatus = 'pending_approval';
+    order.payment = {
+      method: gateway || 'razorpay',
+      transactionId: gatewayPaymentId,
+      gatewayOrderId: gatewayOrderId,
+      gatewayResponse: rawPayload
+    };
+    order.authenticity.paymentVerified = true;
+    order.authenticity.riskScore = 'Low Risk (Webhook Verified)';
+    order.timeline.push({
+      status: 'pending_approval',
+      note: `Payment of ₹${order.totals.grandTotal} captured via ${gateway} webhook (Txn: ${gatewayPaymentId}). Order finalized.`
+    });
+
+    // Deduct stock if order was in payment_pending
+    if (order.products && order.products.length > 0) {
+      const Product = (await import('../models/Product.model.js')).default;
+      const bulkUpdates = order.products.map(item => ({
+        updateOne: {
+          filter: { _id: item.product, 'variants._id': item.variantId },
+          update: {
+            $inc: {
+              'variants.$.stock': -item.quantity,
+              'inventory.totalStock': -item.quantity
+            }
           }
-          await order.save();
         }
-      }
-      return;
+      }));
+      await Product.bulkWrite(bulkUpdates).catch(e => console.error('Stock decrement in webhook:', e.message));
     }
 
-    if (payment.status === PAYMENT_STATUS.COMPLETED) {
-      // Idempotency: Already processed
-      return;
+    // Atomically increment coupon usage if used
+    if (order.coupon) {
+      const Coupon = (await import('../models/Coupon.model.js')).default;
+      await Coupon.updateOne({ _id: order.coupon }, { $inc: { usedCount: 1 } }).catch(() => {});
     }
 
-    payment.status = PAYMENT_STATUS.COMPLETED;
-    payment.gatewayPaymentId = gatewayPaymentId;
-    payment.gatewayResponse = rawPayload;
-    await payment.save();
+    await order.save();
 
-    // Update order status
-    const order = await Order.findById(payment.order);
-    if (order) {
-      order.paymentStatus = PAYMENT_STATUS.COMPLETED;
-      if (order.orderStatus === 'pending') {
-         order.orderStatus = 'processing';
-         order.timeline.push({ status: 'processing', note: 'Payment received successfully.' });
+    // Update or create payment record
+    if (payment) {
+      payment.status = PAYMENT_STATUS.COMPLETED;
+      payment.gatewayPaymentId = gatewayPaymentId;
+      payment.gatewayResponse = rawPayload;
+      await payment.save();
+    } else {
+      await Payment.create({
+        order: order._id,
+        customer: order.customer,
+        gateway: gateway || 'razorpay',
+        gatewayOrderId,
+        gatewayPaymentId,
+        amount: order.totals.grandTotal,
+        currency: 'INR',
+        status: PAYMENT_STATUS.COMPLETED,
+        method: gateway || 'razorpay',
+        gatewayResponse: rawPayload
+      }).catch(() => {});
+    }
+
+    // Dispatch order confirmation email
+    try {
+      const { sendOrderConfirmationEmail } = await import('../utils/emailService.js');
+      const User = (await import('../models/User.model.js')).default;
+      const customer = await User.findById(order.customer);
+      if (customer?.email) {
+        await sendOrderConfirmationEmail(order, customer);
       }
-      await order.save();
+    } catch (mailErr) {
+      console.error('Confirmation email error in webhook:', mailErr.message);
     }
   }
 

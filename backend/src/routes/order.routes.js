@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import {
+  initiateCheckout,
   checkout,
   buyNow,
   getUserOrders,
@@ -23,6 +24,7 @@ const router = Router();
 router.get('/track', trackOrderPublic);
 
 // Customer Routes (auth required)
+router.post('/initiate', verifyJWT, initiateCheckout);
 router.post('/checkout', verifyJWT, checkout);
 router.post('/buy-now', verifyJWT, buyNow);
 router.get('/', verifyJWT, getUserOrders);

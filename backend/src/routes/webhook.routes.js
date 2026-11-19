@@ -2,8 +2,16 @@ import { Router } from 'express';
 import express from 'express';
 import { Webhook } from 'svix';
 import User from '../models/User.model.js';
+import { handleRazorpayWebhook } from '../controllers/webhook.controller.js';
 
 const router = Router();
+
+// Razorpay Webhook endpoint with raw body parser
+router.post(
+  '/razorpay',
+  express.raw({ type: '*/*' }),
+  handleRazorpayWebhook
+);
 
 // Clerk Webhook endpoint
 // Note: We need raw body to verify Svix signature, so we use express.raw

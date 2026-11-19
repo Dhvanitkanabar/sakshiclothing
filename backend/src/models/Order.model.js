@@ -82,6 +82,7 @@ const orderSchema = new Schema(
     payment: {
       method: String, // e.g., 'Credit Card', 'UPI', 'COD'
       transactionId: String,
+      gatewayOrderId: { type: String, index: true },
       gatewayResponse: Schema.Types.Mixed
     },
     coupon: {

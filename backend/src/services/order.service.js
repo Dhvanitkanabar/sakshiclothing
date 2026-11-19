@@ -264,6 +264,104 @@ class OrderService {
     return newOrder;
   }
 
+  async initiateCheckout(userId, items, shippingAddressId, couponCode = null) {
+    if (!items || !items.length) {
+      throw new ApiError(400, 'Order items cannot be empty');
+    }
+
+    const shippingAddress = await addressRepository.findById(shippingAddressId);
+    if (!shippingAddress || shippingAddress.user.toString() !== userId.toString()) {
+      throw new ApiError(404, 'Invalid shipping address');
+    }
+
+    const calculation = await this.calculateOrderTotals(items, couponCode);
+    const { orderItems, totals, coupon } = calculation;
+    const { itemsTotal, shippingCharges, discount, grandTotal } = totals;
+
+    const orderNumber = await orderRepository.generateOrderNumber();
+
+    const orderData = {
+      orderNumber,
+      customer: userId,
+      products: orderItems,
+      orderStatus: 'payment_pending',
+      approvalStatus: 'pending',
+      paymentStatus: PAYMENT_STATUS.PENDING,
+      payment: {
+        method: 'razorpay',
+        transactionId: null,
+        gatewayOrderId: null
+      },
+      coupon: coupon ? coupon._id : null,
+      authenticity: {
+        isGenuine: true,
+        riskScore: 'Unverified (Payment Pending)',
+        paymentVerified: false,
+        addressVerified: true,
+        verificationNotes: ['Order created; awaiting Razorpay payment confirmation']
+      },
+      shippingAddress: {
+        fullName: shippingAddress.fullName,
+        phone: shippingAddress.phone,
+        houseNumber: shippingAddress.houseNumber,
+        street: shippingAddress.street,
+        area: shippingAddress.area,
+        city: shippingAddress.city,
+        state: shippingAddress.state,
+        country: shippingAddress.country,
+        pincode: shippingAddress.pincode,
+        landmark: shippingAddress.landmark
+      },
+      billingAddress: {
+        fullName: shippingAddress.fullName,
+        phone: shippingAddress.phone,
+        houseNumber: shippingAddress.houseNumber,
+        street: shippingAddress.street,
+        area: shippingAddress.area,
+        city: shippingAddress.city,
+        state: shippingAddress.state,
+        country: shippingAddress.country,
+        pincode: shippingAddress.pincode
+      },
+      totals: {
+        itemsTotal,
+        shippingCharges,
+        discount,
+        grandTotal
+      }
+    };
+
+    const newOrder = await orderRepository.create(orderData);
+
+    const razorpayAdapter = (await import('./adapters/razorpay.adapter.js')).default;
+    const amountInPaise = Math.round(grandTotal * 100);
+    const rzpOrder = await razorpayAdapter.createStandardOrder({
+      amount: amountInPaise,
+      currency: 'INR',
+      receipt: newOrder.orderNumber,
+      notes: { orderId: newOrder._id.toString(), orderNumber: newOrder.orderNumber }
+    });
+
+    newOrder.payment.gatewayOrderId = rzpOrder.order_id;
+    await newOrder.save();
+
+    await Payment.create({
+      order: newOrder._id,
+      customer: userId,
+      gateway: 'razorpay',
+      gatewayOrderId: rzpOrder.order_id,
+      amount: grandTotal,
+      currency: 'INR',
+      status: PAYMENT_STATUS.PENDING,
+      method: 'razorpay'
+    });
+
+    return {
+      order: newOrder,
+      razorpayOrder: rzpOrder
+    };
+  }
+
   async getUserOrders(userId) {
     return await orderRepository.findByUser(userId);
   }
