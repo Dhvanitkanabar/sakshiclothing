@@ -20,7 +20,6 @@ const resolveUserFromToken = async (token) => {
 
   const decodedUnverified = jwt.decode(token);
   let user = null;
-  console.log('Decoded Token ISS:', decodedUnverified?.iss);
   
   if (decodedUnverified && decodedUnverified.iss && decodedUnverified.iss.includes('clerk')) {
     // Clerk Token
@@ -48,15 +47,12 @@ const resolveUserFromToken = async (token) => {
               isBlocked: false,
               isEmailVerified: true
             });
-            console.log('JIT Provisioned Clerk User:', email);
           } catch (syncErr) {
-            require('fs').appendFileSync('clerk_error.log', new Date().toISOString() + ' JIT Error: ' + syncErr.message + '\n');
             console.error('Failed to JIT provision Clerk user:', syncErr.message);
           }
         }
       }
     } catch (err) {
-      require('fs').appendFileSync('clerk_error.log', new Date().toISOString() + ' Verification Error: ' + err.message + '\n');
       console.error('Clerk Verification Error:', err.message);
     }
   } else {

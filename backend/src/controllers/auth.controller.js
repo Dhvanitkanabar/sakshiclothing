@@ -21,22 +21,22 @@ const refreshCookieOptions = {
 
 class AuthController {
   register = asyncHandler(async (req, res) => {
-    const user = await AuthService.register(req.body);
-    return res.status(HTTP_STATUS.CREATED).json(
-      new ApiResponse(HTTP_STATUS.CREATED, { user }, 'User registered successfully')
+    return res.status(HTTP_STATUS.BAD_REQUEST).json(
+      new ApiResponse(
+        HTTP_STATUS.BAD_REQUEST,
+        null,
+        'Customer registration is managed exclusively via Clerk. Please use the /auth portal on the storefront.'
+      )
     );
   });
 
   login = asyncHandler(async (req, res) => {
-    const { email, password } = req.body;
-    const { user, accessToken, refreshToken } = await AuthService.login(email, password);
-
-    // Set cookies
-    res.cookie('accessToken', accessToken, accessCookieOptions);
-    res.cookie('refreshToken', refreshToken, refreshCookieOptions);
-
-    return res.status(HTTP_STATUS.OK).json(
-      new ApiResponse(HTTP_STATUS.OK, { user, accessToken }, 'Login successful')
+    return res.status(HTTP_STATUS.BAD_REQUEST).json(
+      new ApiResponse(
+        HTTP_STATUS.BAD_REQUEST,
+        null,
+        'Customer authentication is managed exclusively via Clerk. For administrator access, use /api/v1/auth/admin-login.'
+      )
     );
   });
 
