@@ -7,11 +7,11 @@ build/
 
 # Environment files
 .env
-.env.local
-.env.development
-.env.production
-.env.staging
-.env*.local
+.env.*
+*.env
+**/.env
+**/.env.*
+!**/.env.example
 
 # Database & local data
 .mongo_data/
