@@ -50,8 +50,24 @@ const couponSchema = new Schema(
 );
 
 // Indexes
-
 couponSchema.index({ expiryDate: 1, isActive: 1 });
+
+// Atomic coupon consumption preventing usage limit race conditions
+couponSchema.statics.consumeCoupon = async function(couponId) {
+  if (!couponId) return null;
+  return this.findOneAndUpdate(
+    {
+      _id: couponId,
+      isActive: true,
+      $or: [
+        { usageLimit: null },
+        { $expr: { $lt: ['$usedCount', '$usageLimit'] } }
+      ]
+    },
+    { $inc: { usedCount: 1 } },
+    { new: true }
+  );
+};
 
 const Coupon = mongoose.model('Coupon', couponSchema);
 export default Coupon;

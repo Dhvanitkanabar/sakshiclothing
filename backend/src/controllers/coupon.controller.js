@@ -27,11 +27,23 @@ export const deleteCoupon = asyncHandler(async (req, res) => {
 
 export const validateCoupon = asyncHandler(async (req, res) => {
   const { code, orderAmount } = req.body;
-  const coupon = await Coupon.findOne({ code: code.toUpperCase(), isActive: true });
+  if (!code || typeof code !== 'string') {
+    throw new ApiError(400, 'Coupon code is required');
+  }
+
+  const numericOrderAmount = Number(orderAmount);
+  if (isNaN(numericOrderAmount) || numericOrderAmount < 0) {
+    throw new ApiError(400, 'Valid order amount is required');
+  }
+
+  const coupon = await Coupon.findOne({ 
+    code: code.trim().toUpperCase(), 
+    isActive: true 
+  });
   
-  if (!coupon) throw new ApiError(404, 'Invalid or expired coupon');
+  if (!coupon) throw new ApiError(404, 'Invalid coupon code');
   
-  if (coupon.expiryDate < new Date()) {
+  if (coupon.expiryDate && new Date(coupon.expiryDate) < new Date()) {
     coupon.isActive = false;
     await coupon.save();
     throw new ApiError(400, 'Coupon has expired');
@@ -41,19 +53,31 @@ export const validateCoupon = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Coupon usage limit reached');
   }
 
-  if (coupon.minimumOrderAmount && orderAmount < coupon.minimumOrderAmount) {
+  if (coupon.minimumOrderAmount && numericOrderAmount < coupon.minimumOrderAmount) {
     throw new ApiError(400, `Minimum order amount of ₹${coupon.minimumOrderAmount} required`);
   }
 
   let discount = 0;
   if (coupon.discountType === 'flat') {
-    discount = coupon.discountValue;
+    discount = Math.min(coupon.discountValue, numericOrderAmount);
   } else if (coupon.discountType === 'percentage') {
-    discount = (orderAmount * coupon.discountValue) / 100;
+    discount = Math.round((numericOrderAmount * coupon.discountValue) / 100);
     if (coupon.maximumDiscount && discount > coupon.maximumDiscount) {
       discount = coupon.maximumDiscount;
     }
   }
 
-  return res.status(200).json(new ApiResponse(200, { coupon, discount }, 'Coupon is valid'));
+  return res.status(200).json(new ApiResponse(200, {
+    coupon: {
+      _id: coupon._id,
+      code: coupon.code,
+      discountType: coupon.discountType,
+      discountValue: coupon.discountValue,
+      minimumOrderAmount: coupon.minimumOrderAmount,
+      maximumDiscount: coupon.maximumDiscount,
+      expiryDate: coupon.expiryDate
+    },
+    discount,
+    finalAmount: Math.max(0, numericOrderAmount - discount)
+  }, 'Coupon is valid'));
 });

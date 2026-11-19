@@ -201,7 +201,7 @@ class PaymentService {
     // Atomically increment coupon usage if used
     if (order.coupon) {
       const Coupon = (await import('../models/Coupon.model.js')).default;
-      await Coupon.updateOne({ _id: order.coupon }, { $inc: { usedCount: 1 } }).catch(() => {});
+      await Coupon.consumeCoupon(order.coupon).catch(() => {});
     }
 
     await order.save();

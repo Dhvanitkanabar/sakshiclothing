@@ -237,7 +237,10 @@ class OrderService {
     // Atomically increment coupon usedCount if coupon applied and paid
     if (coupon && isPaid) {
       const Coupon = (await import('../models/Coupon.model.js')).default;
-      await Coupon.updateOne({ _id: coupon._id }, { $inc: { usedCount: 1 } });
+      const consumed = await Coupon.consumeCoupon(coupon._id);
+      if (!consumed) {
+        throw new ApiError(400, 'Coupon usage limit was reached by another checkout. Please try again.');
+      }
     }
 
     const newOrder = await orderRepository.create(orderData);
