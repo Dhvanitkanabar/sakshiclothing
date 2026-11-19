@@ -104,7 +104,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, dark = false 
             e.stopPropagation();
             toggleWishlist(product);
           }}
-          className={`absolute top-2.5 sm:top-3.5 right-2.5 sm:right-3.5 p-2 sm:p-2.5 rounded-full backdrop-blur-md transition-all duration-300 z-20 ${
+          className={`absolute top-2 sm:top-3.5 right-2 sm:right-3.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full backdrop-blur-md transition-all duration-300 z-20 ${
             isWishlisted 
               ? 'bg-amber-400 text-black shadow-lg scale-110' 
               : 'bg-black/35 text-white hover:bg-black/60 hover:scale-105'
@@ -112,7 +112,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, dark = false 
           title={isWishlisted ? 'Remove from saved' : 'Save piece'}
           aria-label="Wishlist"
         >
-          <Heart size={14} fill={isWishlisted ? "currentColor" : "none"} />
+          <Heart size={15} fill={isWishlisted ? "currentColor" : "none"} />
         </button>
 
         {/* Category tag pill */}
@@ -158,7 +158,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, dark = false 
           <button
             onClick={handleAdd}
             disabled={isOutOfStock}
-            className={`px-3 py-1.5 rounded-xl text-xs font-sans font-semibold tracking-wide transition-all duration-300 flex items-center gap-1.5 shadow-xs shrink-0 ${
+            className={`px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-sans font-semibold tracking-wide transition-all duration-300 flex items-center justify-center gap-1.5 shadow-xs shrink-0 ${
               isOutOfStock
                 ? 'bg-stone-200 text-stone-400 cursor-not-allowed shadow-none'
                 : 'bg-stone-900 hover:bg-stone-800 text-white cursor-pointer active:scale-95'

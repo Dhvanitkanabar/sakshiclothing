@@ -51,10 +51,10 @@ const Topbar = ({ onOpenMobileMenu }: TopbarProps) => {
         <button
           type="button"
           onClick={onOpenMobileMenu}
-          className="lg:hidden p-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 transition-colors shrink-0"
+          className="lg:hidden min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 transition-colors shrink-0"
           aria-label="Open mobile navigation menu"
         >
-          <Menu size={18} />
+          <Menu size={20} />
         </button>
 
         <div className="relative flex-1 max-w-xs sm:max-w-sm lg:max-w-md">
@@ -106,7 +106,8 @@ const Topbar = ({ onOpenMobileMenu }: TopbarProps) => {
         <div className="relative">
           <button
             onClick={() => setShowNotifications(!showNotifications)}
-            className="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 transition-colors relative"
+            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 transition-colors relative"
+            aria-label="Toggle notifications"
           >
             <Bell size={18} />
             {notifications.filter(n => !n.isRead).length > 0 && (
@@ -115,7 +116,7 @@ const Topbar = ({ onOpenMobileMenu }: TopbarProps) => {
           </button>
 
           {showNotifications && (
-            <div className="absolute top-full right-0 w-80 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 max-h-[400px] overflow-y-auto z-50 p-4">
+            <div className="absolute top-full right-0 w-80 max-w-[calc(100vw-2rem)] mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 max-h-[400px] overflow-y-auto z-50 p-4">
               <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3 pb-2 border-b border-slate-100 flex items-center justify-between">
                 Notifications
                 <span className="text-[10px] text-amber-600 font-normal">Live feed</span>

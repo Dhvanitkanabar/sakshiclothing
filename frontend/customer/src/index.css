@@ -57,6 +57,13 @@ html, body, #root, *, *::before, *::after {
     line-height: 1.1;
   }
 
+  /* Prevent iOS Safari auto-zoom on input focus by guaranteeing minimum 16px font-size */
+  @media screen and (max-width: 768px) {
+    input, select, textarea {
+      font-size: 16px !important;
+    }
+  }
+
   .heading-lg {
     font-family: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
     font-size: clamp(1.75rem, 3vw, 2.75rem);

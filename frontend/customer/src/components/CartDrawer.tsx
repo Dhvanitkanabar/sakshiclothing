@@ -124,10 +124,10 @@ export const CartDrawer = () => {
                             </Link>
                             <button 
                               onClick={() => removeFromCart(item.id, item.selectedSize)} 
-                              className="text-stone-300 hover:text-rose-600 transition-colors p-1"
+                              className="text-stone-300 hover:text-rose-600 transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center -mr-2"
                               aria-label="Remove item"
                             >
-                              <Trash2 size={14} />
+                              <Trash2 size={16} />
                             </button>
                           </div>
                           <p className="text-[10px] font-sans text-stone-500">
@@ -136,19 +136,21 @@ export const CartDrawer = () => {
                         </div>
                         
                         <div className="flex justify-between items-center pt-2">
-                          <div className="flex items-center bg-stone-100 rounded-xl px-2.5 py-1 border border-stone-200">
+                          <div className="flex items-center bg-stone-100 rounded-xl px-1 py-0.5 border border-stone-200">
                             <button 
                               onClick={() => updateQuantity(item.id, item.selectedSize, item.quantity - 1)} 
-                              className="p-0.5 text-stone-500 hover:text-stone-900 transition-colors"
+                              className="min-w-[32px] min-h-[32px] flex items-center justify-center text-stone-500 hover:text-stone-900 transition-colors"
+                              aria-label="Decrease quantity"
                             >
-                              <Minus size={11} />
+                              <Minus size={13} />
                             </button>
-                            <span className="mx-2.5 text-xs font-sans font-bold w-3 text-center text-stone-900">{item.quantity}</span>
+                            <span className="mx-2 text-xs font-sans font-bold w-4 text-center text-stone-900">{item.quantity}</span>
                             <button 
                               onClick={() => updateQuantity(item.id, item.selectedSize, item.quantity + 1)} 
-                              className="p-0.5 text-stone-500 hover:text-stone-900 transition-colors"
+                              className="min-w-[32px] min-h-[32px] flex items-center justify-center text-stone-500 hover:text-stone-900 transition-colors"
+                              aria-label="Increase quantity"
                             >
-                              <Plus size={11} />
+                              <Plus size={13} />
                             </button>
                           </div>
                           <p className="text-sm font-sans font-bold text-stone-900">

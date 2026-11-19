@@ -722,7 +722,8 @@ export const Navbar = () => {
                   </div>
                   <button
                     onClick={() => setIsMenuOpen(false)}
-                    className="p-1.5 text-stone-400 hover:text-stone-950 rounded-full"
+                    className="min-w-[44px] min-h-[44px] flex items-center justify-center text-stone-400 hover:text-stone-950 rounded-full"
+                    aria-label="Close navigation menu"
                   >
                     <X size={20} />
                   </button>
@@ -731,7 +732,7 @@ export const Navbar = () => {
                 {/* Mobile Search Button */}
                 <button
                   onClick={() => { setIsMenuOpen(false); setIsSearchOpen(true); }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-stone-100 text-stone-600 text-xs font-medium"
+                  className="w-full flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-stone-100 text-stone-600 text-xs font-medium min-h-[44px]"
                 >
                   <Search size={15} className="text-amber-700" />
                   <span>Search all atelier creations...</span>
@@ -754,9 +755,10 @@ export const Navbar = () => {
                           {link.dropdown && (
                             <button
                               onClick={() => setExpandedMobileCategory(isExpanded ? null : link.name)}
-                              className="p-1 text-stone-400"
+                              className="min-w-[44px] min-h-[44px] flex items-center justify-center text-stone-400"
+                              aria-label={`Toggle ${link.name} subcategories`}
                             >
-                              <ChevronRight size={16} className={`transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} />
+                              <ChevronRight size={18} className={`transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} />
                             </button>
                           )}
                         </div>

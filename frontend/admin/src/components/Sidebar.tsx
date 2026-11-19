@@ -96,10 +96,10 @@ export default function Sidebar({ mobileMenuOpen = false, setMobileMenuOpen }: S
           {isMobileView ? (
             <button
               onClick={() => setMobileMenuOpen && setMobileMenuOpen(false)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
               aria-label="Close Menu"
             >
-              <X size={18} />
+              <X size={20} />
             </button>
           ) : (
             <button
