@@ -185,7 +185,7 @@ const Cart = () => {
       </div>
 
       {/* Mobile Sticky Checkout Bar */}
-      <div className="lg:hidden fixed bottom-[max(3.8rem,env(safe-area-inset-bottom))] left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-stone-200 px-4 py-3 shadow-xl">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-stone-200 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-xl">
         <div className="flex items-center justify-between gap-4 max-w-md mx-auto">
           <div>
             <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-stone-400 block">

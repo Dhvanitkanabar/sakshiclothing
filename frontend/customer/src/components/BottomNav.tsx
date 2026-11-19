@@ -17,8 +17,13 @@ export const BottomNav = () => {
     { icon: User, label: 'Account', path: '/profile' },
   ];
 
-  const isCheckout = location.pathname === '/checkout';
-  if (isCheckout) return null;
+  const shouldHideBottomNav = 
+    location.pathname === '/checkout' ||
+    location.pathname === '/cart' ||
+    location.pathname === '/order-success' ||
+    location.pathname.startsWith('/product/');
+
+  if (shouldHideBottomNav) return null;
 
   return (
     <nav 
