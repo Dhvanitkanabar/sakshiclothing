@@ -134,10 +134,10 @@ class AuthController {
   refreshToken = asyncHandler(async (req, res) => {
     // The authenticate middleware (when given a specific flag) will pass the user ID from the refresh token
     const oldRefreshToken = req.cookies.refreshToken;
-    
+
     // Verify happens in service/middleware
     const tokenObj = { id: req.user._id, raw: oldRefreshToken };
-    
+
     const { accessToken, refreshToken } = await AuthService.refreshToken(tokenObj);
 
     res.cookie('accessToken', accessToken, accessCookieOptions);
@@ -201,12 +201,12 @@ class AuthController {
         new ApiResponse(HTTP_STATUS.BAD_REQUEST, null, 'Valid email string is required')
       );
     }
-    
+
     // We import User model directly or use a service
     // Let's use the User model since AuthService doesn't seem to have checkEmail method explicitly exposed
     const { default: User } = await import('../models/User.model.js');
     const user = await User.findOne({ email: email.toLowerCase() });
-    
+
     return res.status(HTTP_STATUS.OK).json(
       new ApiResponse(HTTP_STATUS.OK, { exists: !!user }, 'Email check completed')
     );

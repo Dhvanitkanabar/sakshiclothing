@@ -222,8 +222,8 @@ export const getAllOrders = asyncHandler(async (req, res) => {
 export const acceptOrder = asyncHandler(async (req, res) => {
   const { estimatedDeliveryTime, note, status, courierName, trackingNumber } = req.body;
   const order = await orderService.acceptOrder(
-    req.params.id, 
-    { estimatedDeliveryTime, note, status, courierName, trackingNumber }, 
+    req.params.id,
+    { estimatedDeliveryTime, note, status, courierName, trackingNumber },
     req.user
   );
   return res.status(200).json(new ApiResponse(200, order, 'Order accepted and estimated delivery recorded successfully'));
