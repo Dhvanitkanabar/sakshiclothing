@@ -20,9 +20,13 @@ const userSchema = new Schema(
     },
     clerkUserId: {
       type: String,
-      required: [true, 'Clerk User ID is required'],
       unique: true,
+      sparse: true,
       index: true
+    },
+    password: {
+      type: String,
+      select: false
     },
     phone: {
       type: String,
@@ -89,7 +93,22 @@ const userSchema = new Schema(
 userSchema.index({ role: 1 });
 userSchema.index({ isActive: 1 });
 
-// Removed local password methods as we use Clerk
+// Password hashing middleware
+userSchema.pre('save', async function(next) {
+  if (!this.isModified('password') || !this.password) return next();
+  try {
+    this.password = await bcrypt.hash(this.password, 12);
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Instance method to compare password
+userSchema.methods.comparePassword = async function(candidatePassword) {
+  if (!this.password) return false;
+  return bcrypt.compare(candidatePassword, this.password);
+};
 
 // Virtuals
 userSchema.virtual('totalAddresses').get(function() {

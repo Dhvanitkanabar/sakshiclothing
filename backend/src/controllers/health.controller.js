@@ -11,6 +11,7 @@ export const checkHealth = (req, res, next) => {
     // Return standard success response matching requested format
     res.status(200).json({
       success: true,
+      status: 'success',
       message: 'Server Running Successfully'
     });
   } catch (error) {

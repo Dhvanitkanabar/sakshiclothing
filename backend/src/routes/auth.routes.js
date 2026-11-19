@@ -22,7 +22,9 @@ const router = Router();
 // Rate limiting for auth routes
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 requests per windowMs
+  max: 10, // 10 requests per windowMs
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
   message: { success: false, message: 'Too many attempts, please try again after 15 minutes' }
 });
 
@@ -97,10 +99,10 @@ router.post('/login', authLimiter, validateRequest(loginSchema), AuthController.
  * @swagger
  * /api/v1/auth/admin-login:
  *   post:
- *     summary: Login admin using hardcoded credentials
+ *     summary: Secure admin login
  *     tags: [Authentication]
  */
-router.post('/admin-login', AuthController.adminLogin);
+router.post('/admin-login', authLimiter, AuthController.adminLogin);
 /**
  * @swagger
  * /api/v1/auth/forgot-password:
@@ -121,7 +123,7 @@ router.post('/admin-login', AuthController.adminLogin);
  *         description: Reset email sent
  */
 router.post('/forgot-password', authLimiter, validateRequest(resetPasswordSchema), AuthController.forgotPassword);
-router.post('/reset-password', AuthController.resetPassword);
+router.post('/reset-password', authLimiter, AuthController.resetPassword);
 
 // Check if email exists
 router.post('/check-email', authLimiter, AuthController.checkEmailExists);

@@ -265,20 +265,27 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 import { clerkMiddleware } from '@clerk/express';
 
 // =========================================================================
-// Routes Mounting
+// Health & Liveness Checks (Unconditional, ahead of third-party middlewares)
 // =========================================================================
 
-app.use(clerkMiddleware());
-
 app.get(['/health', '/api/health', '/api/v1/health'], (req, res) => {
-  res.status(200).json({ status: 'ok', uptime: process.uptime(), timestamp: new Date().toISOString() });
+  res.status(200).json({ success: true, status: 'success', uptime: process.uptime(), timestamp: new Date().toISOString() });
 });
+app.use('/api/v1/health', healthRouter);
 
 app.get('/', (req, res) => {
   res.status(200).json({ status: 'ok', service: 'Sakshi Clothing API', active: true });
 });
 
-app.use('/api/v1/health', healthRouter);
+// Mount Clerk middleware safely if publishable key is configured
+if (process.env.CLERK_PUBLISHABLE_KEY) {
+  app.use(clerkMiddleware());
+} else {
+  app.use((req, res, next) => {
+    req.auth = req.auth || { userId: null, sessionId: null };
+    next();
+  });
+}
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/products', productRouter);
 app.use('/api/v1/categories', categoryRouter);

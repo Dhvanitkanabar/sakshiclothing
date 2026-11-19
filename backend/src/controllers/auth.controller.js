@@ -43,50 +43,65 @@ class AuthController {
   adminLogin = asyncHandler(async (req, res) => {
     const rawEmail = (req.body.email || '').trim();
     const rawPassword = (req.body.password || '').trim();
-    const email = rawEmail.toLowerCase();
-    const password = rawPassword.toLowerCase();
-    
-    console.log(`[AdminLogin Attempt] received email: "${rawEmail}", password: "${rawPassword}"`);
 
-    const adminUsernames = [
-      'sakshi', 
-      'admin', 
-      'superadmin', 
-      'sakshiclothing', 
-      'admin@sakshiclothing.store', 
-      'admin@sakshi.com', 
-      'admin@example.com', 
-      'sakshi@example.com'
-    ];
-
-    // Check admin credentials - support any reasonable admin username/password
-    const isMatch = adminUsernames.includes(email) && (
-      password.length >= 3 ||
-      ['sakshi', 'admin', 'admin123', '12345', '123456', 'saksh', 'sakshi123', 'password', 'password123', 'sakshi@123'].includes(password)
-    );
-    
-    if (!isMatch) {
-      console.warn(`[AdminLogin Failed] invalid credentials: "${rawEmail}" / "${rawPassword}"`);
-      return res.status(HTTP_STATUS.UNAUTHORIZED).json(
-        new ApiResponse(HTTP_STATUS.UNAUTHORIZED, null, 'Invalid admin credentials. Use username: sakshi, password: sakshi')
+    if (!rawEmail || !rawPassword) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(
+        new ApiResponse(HTTP_STATUS.BAD_REQUEST, null, 'Email and password are required')
       );
     }
 
+    const email = rawEmail.toLowerCase();
     const { default: User } = await import('../models/User.model.js');
     const { generateTokens } = await import('../utils/tokenHelper.js');
-    
-    // Find or create admin user in MongoDB
-    let user = await User.findOne({ email: 'sakshi@example.com' });
-    if (!user) {
-      user = await User.create({
-        clerkUserId: 'hardcoded-sakshi-id',
-        email: 'sakshi@example.com',
-        fullName: 'Sakshi Admin',
-        role: 'superadmin',
-        isActive: true,
-        isBlocked: false
-      });
+
+    // Query user by email with admin or superadmin role
+    let user = await User.findOne({
+      email,
+      role: { $in: ['admin', 'superadmin'] }
+    }).select('+password');
+
+    // Bootstrap initial admin if configured in env and no admin user exists
+    if (!user && process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
+      if (email === process.env.ADMIN_EMAIL.toLowerCase() && rawPassword === process.env.ADMIN_PASSWORD) {
+        user = await User.create({
+          email,
+          fullName: 'System Administrator',
+          role: 'superadmin',
+          password: rawPassword,
+          isActive: true,
+          isBlocked: false
+        });
+        user = await User.findById(user._id).select('+password');
+      }
     }
+
+    if (!user || !user.password) {
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json(
+        new ApiResponse(HTTP_STATUS.UNAUTHORIZED, null, 'Invalid admin credentials')
+      );
+    }
+
+    const isMatch = await user.comparePassword(rawPassword);
+    if (!isMatch) {
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json(
+        new ApiResponse(HTTP_STATUS.UNAUTHORIZED, null, 'Invalid admin credentials')
+      );
+    }
+
+    if (user.isBlocked) {
+      return res.status(HTTP_STATUS.FORBIDDEN).json(
+        new ApiResponse(HTTP_STATUS.FORBIDDEN, null, 'Your account has been blocked')
+      );
+    }
+
+    if (!user.isActive) {
+      return res.status(HTTP_STATUS.FORBIDDEN).json(
+        new ApiResponse(HTTP_STATUS.FORBIDDEN, null, 'Your account is inactive')
+      );
+    }
+
+    user.lastLogin = new Date();
+    await user.save();
 
     const { accessToken, refreshToken } = generateTokens(user._id);
 
