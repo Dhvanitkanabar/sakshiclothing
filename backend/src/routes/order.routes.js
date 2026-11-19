@@ -16,12 +16,12 @@ import {
   approveReturn,
   updateOrderCoordinates
 } from '../controllers/order.controller.js';
-import { verifyJWT, authorizeRoles } from '../middlewares/auth.middleware.js';
+import { verifyJWT, authorizeRoles, optionalAuth } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
-// Public / Verification Tracking Route
-router.get('/track', trackOrderPublic);
+// Public / Verification Tracking Route (optional auth for seamless owner lookup)
+router.get('/track', optionalAuth, trackOrderPublic);
 
 // Customer Routes (auth required)
 router.post('/initiate', verifyJWT, initiateCheckout);

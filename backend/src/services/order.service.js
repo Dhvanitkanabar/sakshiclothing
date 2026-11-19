@@ -558,17 +558,20 @@ class OrderService {
     return order;
   }
 
-  // Public/Secure Order Tracking with Live Notifications & Checkpoints
+  // Public/Secure Order Tracking with Non-guessable Tokens & Phone/Email Verification
   async trackOrderPublic(orderIdInput, email, phone, currentUserId) {
     const raw = (orderIdInput || '').trim();
+    if (!raw) {
+      throw new ApiError(400, 'Order tracking reference or token is required');
+    }
     const cleanId = raw.replace(/^#+/, '').trim().toUpperCase();
 
     const query = {
       $or: [
+        { trackingToken: raw.toLowerCase() },
         { orderNumber: cleanId },
         { orderNumber: `#${cleanId}` },
         { orderNumber: raw.toUpperCase() },
-        { orderNumber: { $regex: new RegExp(`^#?${cleanId.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') } },
         ...(mongoose.Types.ObjectId.isValid(cleanId) ? [{ _id: cleanId }] : []),
         ...(mongoose.Types.ObjectId.isValid(raw) ? [{ _id: raw }] : [])
       ]
@@ -579,7 +582,22 @@ class OrderService {
       .populate('products.product', 'name thumbnail images');
 
     if (!order) {
-      throw new ApiError(404, 'No order found with the provided Order ID');
+      throw new ApiError(404, 'No order found with the provided tracking details');
+    }
+
+    const isTokenAccess = order.trackingToken && order.trackingToken.toLowerCase() === raw.toLowerCase();
+    const isOwner = currentUserId && order.customer && order.customer._id.toString() === currentUserId.toString();
+    const matchesEmail = email && (
+      (order.customer?.email && order.customer.email.toLowerCase() === email.trim().toLowerCase())
+    );
+    const matchesPhone = phone && (
+      (order.shippingAddress?.phone && order.shippingAddress.phone.replace(/\D/g, '').endsWith(phone.trim().replace(/\D/g, '').slice(-10))) ||
+      (order.customer?.phone && order.customer.phone.replace(/\D/g, '').endsWith(phone.trim().replace(/\D/g, '').slice(-10)))
+    );
+
+    // Require authorization: either authenticated owner, possession of unguessable trackingToken, or verified phone/email
+    if (!isOwner && !isTokenAccess && !matchesEmail && !matchesPhone) {
+      throw new ApiError(403, 'Access denied: Verification required. Please provide the phone number or email address associated with this order.');
     }
 
     // Fetch related live notifications
@@ -587,54 +605,20 @@ class OrderService {
       orderNumber: order.orderNumber
     }).sort({ createdAt: -1 }).limit(5);
 
-    // IDOR Protection: If logged in, verify ownership
-    if (currentUserId && order.customer && order.customer._id.toString() === currentUserId.toString()) {
-      const orderObj = order.toObject();
-      orderObj.notifications = notifications;
-      return orderObj;
-    }
-
-    // Secondary verification check for guest lookup
-    const matchesEmail = email && order.customer?.email?.toLowerCase() === email.toLowerCase();
-    const matchesPhone = phone && (order.shippingAddress?.phone === phone || order.customer?.phone === phone);
-
-    if (!currentUserId && !matchesEmail && !matchesPhone) {
-      // Return safe minimal order tracking structure without exposing sensitive PII
-      return {
-        _id: order._id,
-        orderNumber: order.orderNumber,
-        orderStatus: order.orderStatus,
-        approvalStatus: order.approvalStatus,
-        rejectionReason: order.rejectionReason,
-        tracking: order.tracking,
-        timeline: order.timeline,
-        products: (order.products || []).map(p => ({
-          name: p.name,
-          quantity: p.quantity,
-          price: p.price,
-          size: p.size,
-          product: p.product ? {
-            name: p.product.name,
-            thumbnail: p.product.thumbnail,
-            images: p.product.images
-          } : undefined
-        })),
-        totals: {
-          grandTotal: order.totals?.grandTotal || 0
-        },
-        shippingAddress: {
-          city: order.shippingAddress?.city,
-          state: order.shippingAddress?.state,
-          pincode: order.shippingAddress?.pincode,
-          country: order.shippingAddress?.country || 'India',
-          coordinates: order.shippingAddress?.coordinates
-        },
-        notifications,
-        createdAt: order.createdAt
-      };
-    }
-
     const orderObj = order.toObject();
+
+    // SEC-05: Remove all raw GPS coordinates and internal telemetry
+    if (orderObj.shippingAddress) {
+      delete orderObj.shippingAddress.coordinates;
+    }
+    if (orderObj.billingAddress) {
+      delete orderObj.billingAddress.coordinates;
+    }
+    if (orderObj.userLocation) {
+      delete orderObj.userLocation.coordinates;
+      delete orderObj.userLocation.ip;
+    }
+
     orderObj.notifications = notifications;
     return orderObj;
   }

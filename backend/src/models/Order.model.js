@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
+import crypto from 'crypto';
 import { ORDER_STATUS, PAYMENT_STATUS } from '../constants/index.js';
 import Counter from './Counter.model.js';
 
@@ -27,6 +28,12 @@ const orderSchema = new Schema(
       required: true,
       unique: true,
       trim: true
+    },
+    trackingToken: {
+      type: String,
+      unique: true,
+      sparse: true,
+      index: true
     },
     customer: {
       type: Schema.Types.ObjectId,
@@ -172,8 +179,11 @@ orderSchema.virtual('isPaid').get(function () {
   return this.paymentStatus === PAYMENT_STATUS.COMPLETED;
 });
 
-// Pre-save hook to add initial timeline event
+// Pre-save hook to generate non-guessable tracking token and initial timeline
 orderSchema.pre('save', function (next) {
+  if (!this.trackingToken) {
+    this.trackingToken = crypto.randomBytes(16).toString('hex');
+  }
   if (this.isNew && (!this.timeline || this.timeline.length === 0)) {
     this.timeline.push({ status: this.orderStatus, note: 'Order placed successfully' });
   }
