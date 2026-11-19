@@ -2,31 +2,19 @@ import { Router } from 'express';
 import Order from '../models/Order.model.js';
 import Product from '../models/Product.model.js';
 import Notification from '../models/Notification.model.js';
-import { verifyJWT } from '../middlewares/auth.middleware.js';
+import { verifyJWT, authorizeRoles } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
-// Customer Notifications (by user ID, email, or orderNumber)
-router.get('/customer', async (req, res) => {
+// Customer Notifications (strictly authenticated to requesting customer)
+router.get('/customer', verifyJWT, async (req, res) => {
   try {
-    const { email, orderNumber, userId } = req.query;
-    const query = {};
-
-    if (userId) {
-      query.recipient = userId;
-    } else if (email) {
-      query.$or = [
-        { recipientEmail: email.toLowerCase() },
-        { recipientEmail: { $regex: new RegExp(`^${email}$`, 'i') } }
-      ];
-    } else if (orderNumber) {
-      query.orderNumber = orderNumber.toUpperCase();
-    } else {
-      // Fallback: recent public/system updates
-      query.type = { $in: ['order_accepted', 'shipping_update', 'system'] };
-    }
-
-    const notifications = await Notification.find(query)
+    const notifications = await Notification.find({
+      $or: [
+        { recipient: req.user._id },
+        { recipientEmail: req.user.email?.toLowerCase() }
+      ]
+    })
       .sort({ createdAt: -1 })
       .limit(20);
 
@@ -40,8 +28,8 @@ router.get('/customer', async (req, res) => {
   }
 });
 
-// Admin Notifications
-router.get('/admin', async (req, res) => {
+// Admin Notifications (strictly protected for admin and superadmin roles)
+router.get('/admin', verifyJWT, authorizeRoles('admin', 'superadmin'), async (req, res) => {
   try {
     const notifications = [];
 
