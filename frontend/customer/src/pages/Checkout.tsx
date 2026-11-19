@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import MapPicker from '../components/MapPicker';
 
-import { fetchAddresses, addAddress, placeOrder, authedFetch } from '../lib/api';
+import { fetchAddresses, addAddress, placeOrder, initiateOrderCheckout, authedFetch } from '../lib/api';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
 const Checkout = () => {
@@ -190,13 +190,14 @@ const Checkout = () => {
   };
 
   const openRazorpayModal = (
-    razorpayOrder: { order_id: string; amount: number; currency: string },
+    razorpayOrder: { order_id: string; amount: number; currency: string; key_id?: string },
+    initiatedOrder: any,
     finalAddressId: string,
     activeToken: string | null
   ) => {
-    const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
+    const razorpayKey = razorpayOrder.key_id || import.meta.env.VITE_RAZORPAY_KEY_ID;
     if (!razorpayKey || razorpayKey.includes('REPLACE_WITH')) {
-      toast.error('Razorpay Live Key is not configured yet. Please add your Key ID in frontend/customer/.env');
+      toast.error('Razorpay key is not configured. Please check your environment configuration.');
       setLoading(false);
       return;
     }
@@ -209,12 +210,11 @@ const Checkout = () => {
 
     const options: any = {
       key: razorpayKey,
-      amount: razorpayOrder.amount, // amount in paise
+      amount: razorpayOrder.amount, // Authoritative server-computed amount in paise
       currency: razorpayOrder.currency || 'INR',
       name: 'Sakshi Clothing',
-      description: 'Handcrafted Bespoke Atelier Order',
+      description: `Bespoke Atelier Order #${initiatedOrder.orderNumber}`,
       order_id: razorpayOrder.order_id,
-      // If user selected UPI, prioritize UPI apps and live dynamic QR code
       ...(selectedPaymentMode === 'upi' ? {
         config: {
           display: {
@@ -235,11 +235,10 @@ const Checkout = () => {
       } : {}),
       handler: async function (response: any) {
         setLoading(true);
-        const toastId = toast.loading('Payment successful! Verifying & placing your order...');
+        const toastId = toast.loading('Payment successful! Verifying and finalizing your order...');
         try {
           const freshToken = await getFreshClerkToken() || activeToken;
-          
-          // Place the order ONLY after payment is successful and confirmed
+
           const orderRes = await placeOrder(
             finalAddressId,
             true,
@@ -254,7 +253,8 @@ const Checkout = () => {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature
-            }
+            },
+            couponCode.trim() || undefined
           );
 
           toast.dismiss(toastId);
@@ -265,16 +265,45 @@ const Checkout = () => {
               bc.postMessage({ type: 'ORDER_PLACED', orderId: orderRes.data.orderNumber });
               bc.close();
             } catch {}
-            toast.success(`Live payment received! Your bespoke order #${orderRes.data.orderNumber} is confirmed.`);
+            toast.success(`Payment verified! Your order #${orderRes.data.orderNumber} is confirmed.`);
             clearCart();
-            navigate('/order-success', { state: { orderId: orderRes.data.orderNumber, total: finalTotal } });
+            navigate('/order-success', {
+              state: {
+                orderId: orderRes.data.orderNumber,
+                orderDbId: orderRes.data._id,
+                total: orderRes.data.totals?.grandTotal ?? finalTotal,
+                isPending: false
+              }
+            });
           } else {
-            toast.error(orderRes?.message || 'Payment signature verification failed. Order could not be placed.');
+            // Online payment succeeded at gateway, but client-side verification timed out.
+            // The Razorpay webhook will asynchronously finalize the order on the backend!
+            toast.info('Payment received! Finalizing order via confirmation webhook...');
+            clearCart();
+            navigate('/order-success', {
+              state: {
+                orderId: initiatedOrder.orderNumber,
+                orderDbId: initiatedOrder._id,
+                total: initiatedOrder.totals?.grandTotal ?? finalTotal,
+                isPending: true,
+                isPolling: true
+              }
+            });
           }
         } catch (verifErr: any) {
           toast.dismiss(toastId);
-          console.error('Order placement verification error:', verifErr);
-          toast.error(verifErr.message || 'Payment verification encountered an issue.');
+          console.error('Order placement verification network error:', verifErr);
+          clearCart();
+          toast.info('Payment received! Finalizing order confirmation...');
+          navigate('/order-success', {
+            state: {
+              orderId: initiatedOrder.orderNumber,
+              orderDbId: initiatedOrder._id,
+              total: initiatedOrder.totals?.grandTotal ?? finalTotal,
+              isPending: true,
+              isPolling: true
+            }
+          });
         } finally {
           setLoading(false);
         }
@@ -286,13 +315,14 @@ const Checkout = () => {
       },
       modal: {
         ondismiss: function () {
-          toast.info('Payment window closed. Order was NOT placed.');
+          toast.info(`Payment window closed. Order #${initiatedOrder.orderNumber} is preserved in pending payment.`);
           setLoading(false);
           setShowConfirmation(false);
         }
       },
       notes: {
-        selected_mode: selectedPaymentMode
+        selected_mode: selectedPaymentMode,
+        orderNumber: initiatedOrder.orderNumber
       },
       theme: { color: '#1c1917' }
     };
@@ -300,7 +330,7 @@ const Checkout = () => {
     try {
       const rzp = new (window as any).Razorpay(options);
       rzp.on('payment.failed', function (response: any) {
-        toast.error(response?.error?.description || 'Payment failed or declined. Order was NOT placed.');
+        toast.error(response?.error?.description || 'Payment failed or declined. Please retry with another method.');
         setLoading(false);
         setShowConfirmation(false);
       });
@@ -314,6 +344,7 @@ const Checkout = () => {
   };
 
   const executePayment = async () => {
+    if (loading) return;
     setLoading(true);
 
     try {
@@ -343,46 +374,43 @@ const Checkout = () => {
         }
       }
 
-
-
-      // Case 2: Online Payment via Razorpay
+      // Case 1: Online Payment via Razorpay
       if (paymentGateway === 'razorpay') {
-        toast.loading('Initializing secure payment gateway...');
-        const amountInPaise = Math.round(finalTotal * 100);
+        toast.loading('Securing order & initializing payment...');
 
-        const createRes = await fetch(`${API_URL}/payments/create-order`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            amount: amountInPaise,
-            currency: 'INR',
-            receipt: `rcpt_${Date.now()}`
-          })
-        });
-
-        const createData = await createRes.json();
+        const initiateRes = await initiateOrderCheckout(
+          finalAddressId,
+          cart.map(item => ({
+            productId: item.id,
+            variantId: item.variantId,
+            quantity: item.quantity
+          })),
+          couponCode.trim() || undefined,
+          true,
+          activeToken
+        );
         toast.dismiss();
 
-        if (!createData.success || !createData.order_id) {
-          toast.error(createData.error || 'Failed to initialize payment gateway.');
+        if (!initiateRes.success || !initiateRes.data?.razorpayOrder) {
+          toast.error(initiateRes.message || 'Failed to initialize order on server.');
           setLoading(false);
           return;
         }
 
+        const initiatedOrder = initiateRes.data.order;
+        const razorpayOrder = initiateRes.data.razorpayOrder;
+
         setShowConfirmation(false);
         openRazorpayModal(
-          {
-            order_id: createData.order_id,
-            amount: createData.amount,
-            currency: createData.currency
-          },
+          razorpayOrder,
+          initiatedOrder,
           finalAddressId,
           activeToken
         );
         return;
       }
 
-      // Case 3: Stripe / Alternative
+      // Case 2: Stripe / Alternative
       if (paymentGateway === 'stripe') {
         toast.info('Redirecting to Stripe payment...');
         setTimeout(async () => {
@@ -396,12 +424,19 @@ const Checkout = () => {
               quantity: item.quantity
             })),
             'stripe',
-            { paymentStatus: 'completed' }
+            { paymentStatus: 'completed' },
+            couponCode.trim() || undefined
           );
           if (orderRes.success) {
             toast.success('Payment verified! Your order is placed.');
             clearCart();
-            navigate('/order-success', { state: { orderId: orderRes.data.orderNumber, total: finalTotal } });
+            navigate('/order-success', {
+              state: {
+                orderId: orderRes.data.orderNumber,
+                total: finalTotal,
+                isPending: false
+              }
+            });
           } else {
             toast.error(orderRes.message || 'Failed to complete order.');
           }
@@ -839,11 +874,11 @@ const Checkout = () => {
               </div>
 
               <div className="flex gap-4">
-                <button type="button" onClick={() => setShowConfirmation(false)} className="flex-1 py-4 border-2 border-gray-200 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                <button type="button" disabled={loading} onClick={() => setShowConfirmation(false)} className="flex-1 py-4 border-2 border-gray-200 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
                   <Edit3 size={16} /> Edit Details
                 </button>
-                <button type="button" onClick={executePayment} className="flex-1 py-4 bg-black text-white rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-gray-900 transition-colors shadow-lg">
-                  Confirm & Pay
+                <button type="button" disabled={loading} onClick={executePayment} className="flex-1 py-4 bg-black text-white rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-gray-900 transition-colors shadow-lg disabled:opacity-50">
+                  {loading ? 'Processing...' : 'Confirm & Pay'}
                 </button>
               </div>
             </motion.div>

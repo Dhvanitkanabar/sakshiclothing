@@ -247,19 +247,40 @@ export const setDefaultAddress = async (id: string, clerkToken?: string | null) 
   }
 };
 
+export const initiateOrderCheckout = async (
+  shippingAddressId: string,
+  items: any[],
+  couponCode?: string,
+  isFromCart: boolean = true,
+  clerkToken?: string | null
+) => {
+  try {
+    const res = await authedFetch(`${API_URL}/orders/initiate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ shippingAddressId, items, couponCode, isFromCart })
+    }, clerkToken);
+    return await res.json();
+  } catch (e: any) {
+    console.error('Initiate checkout failed:', e);
+    return { success: false, message: e.message || 'Failed to initiate checkout' };
+  }
+};
+
 export const placeOrder = async (
   shippingAddressId: string,
   isFromCart = true,
   clerkToken?: string | null,
   items?: any[],
   paymentMethod: string = 'cod',
-  payment?: any
+  payment?: any,
+  couponCode?: string
 ) => {
   try {
     const res = await authedFetch(`${API_URL}/orders/checkout`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ shippingAddressId, isFromCart, items, paymentMethod, payment })
+      body: JSON.stringify({ shippingAddressId, isFromCart, items, paymentMethod, payment, couponCode })
     }, clerkToken);
     return await res.json();
   } catch (e) {

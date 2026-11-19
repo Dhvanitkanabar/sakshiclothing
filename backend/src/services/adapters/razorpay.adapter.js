@@ -33,7 +33,8 @@ class RazorpayAdapter {
       return {
         order_id: order.id,
         amount: order.amount,
-        currency: order.currency
+        currency: order.currency,
+        key_id: process.env.RAZORPAY_KEY_ID
       };
     } catch (error) {
       console.error('❌ Razorpay Live Order Creation Error:', error.message);

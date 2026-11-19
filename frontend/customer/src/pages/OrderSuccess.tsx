@@ -17,6 +17,16 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+interface OrderSuccessState {
+  orderId: string;
+  orderDbId?: string;
+  total: number;
+  isPending?: boolean;
+  isPolling?: boolean;
+}
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+
 /**
  * Design Read: Order Success & Confirmation for Sakshi Clothing couture patrons,
  * with refined editorial celebrating artisanal craftsmanship.
@@ -24,8 +34,11 @@ import { toast } from 'sonner';
  */
 const OrderSuccess = () => {
   const location = useLocation();
-  const stateData = location.state as { orderId: string; total: number } | null;
+  const stateData = location.state as OrderSuccessState | null;
   const [copied, setCopied] = useState(false);
+  const [orderStatus, setOrderStatus] = useState<'pending' | 'confirmed' | 'failed'>(
+    stateData?.isPending ? 'pending' : 'confirmed'
+  );
 
   // Persist order data in sessionStorage so refresh doesn't immediately lose context
   const [orderData] = useState(() => {
@@ -41,6 +54,36 @@ const OrderSuccess = () => {
     } catch {}
     return null;
   });
+
+  React.useEffect(() => {
+    if (!stateData?.isPolling || !orderData?.orderId) return;
+
+    let attempts = 0;
+    const maxAttempts = 15;
+    const interval = setInterval(async () => {
+      attempts++;
+      try {
+        const res = await fetch(`${API_URL}/orders/track?orderId=${encodeURIComponent(orderData.orderId)}`);
+        const json = await res.json();
+        if (json.success && json.data) {
+          const status = json.data.orderStatus;
+          const payStatus = json.data.paymentStatus;
+          if (payStatus === 'completed' || (status && status !== 'payment_pending')) {
+            setOrderStatus('confirmed');
+            clearInterval(interval);
+            toast.success('Payment confirmed by gateway! Your order is active.');
+          }
+        }
+      } catch (e) {
+        console.warn('Order polling check error:', e);
+      }
+      if (attempts >= maxAttempts) {
+        clearInterval(interval);
+      }
+    }, 2500);
+
+    return () => clearInterval(interval);
+  }, [stateData, orderData]);
 
   const handleCopyOrderId = () => {
     if (!orderData?.orderId) return;
@@ -120,18 +163,27 @@ const OrderSuccess = () => {
           </div>
 
           {/* Sub-badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-[11px] font-bold uppercase tracking-widest">
-            <Sparkles size={12} className="text-emerald-600" />
-            <span>Order Confirmed &bull; Surat Atelier</span>
-          </div>
+          {orderStatus === 'pending' ? (
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-800 text-[11px] font-bold uppercase tracking-widest animate-pulse">
+              <Clock size={12} className="text-amber-600" />
+              <span>Payment Confirmation In Progress &bull; Surat Atelier</span>
+            </div>
+          ) : (
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-[11px] font-bold uppercase tracking-widest">
+              <Sparkles size={12} className="text-emerald-600" />
+              <span>Order Confirmed &bull; Surat Atelier</span>
+            </div>
+          )}
 
           {/* Headline (Refined font scale, never wrapping into 4-6 lines) */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-normal text-stone-900 tracking-tight leading-tight">
-            Thank you for your order
+            {orderStatus === 'pending' ? 'Verifying your payment' : 'Thank you for your order'}
           </h1>
 
           <p className="text-stone-600 font-sans text-xs sm:text-sm leading-relaxed max-w-lg mx-auto">
-            Your payment has been received successfully. Our master artisans in Surat have begun preparing your handcrafted ensemble with the highest level of craftsmanship.
+            {orderStatus === 'pending'
+              ? 'We received your transaction signal and are awaiting final webhook confirmation from the bank. This page will update automatically.'
+              : 'Your payment has been received successfully. Our master artisans in Surat have begun preparing your handcrafted ensemble with the highest level of craftsmanship.'}
           </p>
         </motion.div>
 
@@ -187,9 +239,15 @@ const OrderSuccess = () => {
                 <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400 block mb-1">
                   Payment Status
                 </span>
-                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200/60">
-                  <ShieldCheck size={13} /> Paid (Razorpay)
-                </span>
+                {orderStatus === 'pending' ? (
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200/60 animate-pulse">
+                    <Clock size={13} /> Awaiting Confirmation
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200/60">
+                    <ShieldCheck size={13} /> Paid (Razorpay)
+                  </span>
+                )}
               </div>
             </div>
 
