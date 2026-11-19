@@ -7,7 +7,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { generateInvoiceHTML } from '../utils/invoiceGenerator.js';
 
 export const checkout = asyncHandler(async (req, res) => {
-  const { shippingAddressId, items, isFromCart, paymentMethod = 'cod', payment } = req.body;
+  const { shippingAddressId, items, isFromCart, paymentMethod = 'cod', payment, couponCode } = req.body;
 
   if (!shippingAddressId) {
     throw new ApiError(400, 'Shipping address is required');
@@ -33,12 +33,30 @@ export const checkout = asyncHandler(async (req, res) => {
       throw new ApiError(400, 'Payment verification failed: Invalid cryptographic signature. Order cannot be placed.');
     }
 
+    // Fetch verified payment record directly from Razorpay API to confirm amount and status
+    let rzpPayment = null;
+    try {
+      rzpPayment = await razorpayAdapter.fetchPayment(paymentId);
+    } catch (fetchErr) {
+      throw new ApiError(400, `Failed to retrieve payment confirmation from Razorpay: ${fetchErr.message}`);
+    }
+
+    if (!rzpPayment || (rzpPayment.status !== 'captured' && rzpPayment.status !== 'authorized')) {
+      throw new ApiError(400, `Razorpay payment is in "${rzpPayment?.status || 'unknown'}" state. Only captured/authorized payments can complete an order.`);
+    }
+
+    if (rzpPayment.order_id && rzpPayment.order_id !== orderId) {
+      throw new ApiError(400, 'Razorpay payment order ID mismatch.');
+    }
+
     paymentInfo = {
       method: 'razorpay',
       transactionId: paymentId,
       gatewayOrderId: orderId,
-      gatewayResponse: payment,
-      paymentStatus: 'completed'
+      gatewayResponse: rzpPayment,
+      paymentStatus: 'completed',
+      amountInPaise: rzpPayment.amount,
+      currency: rzpPayment.currency
     };
   } else if (paymentMethod === 'cod') {
     paymentInfo = {
@@ -70,7 +88,7 @@ export const checkout = asyncHandler(async (req, res) => {
     }
   }
 
-  const order = await orderService.createCheckoutOrder(req.user._id, orderItems, shippingAddressId, paymentInfo);
+  const order = await orderService.createCheckoutOrder(req.user._id, orderItems, shippingAddressId, paymentInfo, couponCode);
 
   // If from cart and successful, clear cart
   if (isFromCart) {

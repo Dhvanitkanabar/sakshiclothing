@@ -12,26 +12,25 @@ import { sendOrderConfirmationEmail, sendOrderRejectionEmail } from '../utils/em
 import mongoose from 'mongoose';
 
 class OrderService {
-  async createCheckoutOrder(userId, items, shippingAddressId, paymentInfo = {}) {
-    if (!items || items.length === 0) {
+  /**
+   * Authoritative server-side calculation of order items, stock, discounts and totals.
+   * Client amounts are completely ignored.
+   */
+  async calculateOrderTotals(items, couponCode = null) {
+    if (!items || !items.length) {
       throw new ApiError(400, 'Order items cannot be empty');
     }
 
-    const shippingAddress = await addressRepository.findById(shippingAddressId);
-    if (!shippingAddress || shippingAddress.user.toString() !== userId.toString()) {
-      throw new ApiError(404, 'Invalid shipping address');
-    }
-
     let itemsTotal = 0;
-    const orderItems = [];
+    const validatedItems = [];
     const bulkProductUpdates = [];
 
-    // Calculate and snapshot products without starting transaction yet to fail early
     for (const item of items) {
-      const product = await Product.findById(item.productId);
-      if (!product) throw new ApiError(404, `Product not found: ${item.productId}`);
+      const productId = item.productId || item.product?._id || item.product;
+      const product = await Product.findById(productId);
+      if (!product) throw new ApiError(404, `Product not found: ${productId}`);
       if (product.status !== 'published') {
-        throw new ApiError(400, `Product ${product.name} is currently unavailable`);
+        throw new ApiError(400, `Product "${product.name}" is currently unavailable`);
       }
 
       let variant = null;
@@ -46,12 +45,11 @@ class OrderService {
       if (!variant && product.variants && product.variants.length > 0) {
         variant = product.variants[0];
       }
-      if (!variant) throw new ApiError(404, `Variant not found in product ${product.name}`);
+      if (!variant) throw new ApiError(404, `Variant not found in product "${product.name}"`);
       if (variant.status && ['out_of_stock', 'archived', 'deleted'].includes(variant.status)) {
-        throw new ApiError(400, `Selected variant for ${product.name} is unavailable`);
+        throw new ApiError(400, `Selected variant for "${product.name}" is unavailable`);
       }
 
-      // Check stock with fallback for single variant/standard size stock desync
       let effectiveStock = typeof variant.stock === 'number' ? variant.stock : 0;
       if (effectiveStock === 0 && (product.inventory?.totalStock || 0) > 0 && product.variants?.length === 1) {
         effectiveStock = product.inventory.totalStock;
@@ -60,14 +58,14 @@ class OrderService {
       }
 
       if (effectiveStock < item.quantity) {
-        throw new ApiError(400, `Insufficient stock for ${product.name} (Size: ${variant.size}). Available: ${effectiveStock}`);
+        throw new ApiError(400, `Insufficient stock for "${product.name}" (${variant.size || variant.color || 'Standard'}). Available: ${effectiveStock}`);
       }
 
       const price = product.calculateDiscount(variant._id);
       const subtotal = price * item.quantity;
       itemsTotal += subtotal;
 
-      orderItems.push({
+      validatedItems.push({
         product: product._id,
         name: product.name,
         variantId: variant._id,
@@ -79,7 +77,6 @@ class OrderService {
         subtotal
       });
 
-      // Prepare bulk update to decrement both variant stock and total inventory stock
       bulkProductUpdates.push({
         updateOne: {
           filter: { _id: product._id, 'variants._id': variant._id, 'variants.stock': { $gte: item.quantity } },
@@ -93,9 +90,84 @@ class OrderService {
       });
     }
 
-    const orderNumber = await orderRepository.generateOrderNumber();
-    const grandTotal = itemsTotal; // No shipping/tax for now
+    const shippingCharges = itemsTotal >= 2000 ? 0 : 0; // standard complimentary delivery
+    let discount = 0;
+    let appliedCoupon = null;
 
+    if (couponCode) {
+      const Coupon = (await import('../models/Coupon.model.js')).default;
+      const coupon = await Coupon.findOne({
+        code: couponCode.toString().trim().toUpperCase(),
+        isActive: true
+      });
+
+      if (!coupon) {
+        throw new ApiError(400, `Invalid coupon code: "${couponCode}"`);
+      }
+
+      if (coupon.expiryDate && new Date() > new Date(coupon.expiryDate)) {
+        throw new ApiError(400, `Coupon "${coupon.code}" has expired`);
+      }
+
+      if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
+        throw new ApiError(400, `Coupon "${coupon.code}" usage limit has been reached`);
+      }
+
+      if (coupon.minimumOrderAmount && itemsTotal < coupon.minimumOrderAmount) {
+        throw new ApiError(400, `Coupon requires a minimum order value of ₹${coupon.minimumOrderAmount}`);
+      }
+
+      if (coupon.discountType === 'percentage') {
+        discount = Math.round((itemsTotal * coupon.discountValue) / 100);
+        if (coupon.maximumDiscount && discount > coupon.maximumDiscount) {
+          discount = coupon.maximumDiscount;
+        }
+      } else if (coupon.discountType === 'flat') {
+        discount = Math.min(coupon.discountValue, itemsTotal);
+      }
+
+      appliedCoupon = coupon;
+    }
+
+    const grandTotal = Math.max(0, itemsTotal + shippingCharges - discount);
+
+    return {
+      orderItems: validatedItems,
+      bulkProductUpdates,
+      totals: {
+        itemsTotal,
+        shippingCharges,
+        discount,
+        grandTotal
+      },
+      coupon: appliedCoupon
+    };
+  }
+
+  async createCheckoutOrder(userId, items, shippingAddressId, paymentInfo = {}, couponCode = null) {
+    if (!items || items.length === 0) {
+      throw new ApiError(400, 'Order items cannot be empty');
+    }
+
+    const shippingAddress = await addressRepository.findById(shippingAddressId);
+    if (!shippingAddress || shippingAddress.user.toString() !== userId.toString()) {
+      throw new ApiError(404, 'Invalid shipping address');
+    }
+
+    // Authoritative calculation from Product collection
+    const calculation = await this.calculateOrderTotals(items, couponCode);
+    const { orderItems, bulkProductUpdates, totals, coupon } = calculation;
+    const { itemsTotal, shippingCharges, discount, grandTotal } = totals;
+
+    // Strict validation if paid via online gateway
+    if (paymentInfo.method === 'razorpay') {
+      const expectedPaise = Math.round(grandTotal * 100);
+      if (paymentInfo.amountInPaise && paymentInfo.amountInPaise !== expectedPaise) {
+        throw new ApiError(400, `Payment verification failed: Server expected ₹${grandTotal} (${expectedPaise} paise), but gateway was charged ₹${paymentInfo.amountInPaise / 100} (${paymentInfo.amountInPaise} paise). Tampered payment rejected.`);
+      }
+    }
+
+    const orderNumber = await orderRepository.generateOrderNumber();
     const isPaid = paymentInfo.paymentStatus === 'completed';
     const isCod = paymentInfo.method === 'cod';
 
@@ -109,8 +181,10 @@ class OrderService {
       payment: {
         method: paymentInfo.method || (isCod ? 'cod' : 'pending'),
         transactionId: paymentInfo.transactionId || null,
+        gatewayOrderId: paymentInfo.gatewayOrderId || null,
         gatewayResponse: paymentInfo.gatewayResponse || null
       },
+      coupon: coupon ? coupon._id : null,
       authenticity: {
         isGenuine: true,
         riskScore: isPaid ? 'Low Risk (Payment Verified)' : (isCod ? 'Low Risk (Cash On Delivery)' : 'Unverified (Payment Pending)'),
@@ -148,6 +222,8 @@ class OrderService {
       },
       totals: {
         itemsTotal,
+        shippingCharges,
+        discount,
         grandTotal
       }
     };
@@ -156,6 +232,12 @@ class OrderService {
 
     if (bulkResult.modifiedCount !== items.length) {
       throw new ApiError(409, 'Checkout failed due to stock availability. Please review your cart.');
+    }
+
+    // Atomically increment coupon usedCount if coupon applied and paid
+    if (coupon && isPaid) {
+      const Coupon = (await import('../models/Coupon.model.js')).default;
+      await Coupon.updateOne({ _id: coupon._id }, { $inc: { usedCount: 1 } });
     }
 
     const newOrder = await orderRepository.create(orderData);

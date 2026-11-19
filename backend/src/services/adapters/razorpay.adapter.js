@@ -75,6 +75,18 @@ class RazorpayAdapter {
     }
   }
 
+  async fetchPayment(paymentId) {
+    if (!paymentId) throw new Error('Payment ID is required');
+    const razorpay = this.getRazorpay();
+    return await razorpay.payments.fetch(paymentId);
+  }
+
+  async fetchOrder(orderId) {
+    if (!orderId) throw new Error('Order ID is required');
+    const razorpay = this.getRazorpay();
+    return await razorpay.orders.fetch(orderId);
+  }
+
   verifyPaymentSignature(orderId, paymentId, signature) {
     if (!orderId || !paymentId || !signature) {
       return false;
