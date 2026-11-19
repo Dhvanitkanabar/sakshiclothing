@@ -118,13 +118,13 @@ const apiLimiter = rateLimit({
 
 app.use('/api/', apiLimiter);
 
-// Configure CORS dynamically for Production & Staging
-const parsedAllowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',').map(url => url.trim())
-  : [];
+// Configure CORS strictly using an explicit allow-list
+const envOrigins = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map(url => url.trim())
+  .filter(Boolean);
 
-const allowedOriginsList = Array.from(new Set([
-  ...parsedAllowedOrigins,
+const defaultAllowedOrigins = [
   process.env.CLIENT_URL,
   process.env.ADMIN_URL,
   'https://www.sakshiclothing.store',
@@ -133,26 +133,43 @@ const allowedOriginsList = Array.from(new Set([
   'https://sakshi-clothing-customer.vercel.app',
   'https://sakshi-clothing-admin.vercel.app',
   'http://localhost:5173',
+  'http://localhost:3000',
   'http://localhost:3001'
-].filter(Boolean)));
+].filter(Boolean);
+
+const allowedOriginsList = Array.from(new Set([...envOrigins, ...defaultAllowedOrigins]));
 
 const corsOptions = {
   origin: function (origin, callback) {
-    if (
-      !origin || 
-      allowedOriginsList.includes(origin) || 
-      allowedOriginsList.includes('*') ||
-      origin.endsWith('sakshiclothing.store') ||
-      origin.endsWith('vercel.app')
-    ) {
-      callback(null, true);
-    } else {
-      callback(null, true); // Fallback allow dynamically
+    // Allow non-browser requests (mobile apps, server-to-server, curl) with no Origin header
+    if (!origin) {
+      return callback(null, true);
     }
+
+    // Check exact whitelist match
+    if (allowedOriginsList.includes(origin)) {
+      return callback(null, true);
+    }
+
+    // Check verified production subdomains
+    try {
+      const url = new URL(origin);
+      if (
+        url.hostname === 'sakshiclothing.store' ||
+        url.hostname.endsWith('.sakshiclothing.store') ||
+        (process.env.NODE_ENV !== 'production' && (url.hostname === 'localhost' || url.hostname === '127.0.0.1'))
+      ) {
+        return callback(null, true);
+      }
+    } catch {}
+
+    // Reject all unauthorized origins
+    return callback(new Error(`CORS blocked: Origin ${origin} is not allowed`));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-razorpay-signature', 'svix-id', 'svix-timestamp', 'svix-signature'],
+  optionsSuccessStatus: 204
 };
 app.use(cors(corsOptions));
 
