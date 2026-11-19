@@ -40,9 +40,9 @@ export const ProductDetails = () => {
         setProduct(chosen);
         if (chosen.variants && chosen.variants.length > 0) {
           const inStock = chosen.variants.find((v: any) => (v.stock > 0 || v.status !== 'out_of_stock') && v.size);
-          setSelectedSize(inStock ? inStock.size : (chosen.variants[0]?.size || 'Standard'));
+          setSelectedSize(inStock?.size || chosen.variants[0]?.size || 'Standard');
         } else if (chosen.sizes && chosen.sizes.length > 0) {
-          setSelectedSize(chosen.sizes[0]);
+          setSelectedSize(chosen.sizes[0] || 'Standard');
         } else {
           setSelectedSize('Standard');
         }
@@ -54,7 +54,7 @@ export const ProductDetails = () => {
         // Fetch related pieces
         const related = await fetchProducts({ category: chosen.category, limit: 4 });
         const validRelated = (related && related.length > 0) ? related : PRODUCTS;
-        setRelatedProducts(validRelated.filter(p => p.id !== chosen.id).slice(0, 4));
+        setRelatedProducts(validRelated.filter((p: any) => p.id !== chosen.id).slice(0, 4));
       }
       setLoading(false);
       // Immediately reset scroll once product data and layout are painted
@@ -233,7 +233,7 @@ export const ProductDetails = () => {
                     return (
                       <button
                         key={variant._id || variant.size}
-                        onClick={() => setSelectedSize(variant.size)}
+                        onClick={() => setSelectedSize(variant.size || 'Standard')}
                         className={`min-w-14 sm:min-w-16 h-12 sm:h-14 px-3 flex flex-col items-center justify-center rounded-2xl border transition-all cursor-pointer ${
                           isSelected
                             ? 'bg-stone-900 border-stone-900 text-white shadow-md'

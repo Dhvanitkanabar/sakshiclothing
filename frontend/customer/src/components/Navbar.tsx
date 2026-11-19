@@ -19,7 +19,8 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { useUser } from '@clerk/clerk-react';
-import { getCachedProducts, fetchProducts, Product } from '../lib/api';
+import { getCachedProducts, fetchProducts } from '../lib/api';
+import type { Product } from '../types';
 
 /**
  * Design Read: Full-Width Luxury Editorial Navbar & Instant Live Search Modal for Sakshi Clothing
