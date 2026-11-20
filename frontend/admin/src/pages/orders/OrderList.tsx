@@ -332,9 +332,107 @@ const OrderList = ({ defaultSection }: OrderListProps) => {
         <div className="p-4 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>
       )}
 
-      {/* ── Table ── */}
+      {/* ── Table & Cards Container ── */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Mobile Responsive Order Cards (< 768px) */}
+        <div className="md:hidden divide-y divide-gray-100">
+          {loading ? (
+            <div className="px-4 py-12 text-center text-gray-400 text-sm">
+              Loading {activeSection === 'pending' ? 'pending orders' : 'order history'}…
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="px-4 py-12 text-center text-gray-400 text-sm">
+              {activeSection === 'pending' ? 'No pending orders in queue' : 'No completed order records'}
+            </div>
+          ) : (
+            filtered.map(order => {
+              const effectiveStatus = getEffectiveStatus(order);
+              const colorCls = STATUS_COLORS[effectiveStatus] || 'bg-gray-50 text-gray-700 border-gray-200';
+              const label = STATUS_LABELS[effectiveStatus] || effectiveStatus.replace(/_/g, ' ');
+
+              return (
+                <div
+                  key={order._id}
+                  onClick={() => navigate(`/orders/${order._id}`)}
+                  className="p-4 space-y-3 hover:bg-amber-50/20 active:bg-amber-50/40 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-sm font-bold text-gray-900 block font-mono">
+                        {order.orderNumber}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      </span>
+                    </div>
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${colorCls}`}>
+                      <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                      {label}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-gray-600">
+                    <div>
+                      <p className="font-medium text-gray-900">{order.customer?.fullName || 'Customer'}</p>
+                      <p className="text-gray-400">{order.customer?.email}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-bold text-gray-900 text-sm block">
+                        ₹{(order.totals?.grandTotal || 0).toLocaleString('en-IN')}
+                      </span>
+                      <span className="text-[11px] text-gray-500">
+                        {getOrderTotalItems(order)} item(s)
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 flex items-center justify-between border-t border-gray-50 gap-2">
+                    {order.paymentStatus === 'completed' ? (
+                      <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                        ✓ Paid ({order.payment?.method || 'Online'})
+                      </span>
+                    ) : order.payment?.method === 'cod' ? (
+                      <span className="text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                        Cash on Delivery
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-gray-400">Payment Pending</span>
+                    )}
+
+                    <div className="flex items-center gap-2">
+                      <Link
+                        to={`/orders/${order._id}`}
+                        onClick={e => e.stopPropagation()}
+                        className="px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white hover:bg-gray-100 border border-gray-200 rounded-lg shadow-2xs"
+                      >
+                        Inspect
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          try {
+                            const { filename } = generateShippingInvoicePdf(order, true);
+                            alert(`Downloaded Invoice (${filename})`);
+                          } catch (err) {
+                            console.error(err);
+                          }
+                        }}
+                        className="p-1.5 text-gray-600 hover:text-black bg-white hover:bg-gray-100 border border-gray-200 rounded-lg shadow-2xs"
+                        aria-label="Print label"
+                      >
+                        <Printer size={13} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Desktop Table (>= 768px) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">

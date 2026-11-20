@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   Search, ShieldBan, ShieldCheck, User as UserIcon,
-  Mail, Phone, Calendar, ShoppingBag, Heart, Package, MapPin, X, ChevronRight
+  Mail, Phone, Calendar, ShoppingBag, Heart, Package, MapPin, X, ChevronRight, ArrowLeft
 } from 'lucide-react';
 import { adminFetch } from '../../lib/api';
 
@@ -93,7 +93,7 @@ export default function CustomerList() {
   return (
     <div className="flex h-[calc(100vh-8rem)] gap-0 rounded-xl overflow-hidden border border-gray-100 shadow-sm bg-white">
       {/* LEFT: User List */}
-      <div className={`flex flex-col border-r border-gray-100 ${selectedId ? 'w-80 min-w-[18rem]' : 'flex-1'} transition-all duration-300`}>
+      <div className={`flex flex-col border-r border-gray-100 ${selectedId ? 'hidden md:flex w-full md:w-80 md:min-w-[18rem]' : 'flex-1'} transition-all duration-300`}>
         {/* Header */}
         <div className="p-4 border-b border-gray-100">
           <h1 className="text-lg font-bold text-gray-900 mb-3">Customers</h1>
@@ -165,7 +165,7 @@ export default function CustomerList() {
 
       {/* RIGHT: Detail Panel */}
       {selectedId && (
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden w-full">
           {detailLoading ? (
             <div className="flex items-center justify-center h-full">
               <div className="animate-spin w-8 h-8 border-4 border-black border-t-transparent rounded-full" />
@@ -173,8 +173,16 @@ export default function CustomerList() {
           ) : selectedUser ? (
             <>
               {/* Detail Header */}
-              <div className="flex items-center gap-4 px-6 py-4 border-b border-gray-100">
-                <div className="w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center text-lg font-bold">
+              <div className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-4 border-b border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setSelectedId(null)}
+                  className="md:hidden p-2 rounded-lg hover:bg-gray-100 text-gray-600 shrink-0"
+                  aria-label="Back to customer list"
+                >
+                  <ArrowLeft size={18} />
+                </button>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-900 text-white flex items-center justify-center text-base sm:text-lg font-bold shrink-0">
                   {selectedUser.fullName?.charAt(0).toUpperCase()}
                 </div>
                 <div>

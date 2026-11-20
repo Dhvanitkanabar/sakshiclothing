@@ -141,7 +141,84 @@ export default function ProductList() {
 
       {/* Table Container */}
       <div className="bg-white shadow-xl shadow-slate-100/80 border border-slate-100 rounded-3xl overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Mobile Product Cards (< 768px) */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {loading ? (
+            <div className="text-center py-12 text-slate-400">
+              <div className="animate-spin w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full mx-auto mb-2" />
+              Loading product catalog...
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="text-center py-12 text-slate-400 text-sm">
+              No products found. Click "Add New Product" to create one.
+            </div>
+          ) : (
+            filteredProducts.map((product: any) => (
+              <div key={product._id} className="p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  {product.thumbnail?.url ? (
+                    <div className="w-16 h-16 rounded-xl overflow-hidden border border-slate-100 bg-slate-50 shrink-0">
+                      <img src={product.thumbnail.url} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 rounded-xl border border-slate-100 bg-slate-50 shrink-0 flex items-center justify-center text-slate-300">
+                      <ImageIcon size={22} />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-slate-900 text-sm line-clamp-1">{product.name}</div>
+                    <div className="text-[11px] text-amber-700 font-medium mt-0.5 flex items-center gap-1">
+                      <Tag size={12} /> {product.category?.name || 'Jewellery & Apparel'}
+                    </div>
+                    <div className="font-sans font-bold text-slate-900 text-sm mt-1">
+                      ₹{product.pricing?.basePrice?.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-slate-50">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleToggleStatus(product._id, product.status)}
+                      className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${
+                        product.status === 'published' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' :
+                        product.status === 'draft' ? 'bg-amber-50 text-amber-700 border border-amber-200/60' :
+                        'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      {product.status}
+                    </button>
+                    <span className={`inline-flex items-center gap-1 font-bold px-2 py-0.5 rounded-lg text-xs ${
+                      (product.inventory?.totalStock || 0) < 10 ? 'bg-rose-50 text-rose-600' : 'bg-slate-100 text-slate-800'
+                    }`}>
+                      <Package size={12} /> {product.inventory?.totalStock || 0}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <Link
+                      to={`/products/edit/${product._id}`}
+                      className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+                      title="Edit product"
+                    >
+                      <Edit2 size={16} />
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(product._id)}
+                      className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                      title="Delete product"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop Table (>= 768px) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs text-slate-600">
             <thead className="bg-slate-50/80 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
               <tr>
