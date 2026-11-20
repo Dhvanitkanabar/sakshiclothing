@@ -122,7 +122,7 @@ const AppContent = () => {
   const isAuthPage = location.pathname.startsWith('/login') || location.pathname.startsWith('/signup');
 
   return (
-    <div className="min-h-screen flex flex-col font-sans bg-white text-gray-900 overflow-x-hidden pb-20 lg:pb-0">
+    <div className="min-h-screen flex flex-col font-sans bg-[#FBF9F6] text-[#1A1A1A] overflow-x-hidden pb-20 lg:pb-0">
       {!isAuthPage && <Navbar />}
       <CartDrawer />
       <main className="flex-grow">

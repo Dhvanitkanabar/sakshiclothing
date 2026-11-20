@@ -1,39 +1,62 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Plus Jakarta Sans", "Inter", "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-serif: "Plus Jakarta Sans", "Inter", "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-display: "Plus Jakarta Sans", "Inter", "Outfit", sans-serif;
+  --font-sans: "Plus Jakarta Sans", "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Brand Palette Tokens */
+  --color-brand-bg: #FBF9F6;
+  --color-brand-surface: #FFFFFF;
+  --color-brand-text: #1A1A1A;
+  --color-brand-muted: #6B7280;
   
-  --color-primary: #fdf2f8;
-  --color-accent: #0a0a0a;
-  --color-luxury-black: #0a0a0a;
-  --color-luxury-white: #ffffff;
-  --color-beige: #f5f5f4;
-  --color-muted: #737373;
+  --color-brand-plum: #4A1D3F;
+  --color-brand-plum-hover: #3B1632;
+  --color-brand-plum-light: #6A2C5B;
+  --color-brand-plum-subtle: #F6EFF4;
+
+  --color-brand-champagne: #C6A15B;
+  --color-brand-champagne-light: #F4EEDF;
+  --color-brand-champagne-dark: #A4813D;
+
+  --color-brand-sale: #B43E2B;
+  --color-brand-sale-subtle: #FDF2F0;
+
+  --color-brand-border: #E8E5DF;
+  --color-brand-border-subtle: #F2EFEA;
 }
 
-/* HARD OVERRIDE: 100% Normal Professional Shopping Font Everywhere */
-html, body, #root, *, *::before, *::after {
-  font-family: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
-}
-
-.font-serif, .font-mono, .font-display, .font-sans, .font-heading {
-  font-family: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+:root {
+  --bg-primary: #FBF9F6;
+  --bg-surface: #FFFFFF;
+  --text-primary: #1A1A1A;
+  --text-muted: #6B7280;
+  --accent-plum: #4A1D3F;
+  --accent-champagne: #C6A15B;
+  --accent-sale: #B43E2B;
+  --border-subtle: #E8E5DF;
 }
 
 @layer base {
-  body {
-    font-family: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
-    background-color: var(--color-luxury-white);
-    color: var(--color-luxury-black);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+  html {
+    scroll-behavior: smooth;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
   }
 
-  /* Always show pointer cursor on interactive elements */
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+  }
+
+  /* Interactive Elements */
   button, a, [role="button"], label[for], select, summary {
     cursor: pointer;
   }
@@ -41,20 +64,10 @@ html, body, #root, *, *::before, *::after {
     cursor: not-allowed;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-family: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
-    font-weight: 700;
+  /* Headings use modern Playfair Display serif */
+  h1, h2, h3, .font-serif, .heading-serif {
+    font-family: var(--font-serif);
     letter-spacing: -0.015em;
-    line-height: 1.25;
-  }
-
-  /* Modern professional shopping site typography */
-  .heading-xl {
-    font-family: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-    font-size: clamp(2.25rem, 4.5vw, 4rem);
-    font-weight: 800;
-    letter-spacing: -0.025em;
-    line-height: 1.1;
   }
 
   /* Prevent iOS Safari auto-zoom on input focus by guaranteeing minimum 16px font-size */
@@ -64,20 +77,28 @@ html, body, #root, *, *::before, *::after {
     }
   }
 
+  .heading-xl {
+    font-family: var(--font-serif);
+    font-size: clamp(2.25rem, 4.5vw, 4rem);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+  }
+
   .heading-lg {
-    font-family: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    font-family: var(--font-serif);
     font-size: clamp(1.75rem, 3vw, 2.75rem);
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: -0.02em;
     line-height: 1.2;
   }
 
-  .caption {
+  .caption-eyebrow {
+    font-family: var(--font-sans);
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-muted);
+    letter-spacing: 0.18em;
   }
 }
 
@@ -91,7 +112,11 @@ html, body, #root, *, *::before, *::after {
   }
 
   .luxury-shadow {
-    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 16px 36px -12px rgba(74, 29, 63, 0.08);
+  }
+
+  .card-subtle-shadow {
+    box-shadow: 0 4px 20px -2px rgba(26, 26, 26, 0.04);
   }
 
   @keyframes shimmer {
@@ -101,45 +126,23 @@ html, body, #root, *, *::before, *::after {
   }
 
   .animate-shimmer {
-    animation: shimmer 2.5s infinite;
-  }
-
-  .parallax-bg {
-    background-attachment: fixed;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
+    animation: shimmer 2.2s infinite;
   }
 }
 
-/* Base custom animations & utilities */
+/* Glass and elevation styles */
 .glass-effect {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.text-stroke {
-  -webkit-text-stroke: 1px currentColor;
-  color: transparent;
-}
-
-.text-stroke-white {
-  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.8);
-  color: transparent;
+  background: rgba(251, 249, 246, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(232, 229, 223, 0.6);
 }
 
 .card-hover-effect {
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .card-hover-effect:hover {
   transform: translateY(-4px);
-  box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.1);
-}
-
-.badge-luxury {
-  background: linear-gradient(135deg, #1c1917 0%, #292524 100%);
-  color: #fbbf24;
-  border: 1px solid rgba(251, 191, 36, 0.3);
+  box-shadow: 0 18px 36px -8px rgba(74, 29, 63, 0.1);
 }
