@@ -15,8 +15,11 @@ export const addReview = asyncHandler(async (req, res) => {
   // Check if they purchased the product
   const hasPurchased = await Order.exists({
     customer: customerId,
-    'orderItems.product': productId,
-    orderStatus: 'delivered'
+    $or: [
+      { 'products.product': productId },
+      { 'orderItems.product': productId }
+    ],
+    orderStatus: { $in: ['delivered', 'completed', 'shipped', 'confirmed'] }
   });
 
   const review = await Review.create({
