@@ -11,5 +11,8 @@
     "dev:customer": "npm run dev --workspace=frontend/customer",
     "dev:admin": "npm run dev --workspace=frontend/admin",
     "dev": "npm run dev:backend & npm run dev:customer & npm run dev:admin"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1"
   }
 }

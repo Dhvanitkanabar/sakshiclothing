@@ -340,7 +340,7 @@ export const Navbar = () => {
           <div className="flex items-center gap-3 sm:gap-4 shrink-0">
             <button
               onClick={() => setIsMenuOpen(true)}
-              className={`lg:hidden p-2 -ml-1 rounded-full transition-colors active:scale-95 ${
+              className={`lg:hidden min-w-[44px] min-h-[44px] flex items-center justify-center p-2.5 -ml-1 rounded-full transition-colors active:scale-95 ${
                 isTransparent 
                   ? 'text-white hover:bg-white/15' 
                   : 'text-stone-700 hover:text-stone-950 hover:bg-stone-100'

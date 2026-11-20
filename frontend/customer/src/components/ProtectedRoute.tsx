@@ -11,7 +11,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { userId, isLoaded } = useClerkAuth();
   const location = useLocation();
 
-  if (!isLoaded) {
+  const isMockAuth = typeof window !== 'undefined' && Boolean((window as any).__MOCK_AUTH_USER__);
+
+  if (!isLoaded && !isMockAuth) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="animate-spin text-accent" size={48} />
@@ -19,7 +21,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  if (!userId) {
+  if (!userId && !isMockAuth) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

@@ -103,19 +103,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const mockUser = typeof window !== 'undefined' && (window as any).__MOCK_AUTH_USER__;
+  const effectiveUser = user || (mockUser ? {
+    _id: mockUser.id || 'mock_user_123',
+    clerkUserId: mockUser.id || 'mock_user_123',
+    fullName: mockUser.fullName || 'Test Customer',
+    email: mockUser.email || 'customer@example.com',
+    role: 'user',
+    isActive: true,
+    isBlocked: false,
+  } : null);
+
   const getClerkToken = async () => {
     try {
-      return await getToken();
+      const token = await getToken();
+      return token || (mockUser ? 'mock_clerk_token' : null);
     } catch {
-      return null;
+      return mockUser ? 'mock_clerk_token' : null;
     }
   };
 
   // loading = true only while Clerk itself is loading (usually <300ms)
-  const loading = !isLoaded;
+  const loading = mockUser ? false : !isLoaded;
 
   return (
-    <AuthContext.Provider value={{ user, isSignedIn: !!isSignedIn, loading, getClerkToken, login, signup, logout }}>
+    <AuthContext.Provider value={{ 
+      user: effectiveUser, 
+      isSignedIn: !!isSignedIn || Boolean(mockUser), 
+      loading, 
+      getClerkToken, 
+      login, 
+      signup, 
+      logout 
+    }}>
       {children}
     </AuthContext.Provider>
   );

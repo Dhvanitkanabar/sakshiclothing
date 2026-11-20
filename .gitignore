@@ -36,6 +36,10 @@ backend/fix_admin_role.js
 backend/reset_pw.js
 frontend/customer/patch_checkout.cjs
 
+# Test outputs
+test-results/
+playwright-report/
+
 # OS generated files
 .DS_Store
 Thumbs.db
