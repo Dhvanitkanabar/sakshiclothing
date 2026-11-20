@@ -399,7 +399,30 @@ public class MainActivity extends AppCompatActivity {
                         startActivity(intent);
                         return true;
                     } catch (Throwable ignored) {
-                        return false;
+                        return true;
+                    }
+                }
+
+                // Android Intent Scheme (deep links, external viewers)
+                if (url.startsWith("intent://") || url.startsWith("intent:")) {
+                    try {
+                        Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+                        if (intent != null) {
+                            if (getPackageManager().resolveActivity(intent, 0) != null) {
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(intent);
+                                return true;
+                            }
+                            String fallbackUrl = intent.getStringExtra("browser_fallback_url");
+                            if (fallbackUrl != null && !fallbackUrl.isEmpty()) {
+                                view.loadUrl(fallbackUrl);
+                                return true;
+                            }
+                            return true;
+                        }
+                    } catch (Throwable t) {
+                        Log.e(TAG, "Error handling intent scheme: " + url, t);
+                        return true;
                     }
                 }
                 return false;

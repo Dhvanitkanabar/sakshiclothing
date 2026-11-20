@@ -364,7 +364,7 @@ public class MainActivity extends AppCompatActivity {
                         startActivity(intent);
                         return true;
                     } catch (Throwable ignored) {
-                        return false;
+                        return true;
                     }
                 }
 
@@ -376,7 +376,41 @@ public class MainActivity extends AppCompatActivity {
                         startActivity(intent);
                         return true;
                     } catch (Throwable ignored) {
-                        return false;
+                        return true;
+                    }
+                }
+
+                // Android Intent Scheme (Razorpay, Bank UPI redirects, deep-links)
+                if (url.startsWith("intent://") || url.startsWith("intent:")) {
+                    try {
+                        Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+                        if (intent != null) {
+                            if (getPackageManager().resolveActivity(intent, 0) != null) {
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(intent);
+                                return true;
+                            }
+                            // Fallback to browser URL if available in intent
+                            String fallbackUrl = intent.getStringExtra("browser_fallback_url");
+                            if (fallbackUrl != null && !fallbackUrl.isEmpty()) {
+                                view.loadUrl(fallbackUrl);
+                                return true;
+                            }
+                            // Fallback to Play Store if package is specified
+                            String packageName = intent.getPackage();
+                            if (packageName != null && !packageName.isEmpty()) {
+                                try {
+                                    Intent marketIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + packageName));
+                                    marketIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    startActivity(marketIntent);
+                                    return true;
+                                } catch (Throwable ignored) {}
+                            }
+                            return true;
+                        }
+                    } catch (Throwable t) {
+                        Log.e(TAG, "Error handling intent scheme: " + url, t);
+                        return true;
                     }
                 }
 
@@ -388,7 +422,7 @@ public class MainActivity extends AppCompatActivity {
                         startActivity(intent);
                         return true;
                     } catch (Throwable ignored) {
-                        return false;
+                        return true;
                     }
                 }
 
