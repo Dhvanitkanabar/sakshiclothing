@@ -47,6 +47,8 @@ import subscriberRouter from './routes/subscriber.routes.js';
 
 import paymentRouter from './routes/payment.routes.js';
 import { createStandardOrder, verifyStandardPayment } from './controllers/payment.controller.js';
+import { getLoyaltyPoints } from './controllers/user.controller.js';
+import { optionalAuth } from './middlewares/auth.middleware.js';
 
 // Initialize dotenv in application scope
 dotenv.config();
@@ -332,6 +334,7 @@ app.use('/api/v1/subscribers', subscriberRouter);
 app.use('/api/subscribers', subscriberRouter);
 
 app.use('/api/v1/payments', paymentRouter);
+app.get('/api/v1/loyalty', optionalAuth, getLoyaltyPoints);
 app.post('/api/create-order', createStandardOrder);
 app.post('/api/verify-payment', verifyStandardPayment);
 

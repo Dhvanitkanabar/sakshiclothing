@@ -11,7 +11,8 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   fetchOrders, cancelOrder, getInvoiceUrl,
-  fetchAddresses, addAddress, deleteAddress, setDefaultAddress
+  fetchAddresses, addAddress, deleteAddress, setDefaultAddress,
+  authedFetch, API_URL
 } from '../lib/api';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -81,7 +82,8 @@ const resolveProductImage = (p: any): string => {
   }
 
   const cleanPath = url.startsWith('/') ? url : `/${url}`;
-  return `http://localhost:5000${cleanPath}`;
+  const baseUrl = (API_URL || 'http://localhost:5000/api/v1').replace(/\/api\/v1\/?$/, '');
+  return `${baseUrl}${cleanPath}`;
 };
 
 // ─── Profile Component ─────────────────────────────────────────────────────
@@ -108,9 +110,9 @@ const Profile = () => {
   const loadLoyalty = useCallback(async () => {
     if (!user) return;
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/loyalty`, { credentials: 'include' });
+      const res = await authedFetch(`${API_URL}/loyalty`, { credentials: 'include' });
       const data = await res.json();
-      if (data.success) {
+      if (data.success && data.data) {
         setLoyaltyData(data.data);
       }
     } catch (err) { }

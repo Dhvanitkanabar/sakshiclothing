@@ -97,3 +97,21 @@ export const getCustomerDetails = asyncHandler(async (req, res) => {
     orderHistory
   }, 'Customer details fetched'));
 });
+
+export const getLoyaltyPoints = asyncHandler(async (req, res) => {
+  if (!req.user) {
+    return res.status(200).json(new ApiResponse(200, { points: 0, transactions: [] }, 'Guest loyalty'));
+  }
+  const user = await User.findById(req.user._id).select('loyaltyPoints createdAt fullName');
+  const points = user?.loyaltyPoints || 0;
+  const transactions = points > 0 ? [
+    {
+      _id: `tx_${user._id}`,
+      type: 'earned',
+      points: points,
+      description: 'Account Welcome Reward & Couture Tier Points',
+      createdAt: user?.createdAt || new Date()
+    }
+  ] : [];
+  return res.status(200).json(new ApiResponse(200, { points, transactions }, 'Loyalty points retrieved'));
+});

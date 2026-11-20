@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { adminFetch } from '../../lib/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
@@ -10,8 +10,9 @@ export default function WishlistViewer() {
   useEffect(() => {
     const fetchWishlists = async () => {
       try {
-        const { data } = await axios.get(`${API_URL}/wishlist/all`, { withCredentials: true });
-        if (data.success) {
+        const res = await adminFetch(`${API_URL}/wishlist/all`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
           setWishlists(data.data);
         }
       } catch (error) {
