@@ -15,7 +15,7 @@ const Wishlist: React.FC = () => {
 
   const handleMoveToBag = (product: any) => {
     // If product has size options, default to first available size or 'M'
-    const defaultSize = (product.sizes && product.sizes.length > 0) ? product.sizes[0] : (product.selectedSize || 'Free Size');
+    const defaultSize = (product.sizes && product.sizes.length > 0) ? product.sizes[0] : 'Free Size';
     addToCart(product, defaultSize, 1);
     toggleWishlist(product);
     toast.success(`${product.name} moved to your bag.`);
@@ -89,9 +89,11 @@ const Wishlist: React.FC = () => {
                                   product.category?.toLowerCase()?.includes('earring') || 
                                   product.category?.toLowerCase()?.includes('bangle');
 
+              const anyProduct = product as any;
+
               return (
                 <motion.div
-                  key={product.id || product._id}
+                  key={product.id}
                   layout
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -101,7 +103,7 @@ const Wishlist: React.FC = () => {
                 >
                   <div className="relative aspect-[3/4] bg-[#FAF8F5] overflow-hidden">
                     <img
-                      src={product.image || product.thumbnail?.url || product.images?.[0]?.url}
+                      src={product.image || anyProduct.thumbnail?.url || anyProduct.images?.[0]?.url || product.image}
                       alt={product.name}
                       className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
                       loading="lazy"
@@ -135,7 +137,7 @@ const Wishlist: React.FC = () => {
                   {/* Card Info & Action */}
                   <div className="p-3.5 sm:p-4 flex flex-col flex-1 justify-between gap-3">
                     <div className="space-y-1">
-                      <Link to={`/product/${product.id || product._id}`}>
+                      <Link to={`/product/${product.id}`}>
                         <h3 className="text-xs sm:text-sm font-semibold text-[#1A1A1A] line-clamp-1 hover:text-[#4A1D3F] transition-colors">
                           {product.name}
                         </h3>
@@ -144,9 +146,9 @@ const Wishlist: React.FC = () => {
                         <span className="text-xs sm:text-sm font-bold text-[#1A1A1A]">
                           ₹{Number(product.price || 0).toLocaleString('en-IN')}
                         </span>
-                        {product.originalPrice && product.originalPrice > product.price && (
+                        {anyProduct.originalPrice && anyProduct.originalPrice > product.price && (
                           <span className="text-[11px] text-[#9CA3AF] line-through">
-                            ₹{Number(product.originalPrice).toLocaleString('en-IN')}
+                            ₹{Number(anyProduct.originalPrice).toLocaleString('en-IN')}
                           </span>
                         )}
                       </div>
