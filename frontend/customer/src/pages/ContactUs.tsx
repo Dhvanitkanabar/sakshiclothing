@@ -20,6 +20,7 @@ import {
 import { toast } from 'sonner';
 import { BUSINESS_CONFIG } from '../config/business';
 import { API_URL } from '../lib/api';
+import SEOHead from '../components/SEOHead';
 
 export const ContactUs: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -64,6 +65,10 @@ export const ContactUs: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#FBF9F6] text-[#1A1A1A] py-12 sm:py-20 px-4 sm:px-6 lg:px-8">
+      <SEOHead
+        title="Contact Us & Grievance Desk | Sakshi Clothing"
+        description="Connect with Sakshi Clothing concierge via WhatsApp, phone, email, or visit our Surat atelier coordinates."
+      />
       <div className="max-w-6xl mx-auto space-y-12">
         
         {/* Breadcrumb Navigation */}

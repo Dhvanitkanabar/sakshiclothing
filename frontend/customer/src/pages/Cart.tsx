@@ -6,6 +6,7 @@ import { useCart } from '../context/CartContext';
 import { Trash2, ShoppingBag, ArrowRight, Minus, Plus, Sparkles, Truck, ShieldCheck, Banknote, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '../components/ui/Button';
+import SEOHead from '../components/SEOHead';
 
 const FREE_SHIPPING_THRESHOLD = 999;
 
@@ -20,6 +21,7 @@ export const Cart: React.FC = () => {
   if (cart.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-36 text-center">
+        <SEOHead title="Your Bag is Empty | Sakshi Clothing" noIndex={true} />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -50,6 +52,7 @@ export const Cart: React.FC = () => {
 
   return (
     <div className="bg-[#FBF9F6] min-h-screen text-[#1A1A1A] pt-8 sm:pt-14 pb-36 lg:pb-16">
+      <SEOHead title={`Shopping Bag (${totalItems}) | Sakshi Clothing`} noIndex={true} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}

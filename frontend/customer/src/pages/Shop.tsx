@@ -8,6 +8,7 @@ import { fetchProducts, getCachedProducts } from '../lib/api';
 import { SearchX, SlidersHorizontal, X, Sparkles, ArrowRight, RotateCcw } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
+import SEOHead from '../components/SEOHead';
 
 const CATEGORY_META: Record<string, { badge: string; title: string; description: string; subcategories: string[] }> = {
   women: {
@@ -176,8 +177,17 @@ export const Shop: React.FC = () => {
 
   const isJewellerySelected = selectedCategory.toLowerCase() === 'jewellery';
 
+  const metaInfo = CATEGORY_META[selectedCategory.toLowerCase()] || {
+    title: selectedCategory !== 'All' ? `${selectedCategory} Collection` : 'All Collections',
+    description: 'Explore authentic Indian attire, artisanal sarees, bridal lehengas, and skin-friendly imitation jewellery.'
+  };
+
   return (
     <div className="bg-[#FBF9F6] min-h-screen text-[#1A1A1A] pb-24 lg:pb-16">
+      <SEOHead
+        title={`${metaInfo.title} | Sakshi Clothing`}
+        description={metaInfo.description}
+      />
       
       {/* ─── 1. PAGE HEADER ─────────────────────────────────────────── */}
       <header className="pt-10 sm:pt-14 pb-6 sm:pb-8 px-5 sm:px-8 max-w-7xl mx-auto">

@@ -4,10 +4,15 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Lock, Eye, Server, RefreshCw, Mail, Phone, MapPin, ChevronRight, AlertCircle } from 'lucide-react';
 import { BUSINESS_CONFIG } from '../config/business';
+import SEOHead from '../components/SEOHead';
 
 export const PrivacyPolicy: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#FBF9F6] text-[#1A1A1A] py-12 sm:py-20 px-4 sm:px-6 lg:px-8">
+      <SEOHead
+        title="Privacy Policy & Data Notice (DPDP) | Sakshi Clothing"
+        description="Data fiduciary and privacy protection notice under the Digital Personal Data Protection Act, 2023."
+      />
       <div className="max-w-4xl mx-auto space-y-10">
         
         {/* Breadcrumb Navigation */}

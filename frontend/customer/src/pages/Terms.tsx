@@ -5,10 +5,15 @@ import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { ShieldCheck, Scale, AlertCircle, FileText, CheckCircle2, ChevronRight, Mail, Phone, MapPin } from 'lucide-react';
 import { BUSINESS_CONFIG } from '../config/business';
+import SEOHead from '../components/SEOHead';
 
 export const Terms: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#FBF9F6] text-[#1A1A1A] py-12 sm:py-20 px-4 sm:px-6 lg:px-8">
+      <SEOHead
+        title="Terms & Conditions of Service | Sakshi Clothing"
+        description="Statutory terms and conditions for Sakshi Clothing e-commerce orders, pricing, and dispute resolution."
+      />
       <div className="max-w-4xl mx-auto space-y-10">
         
         {/* Breadcrumb Navigation */}

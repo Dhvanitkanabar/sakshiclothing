@@ -19,6 +19,7 @@ import { fetchHomepageData, fetchProducts, getCachedProducts, HomepageData } fro
 import { SectionHeading } from '../components/ui/SectionHeading';
 import { Button } from '../components/ui/Button';
 import { BUSINESS_CONFIG } from '../config/business';
+import SEOHead, { getOrganizationSchema } from '../components/SEOHead';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -107,6 +108,11 @@ export const Home: React.FC = () => {
 
   return (
     <div className="bg-[#FBF9F6] text-[#1A1A1A] min-h-screen">
+      <SEOHead
+        title="Sakshi Clothing | Luxury Indian Wear & Imitation Jewellery"
+        description="Discover handcrafted sarees, lehengas, kurtis, and skin-friendly imitation jewellery from Surat. Free shipping above ₹999 with Cash on Delivery."
+        jsonLd={getOrganizationSchema()}
+      />
       
       {/* ─── 1. HERO BANNER (DATA-DRIVEN CAROUSEL OR LUXURY BRAND HERO) ─── */}
       <section 

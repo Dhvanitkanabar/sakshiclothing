@@ -4,10 +4,15 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Truck, MapPin, Clock, Banknote, ShieldCheck, ChevronRight, AlertCircle, Package } from 'lucide-react';
 import { BUSINESS_CONFIG } from '../config/business';
+import SEOHead from '../components/SEOHead';
 
 export const ShippingPolicy: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#FBF9F6] text-[#1A1A1A] py-12 sm:py-20 px-4 sm:px-6 lg:px-8">
+      <SEOHead
+        title="Shipping & Delivery Policy | Sakshi Clothing"
+        description="Express 2-5 business day delivery across India from our Surat atelier with free shipping above ₹999."
+      />
       <div className="max-w-4xl mx-auto space-y-10">
         
         {/* Breadcrumb Navigation */}

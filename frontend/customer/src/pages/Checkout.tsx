@@ -13,6 +13,7 @@ import {
 import MapPicker from '../components/MapPicker';
 import { fetchAddresses, addAddress, placeOrder, initiateOrderCheckout } from '../lib/api';
 import { Button } from '../components/ui/Button';
+import SEOHead from '../components/SEOHead';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
@@ -416,6 +417,7 @@ export const Checkout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#FBF9F6] pt-8 sm:pt-14 pb-28 lg:pb-16 text-[#1A1A1A]">
+      <SEOHead title="Secure Checkout | Sakshi Clothing" noIndex={true} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Navigation Back */}

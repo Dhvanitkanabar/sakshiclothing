@@ -1,0 +1,24 @@
+# Robots.txt for Sakshi Clothing (https://sakshiclothing.store)
+User-agent: *
+Allow: /
+Allow: /shop
+Allow: /category/
+Allow: /product/
+Allow: /terms
+Allow: /privacy
+Allow: /refund-policy
+Allow: /shipping-policy
+Allow: /contact
+Allow: /track-order
+
+# Disallow private user states, checkouts, and admin portals
+Disallow: /admin
+Disallow: /checkout
+Disallow: /cart
+Disallow: /profile
+Disallow: /order-success
+Disallow: /payment-retry
+Disallow: /sso-callback
+Disallow: /api/
+
+Sitemap: https://sakshiclothing.store/sitemap.xml

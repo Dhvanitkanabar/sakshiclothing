@@ -4,10 +4,15 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { RotateCcw, ShieldAlert, Sparkles, CheckCircle2, ChevronRight, AlertCircle, Clock, Banknote, RefreshCw } from 'lucide-react';
 import { BUSINESS_CONFIG } from '../config/business';
+import SEOHead from '../components/SEOHead';
 
 export const RefundPolicy: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#FBF9F6] text-[#1A1A1A] py-12 sm:py-20 px-4 sm:px-6 lg:px-8">
+      <SEOHead
+        title="Refund, Return & Cancellation Policy | Sakshi Clothing"
+        description="7-day return policy for clothing and transit damage unboxing protocols for imitation jewellery."
+      />
       <div className="max-w-4xl mx-auto space-y-10">
         
         {/* Breadcrumb Navigation */}

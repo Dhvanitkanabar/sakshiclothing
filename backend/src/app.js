@@ -49,6 +49,7 @@ import paymentRouter from './routes/payment.routes.js';
 import { createStandardOrder, verifyStandardPayment } from './controllers/payment.controller.js';
 import { getLoyaltyPoints } from './controllers/user.controller.js';
 import { optionalAuth } from './middlewares/auth.middleware.js';
+import { getSitemapXml } from './controllers/sitemap.controller.js';
 
 // Initialize dotenv in application scope
 dotenv.config();
@@ -300,6 +301,7 @@ app.get(['/health', '/api/health', '/api/v1/health'], (req, res) => {
   res.status(200).json({ success: true, status: 'success', uptime: process.uptime(), timestamp: new Date().toISOString() });
 });
 app.use('/api/v1/health', healthRouter);
+app.get(['/sitemap.xml', '/api/v1/sitemap.xml'], getSitemapXml);
 
 app.get('/', (req, res) => {
   res.status(200).json({ status: 'ok', service: 'Sakshi Clothing API', active: true });

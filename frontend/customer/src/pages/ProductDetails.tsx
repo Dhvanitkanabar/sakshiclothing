@@ -33,6 +33,7 @@ import { toast } from 'sonner';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
+import SEOHead from '../components/SEOHead';
 
 export const ProductDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -187,8 +188,65 @@ export const ProductDetails: React.FC = () => {
     });
   };
 
+  const productSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    image: allImages.filter(Boolean),
+    description: product.description || `Handcrafted ${product.name} from Sakshi Clothing.`,
+    sku: product.id,
+    brand: {
+      '@type': 'Brand',
+      name: BUSINESS_CONFIG.storeName,
+    },
+    offers: {
+      '@type': 'Offer',
+      url: typeof window !== 'undefined' ? window.location.href : `https://sakshiclothing.store/product/${product.id}`,
+      priceCurrency: 'INR',
+      price: product.price,
+      availability: isSelectedOutOfStock ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+      itemCondition: 'https://schema.org/NewCondition',
+      seller: {
+        '@type': 'Organization',
+        name: BUSINESS_CONFIG.storeName,
+      },
+    },
+  };
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: 'https://sakshiclothing.store/',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: product.category,
+        item: `https://sakshiclothing.store/shop?category=${encodeURIComponent(product.category)}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: product.name,
+        item: `https://sakshiclothing.store/product/${product.id}`,
+      },
+    ],
+  };
+
   return (
     <div className="bg-[#FBF9F6] min-h-screen text-[#1A1A1A] pb-28 lg:pb-16">
+      <SEOHead
+        title={`${product.name} — Handcrafted ${product.category}`}
+        description={product.description?.slice(0, 160) || `Buy authentic ${product.name} at Sakshi Clothing. Handcrafted luxury with pan-India delivery.`}
+        ogType="product"
+        ogImage={mainImage || allImages[0] || product.image}
+        jsonLd={[productSchema, breadcrumbSchema]}
+      />
       
       {/* Breadcrumb Navigation */}
       <div className="max-w-7xl mx-auto px-5 sm:px-8 pt-8 pb-4">
