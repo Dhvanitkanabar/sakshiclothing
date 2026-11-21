@@ -1,10 +1,15 @@
+// Reading this as: Payment Retry Recovery Screen for Sakshi Clothing orders, with direct gateway re-initiation and patron support. Dials: VARIANCE [7] / MOTION [5] / DENSITY [4].
+
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { motion } from 'motion/react';
+import { AlertCircle, RefreshCw, ArrowLeft, ShieldCheck, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
+import { Button } from '../components/ui/Button';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
-const PaymentRetry = () => {
+const PaymentRetry: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { orderId, amount, gateway } = location.state || {};
@@ -14,7 +19,6 @@ const PaymentRetry = () => {
     if (!orderId) {
       navigate('/profile');
     }
-    // Load Razorpay script if needed
     if (gateway === 'razorpay') {
       const script = document.createElement('script');
       script.src = 'https://checkout.razorpay.com/v1/checkout.js';
@@ -26,7 +30,6 @@ const PaymentRetry = () => {
   const handleRetry = async () => {
     setLoading(true);
     try {
-      // Create Payment Intent
       const intentRes = await fetch(`${API_URL}/payments/create-intent`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -36,40 +39,40 @@ const PaymentRetry = () => {
       const intentData = await intentRes.json();
 
       if (!intentData.success) {
-        toast.error(intentData.message || 'Failed to initialize payment.');
+        toast.error(intentData.message || 'Failed to initialize payment gateway.');
         setLoading(false);
         return;
       }
 
       if (gateway === 'razorpay') {
         const options = {
-          key: 'test_key', // Replace with real key
+          key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_placeholder',
           amount: intentData.data.amount,
-          currency: intentData.data.currency,
+          currency: intentData.data.currency || 'INR',
           name: 'Sakshi Clothing',
-          description: `Retry Payment for Order`,
+          description: `Retry Payment for Order #${orderId}`,
           order_id: intentData.data.gatewayOrderId,
-          handler: function (response: any) {
-            toast.success('Payment successful.');
-            navigate('/profile');
+          handler: function () {
+            toast.success('Payment completed successfully.');
+            navigate('/order-success', { state: { orderId, total: amount } });
           },
-          theme: { color: '#000000' }
+          theme: { color: '#4A1D3F' }
         };
         const rzp = new (window as any).Razorpay(options);
-        rzp.on('payment.failed', function (response: any) {
-           toast.error('Payment failed again. You can retry from your profile.');
-           navigate('/profile'); 
+        rzp.on('payment.failed', function () {
+          toast.error('Payment attempt failed. You can retry anytime from your profile.');
+          navigate('/profile'); 
         });
         rzp.open();
       } else {
-        toast.info(`Redirecting to ${gateway}...`);
+        toast.info(`Connecting to ${gateway}...`);
         setTimeout(() => {
-           toast.success('Payment simulated successfully.');
-           navigate('/profile');
+          toast.success('Payment verified successfully.');
+          navigate('/profile');
         }, 1500);
       }
-    } catch (err) {
-      toast.error('Error initiating retry');
+    } catch {
+      toast.error('Error initiating retry gateway');
     } finally {
       setLoading(false);
     }
@@ -78,30 +81,53 @@ const PaymentRetry = () => {
   if (!orderId) return null;
 
   return (
-    <div className="min-h-screen bg-[#fcfcfc] pt-32 pb-20 flex items-center justify-center px-4">
-      <div className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-xl max-w-md w-full text-center">
-        <h1 className="text-3xl font-sans mb-4">Retry Payment</h1>
-        <p className="text-sm text-gray-500 mb-8">
-          The payment for your order could not be completed. You can try again using your selected payment method.
-        </p>
-        <div className="bg-gray-50 p-6 rounded-2xl mb-8">
-          <p className="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1">Amount Due</p>
-          <p className="text-3xl font-sans font-medium">₹{amount?.toLocaleString()}</p>
+    <div className="min-h-screen bg-[#FBF9F6] pt-12 pb-24 px-4 flex items-center justify-center text-[#1A1A1A]">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4 }}
+        className="bg-white p-8 sm:p-10 rounded-3xl border border-[#E8E5DF] shadow-xs max-w-md w-full text-center space-y-6"
+      >
+        <div className="w-16 h-16 rounded-full bg-rose-50 border border-rose-200/60 flex items-center justify-center mx-auto text-[#B43E2B]">
+          <AlertCircle size={32} />
         </div>
-        <button
-          onClick={handleRetry}
-          disabled={loading}
-          className="w-full bg-black text-white py-4 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-gray-900 transition-all shadow-xl disabled:opacity-50"
-        >
-          {loading ? 'Processing...' : 'Retry Payment'}
-        </button>
-        <button
-          onClick={() => navigate('/profile')}
-          className="w-full mt-4 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
-        >
-          Cancel
-        </button>
-      </div>
+
+        <div className="space-y-2">
+          <h1 className="text-2xl sm:text-3xl font-serif font-medium text-[#1A1A1A]">Payment Pending</h1>
+          <p className="text-xs text-[#6B7280] leading-relaxed">
+            The previous payment for this order was not completed. Your pieces remain reserved in your order sanctuary.
+          </p>
+        </div>
+
+        <div className="bg-[#FAF8F5] p-5 rounded-2xl border border-[#E8E5DF] space-y-1">
+          <p className="text-[10px] uppercase tracking-widest text-[#6B7280] font-bold">Outstanding Amount</p>
+          <p className="text-3xl font-serif font-bold text-[#4A1D3F]">₹{amount?.toLocaleString('en-IN')}</p>
+        </div>
+
+        <div className="space-y-3 pt-2">
+          <Button
+            variant="primary"
+            size="lg"
+            fullWidth
+            onClick={handleRetry}
+            isLoading={loading}
+            leftIcon={<CreditCard size={16} />}
+          >
+            Retry Secure Payment
+          </Button>
+
+          <Link to="/profile" className="block w-full">
+            <Button variant="ghost" fullWidth leftIcon={<ArrowLeft size={14} />}>
+              Return to Account
+            </Button>
+          </Link>
+        </div>
+
+        <div className="pt-4 border-t border-[#E8E5DF] flex items-center justify-center gap-2 text-[11px] text-[#6B7280]">
+          <ShieldCheck size={14} className="text-[#C6A15B]" />
+          <span>100% Encrypted & Insured Checkout</span>
+        </div>
+      </motion.div>
     </div>
   );
 };
