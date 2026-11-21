@@ -24,6 +24,7 @@ import {
 import { API_URL } from '../lib/api';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/Button';
+import { BUSINESS_CONFIG } from '../config/business';
 
 const STATUS_STEPS = [
   { key: 'pending_approval', label: 'Order Placed', shortLabel: 'Placed' },
@@ -589,13 +590,13 @@ const TrackOrder: React.FC = () => {
                     Have questions regarding your delivery status, sizing exchange, or packaging? Our Surat atelier concierge is on WhatsApp.
                   </p>
                   <a
-                    href={`https://wa.me/919316533660?text=${encodeURIComponent(`Hi Sakshi Clothing! I am tracking Order #${order.orderNumber} and would like an update.`)}`}
+                    href={`https://wa.me/${BUSINESS_CONFIG.whatsappNumber}?text=${encodeURIComponent(`Hi ${BUSINESS_CONFIG.storeName}! I am tracking Order #${order.orderNumber} and would like an update.`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full min-h-[44px] py-3 px-4 bg-[#FAF8F5] hover:bg-[#F3EFEA] border border-[#E8E5DF] text-[#1A1A1A] text-xs font-bold uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2"
                   >
                     <MessageCircle size={15} className="text-[#25D366]" />
-                    <span>WhatsApp Concierge (+91 9316533660)</span>
+                    <span>WhatsApp Concierge ({BUSINESS_CONFIG.helplineDisplay})</span>
                   </a>
                 </div>
 

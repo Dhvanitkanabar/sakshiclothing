@@ -1,3 +1,5 @@
+import { BUSINESS_CONFIG } from '../config/business.config.js';
+
 /**
  * Generates a printable HTML invoice for an order.
  * No external dependencies — pure HTML/CSS.
@@ -88,11 +90,11 @@ export const generateInvoiceHTML = (order) => {
   <div class="page">
     <div class="header">
       <div>
-        <div class="brand">SAKSHI</div>
+        <div class="brand">${BUSINESS_CONFIG.storeName.toUpperCase()}</div>
         <div style="margin-top:16px;font-size:12px;opacity:.75;line-height:1.7;">
-          G-903 Sentosa Heights, Utran, Surat, Gujarat, India<br>
-          GST: 24AABCS1429B1Z1 &bull; Mobile: +91 9316533660<br>
-          Email: sakshiclothing2025@gmail.com
+          ${BUSINESS_CONFIG.address.fullFormatted}<br>
+          GST: ${BUSINESS_CONFIG.gstNumber} &bull; Mobile: ${BUSINESS_CONFIG.supportPhone}<br>
+          Email: ${BUSINESS_CONFIG.supportEmail}
         </div>
       </div>
       <div class="invoice-meta">

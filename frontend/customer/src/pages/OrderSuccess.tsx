@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/Button';
+import { BUSINESS_CONFIG } from '../config/business';
 
 interface OrderSuccessState {
   orderId: string;
@@ -190,7 +191,7 @@ export const OrderSuccess: React.FC = () => {
             <div className="p-3.5 rounded-2xl bg-[#FAF8F5] border border-[#E8E5DF] space-y-1">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-[#1A1A1A]">
                 <RotateCcw size={14} className="text-[#4A1D3F]" />
-                <span>7-Day Return</span>
+                <span>{BUSINESS_CONFIG.policies.returnWindowDays}-Day Return</span>
               </div>
               <p className="text-[11px] text-[#6B7280] leading-relaxed">
                 Hassle-free return & size exchange policy on all purchases.
@@ -224,13 +225,13 @@ export const OrderSuccess: React.FC = () => {
 
           <div className="pt-2 text-center">
             <a
-              href="https://wa.me/919316533660"
+              href={BUSINESS_CONFIG.whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-xs text-[#25D366] font-semibold hover:underline min-h-[44px] py-1"
             >
               <MessageCircle size={15} />
-              <span>Need help? Chat with WhatsApp Concierge (+91 9316533660)</span>
+              <span>Need help? Chat with WhatsApp Concierge ({BUSINESS_CONFIG.helplineDisplay})</span>
             </a>
           </div>
 

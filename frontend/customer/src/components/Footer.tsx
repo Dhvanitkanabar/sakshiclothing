@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { API_URL } from '../lib/api';
+import { BUSINESS_CONFIG } from '../config/business';
 
 export const Footer: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -66,7 +67,7 @@ export const Footer: React.FC = () => {
             </div>
             <div>
               <p className="font-semibold text-white text-xs">Free Express Shipping</p>
-              <p className="text-[#A89FA9] text-[11px]">On all prepaid & COD orders above ₹999</p>
+              <p className="text-[#A89FA9] text-[11px]">On all prepaid & COD orders above ₹{BUSINESS_CONFIG.policies.freeShippingThreshold}</p>
             </div>
           </div>
 
@@ -85,7 +86,7 @@ export const Footer: React.FC = () => {
               <RotateCcw size={18} />
             </div>
             <div>
-              <p className="font-semibold text-white text-xs">7-Day Easy Returns</p>
+              <p className="font-semibold text-white text-xs">{BUSINESS_CONFIG.policies.returnWindowDays}-Day Easy Returns</p>
               <p className="text-[#A89FA9] text-[11px]">Hassle-free return & size exchange policy</p>
             </div>
           </div>
@@ -163,20 +164,20 @@ export const Footer: React.FC = () => {
             <div className="space-y-2 text-[11px] text-[#DDD6DF] pt-1">
               <p className="flex items-start gap-2">
                 <MapPin size={14} className="text-[#C6A15B] shrink-0 mt-0.5" />
-                <span>G-903 Sentosa Heights, Utran, Surat, Gujarat - 394105</span>
+                <span>{BUSINESS_CONFIG.address.fullFormatted}</span>
               </p>
               <p className="flex items-center gap-2">
                 <Phone size={14} className="text-[#C6A15B] shrink-0" />
-                <span>+91 9316533660</span>
+                <span>{BUSINESS_CONFIG.helplineDisplay}</span>
               </p>
               <p className="flex items-center gap-2">
                 <Mail size={14} className="text-[#C6A15B] shrink-0" />
-                <span>sakshiclothing2025@gmail.com</span>
+                <span>{BUSINESS_CONFIG.supportEmail}</span>
               </p>
             </div>
             <div className="pt-2">
               <a
-                href="https://wa.me/919316533660"
+                href={BUSINESS_CONFIG.whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-[#25D366]/15 hover:bg-[#25D366]/25 text-[#4ADE80] border border-[#25D366]/30 rounded-full text-xs font-medium transition-colors min-h-[44px]"
@@ -268,7 +269,7 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <span className="text-[#DDD6DF]">
-                  Free Shipping Above ₹999
+                  Free Shipping Above ₹{BUSINESS_CONFIG.policies.freeShippingThreshold}
                 </span>
               </li>
               <li>
@@ -278,12 +279,12 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <span className="text-[#DDD6DF]">
-                  7-Day Return & Exchange Policy
+                  {BUSINESS_CONFIG.policies.returnWindowDays}-Day Return & Exchange Policy
                 </span>
               </li>
               <li>
-                <a href="tel:+919316533660" className="hover:text-white transition-colors">
-                  Helpline: +91 9316533660
+                <a href={`tel:${BUSINESS_CONFIG.supportPhone.replace(/\s+/g, '')}`} className="hover:text-white transition-colors">
+                  Helpline: {BUSINESS_CONFIG.helplineDisplay}
                 </a>
               </li>
             </ul>

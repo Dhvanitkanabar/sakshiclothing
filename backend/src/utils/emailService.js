@@ -6,6 +6,7 @@ if (dns.setDefaultResultOrder) {
 import nodemailer from 'nodemailer';
 import mongoose from 'mongoose';
 import StoreSettings from '../models/StoreSettings.model.js';
+import { BUSINESS_CONFIG } from '../config/business.config.js';
 
 export const getTransporter = async (customConfig = null, forcePort = null) => {
   let cfg = customConfig;
@@ -80,10 +81,10 @@ export const getTransporter = async (customConfig = null, forcePort = null) => {
   });
 };
 
-const DEFAULT_SENDER = process.env.EMAIL_FROM || 'sakshiclothing2025@gmail.com';
-const COMPANY_ADDRESS = 'G-903 Sentosa Heights, Utran, Surat, Gujarat, India';
-const COMPANY_PHONE = '+91 9316533660';
-const COMPANY_EMAIL = 'sakshiclothing2025@gmail.com';
+const DEFAULT_SENDER = BUSINESS_CONFIG.supportEmail;
+const COMPANY_ADDRESS = BUSINESS_CONFIG.address.fullFormatted;
+const COMPANY_PHONE = BUSINESS_CONFIG.supportPhone;
+const COMPANY_EMAIL = BUSINESS_CONFIG.supportEmail;
 
 const VERCEL_RELAY_URL = process.env.EMAIL_RELAY_URL || 'https://admin.sakshiclothing.store/api/send-email';
 const VERCEL_RELAY_SECRET = process.env.EMAIL_RELAY_SECRET || 'sakshi_luxury_secure_relay_2025';

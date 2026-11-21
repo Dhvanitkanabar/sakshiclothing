@@ -43,7 +43,7 @@ public class WebAppInterface {
     @JavascriptInterface
     public void openWhatsApp(String message) {
         try {
-            String url = "https://api.whatsapp.com/send?phone=919825440058&text=" + Uri.encode(message);
+            String url = "https://api.whatsapp.com/send?phone=919316533660&text=" + Uri.encode(message);
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(intent);
