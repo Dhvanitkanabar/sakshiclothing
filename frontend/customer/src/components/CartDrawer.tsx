@@ -15,6 +15,17 @@ export const CartDrawer: React.FC = () => {
   const progressPercent = Math.min(100, Math.round((totalPrice / FREE_SHIPPING_THRESHOLD) * 100));
   const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - totalPrice);
 
+  React.useEffect(() => {
+    if (!isCartOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsCartOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isCartOpen, setIsCartOpen]);
+
   return (
     <AnimatePresence>
       {isCartOpen && (
@@ -34,6 +45,9 @@ export const CartDrawer: React.FC = () => {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 260 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Shopping Bag Drawer"
             className="fixed top-0 right-0 h-full w-full sm:max-w-md bg-[#FBF9F6] shadow-2xl z-[111] flex flex-col justify-between"
           >
             {/* Drawer Header */}

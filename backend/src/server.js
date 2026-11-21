@@ -7,6 +7,8 @@ import dotenv from 'dotenv';
 import app from './app.js';
 import connectDB from './config/database.js';
 import logger from './utils/logger.js';
+import validateEnv from './config/envValidator.js';
+import { startStockCleanupCron } from './jobs/stockCleanupJob.js';
 
 // Load environment configurations before initiating database connection
 dotenv.config();
@@ -27,6 +29,9 @@ process.on('uncaughtException', (err) => {
 
 const startServer = async () => {
   try {
+    // 0. Validate core environment variables before establishing connections
+    validateEnv();
+
     // 1. Await successful connection to MongoDB
     logger.info('[Server] Connecting to MongoDB...');
     await connectDB();
@@ -79,6 +84,9 @@ const startServer = async () => {
       logger.info(`[Server] E-Commerce server running on port: ${PORT}`);
       logger.info(`[Server] Mode: ${process.env.NODE_ENV}`);
       logger.info(`[Server] Health check target: http://0.0.0.0:${PORT}/health`);
+
+      // Initialize background stock cleanup daemon (every 15 minutes)
+      startStockCleanupCron(15 * 60 * 1000);
 
       // Prevent Render instance from sleeping: Self-ping heartbeat every 10 minutes
       const keepAliveUrl = process.env.RENDER_EXTERNAL_URL 

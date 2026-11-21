@@ -50,6 +50,7 @@ import { createStandardOrder, verifyStandardPayment } from './controllers/paymen
 import { getLoyaltyPoints } from './controllers/user.controller.js';
 import { optionalAuth } from './middlewares/auth.middleware.js';
 import { getSitemapXml } from './controllers/sitemap.controller.js';
+import { checkHealth } from './controllers/health.controller.js';
 
 // Initialize dotenv in application scope
 dotenv.config();
@@ -297,9 +298,7 @@ import { clerkMiddleware } from '@clerk/express';
 // Health & Liveness Checks (Unconditional, ahead of third-party middlewares)
 // =========================================================================
 
-app.get(['/health', '/api/health', '/api/v1/health'], (req, res) => {
-  res.status(200).json({ success: true, status: 'success', uptime: process.uptime(), timestamp: new Date().toISOString() });
-});
+app.get(['/health', '/api/health', '/api/v1/health'], checkHealth);
 app.use('/api/v1/health', healthRouter);
 app.get(['/sitemap.xml', '/api/v1/sitemap.xml'], getSitemapXml);
 

@@ -15,6 +15,7 @@ import BottomNav from './components/BottomNav';
 import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
 import ProtectedRoute from './components/ProtectedRoute';
+import CookieConsent from './components/CookieConsent';
 import { motion, AnimatePresence } from 'motion/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Analytics } from '@vercel/analytics/react';
@@ -37,6 +38,7 @@ const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const RefundPolicy = lazy(() => import('./pages/RefundPolicy'));
 const ShippingPolicy = lazy(() => import('./pages/ShippingPolicy'));
 const ContactUs = lazy(() => import('./pages/ContactUs'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 
 import ScrollToTop from './components/ScrollToTop';
@@ -97,6 +99,9 @@ const AnimatedRoutes = () => {
 
             {/* OAuth callback — Clerk handles this automatically */}
             <Route path="/sso-callback" element={<AuthenticateWithRedirectCallback />} />
+
+            {/* Fallback 404 Route */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </motion.div>
@@ -140,6 +145,7 @@ const AppContent = () => {
       </main>
       {!isAuthPage && <BottomNav />}
       {!isAuthPage && <Footer />}
+      <CookieConsent />
       <Toaster position="top-center" richColors />
       <SpeedInsights />
       <Analytics />
