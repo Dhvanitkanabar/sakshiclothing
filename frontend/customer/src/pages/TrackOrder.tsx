@@ -206,7 +206,7 @@ const TrackOrder: React.FC = () => {
               <span>Surat Atelier Live Fulfillment</span>
             </div>
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-medium text-[#1A1A1A] tracking-tight">
-              {order ? `Order #${order.orderNumber}` : 'Track Your Shipment'}
+              {order ? `Order #${order.orderNumber}` : 'Track Your Order'}
             </h1>
           </div>
 
@@ -215,7 +215,7 @@ const TrackOrder: React.FC = () => {
             <div className="relative flex-1 md:w-64">
               <input
                 type="text"
-                placeholder="Order # (e.g. ORDERSC1)"
+                placeholder="Enter Order # (e.g. ORDERSC1)"
                 value={orderId}
                 onChange={(e) => setOrderId(e.target.value.replace(/^#+/, '').toUpperCase())}
                 className="w-full bg-white border border-[#E8E5DF] px-4 py-2.5 rounded-xl text-base sm:text-xs font-semibold text-[#1A1A1A] focus:outline-none focus:border-[#4A1D3F] focus:ring-1 focus:ring-[#4A1D3F] transition-all uppercase placeholder:normal-case font-mono min-h-[44px]"

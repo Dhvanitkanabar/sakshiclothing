@@ -49,7 +49,7 @@ export const CartDrawer: React.FC = () => {
                 </div>
                 <div>
                   <h2 className="text-lg font-serif font-semibold text-[#1A1A1A] leading-tight">
-                    Your Shopping Bag
+                    Your Atelier Bag
                   </h2>
                   <p className="text-[10px] font-sans uppercase tracking-wider text-[#6B7280]">
                     Sakshi Clothing & Jewellery
