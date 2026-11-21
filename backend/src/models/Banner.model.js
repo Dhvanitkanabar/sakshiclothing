@@ -43,7 +43,7 @@ const bannerSchema = new Schema(
     },
     homepageSection: {
       type: String,
-      enum: ['hero', 'trending', 'featured', 'bottom', 'popup'],
+      enum: ['hero', 'trending', 'featured', 'spotlight', 'lookbook', 'bottom', 'popup'],
       default: 'hero'
     },
     isActive: {

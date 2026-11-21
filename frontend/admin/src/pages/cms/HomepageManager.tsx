@@ -123,11 +123,14 @@ export default function HomepageManager() {
           <div><label className="block text-sm">Button Link</label><input value={bannerForm.buttonLink} onChange={e => setBannerForm({...bannerForm, buttonLink: e.target.value})} className="w-full border p-2 rounded" /></div>
           <div><label className="block text-sm">Image URL</label><input required type="url" value={bannerForm.image.url} onChange={e => setBannerForm({...bannerForm, image: { url: e.target.value }})} className="w-full border p-2 rounded" /></div>
           <div>
-            <label className="block text-sm">Section</label>
+            <label className="block text-sm">Target Homepage Section</label>
             <select value={bannerForm.homepageSection} onChange={e => setBannerForm({...bannerForm, homepageSection: e.target.value})} className="w-full border p-2 rounded">
-              <option value="hero">Hero</option>
-              <option value="trending">Trending</option>
-              <option value="bottom">Bottom</option>
+              <option value="hero">Hero (Top Carousel)</option>
+              <option value="spotlight">Jewellery Spotlight</option>
+              <option value="lookbook">Shop The Look (Lookbook Pair)</option>
+              <option value="featured">Featured Collections</option>
+              <option value="trending">Trending Section</option>
+              <option value="bottom">Bottom / Footer Banner</option>
             </select>
           </div>
           <div className="col-span-2 flex justify-end">

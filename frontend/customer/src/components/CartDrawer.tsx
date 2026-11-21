@@ -141,7 +141,7 @@ export const CartDrawer: React.FC = () => {
                             referrerPolicy="no-referrer" 
                             onError={(e) => {
                               const target = e.currentTarget;
-                              const fallback = "https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=600&auto=format&fit=crop";
+                              const fallback = "/placeholder-product.svg";
                               if (target.src !== fallback) {
                                 target.src = fallback;
                               }

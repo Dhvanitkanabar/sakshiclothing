@@ -2,6 +2,7 @@ import Banner from '../models/Banner.model.js';
 import StoreSettings from '../models/StoreSettings.model.js';
 import Product from '../models/Product.model.js';
 import Category from '../models/Category.model.js';
+import Review from '../models/Review.model.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import { HTTP_STATUS, PRODUCT_STATUS } from '../constants/index.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
@@ -11,6 +12,8 @@ class CmsController {
   getHomepageData = asyncHandler(async (req, res) => {
     // 1. Fetch Banners
     const heroBanners = await Banner.find({ homepageSection: 'hero', isActive: true }).sort('displayOrder');
+    const spotlightBanners = await Banner.find({ homepageSection: 'spotlight', isActive: true }).sort('displayOrder');
+    const lookbookBanners = await Banner.find({ homepageSection: 'lookbook', isActive: true }).sort('displayOrder');
     
     // 2. Fetch Store Settings (Announcements, Footer, etc)
     const storeSettings = await StoreSettings.findOne() || {};
@@ -27,13 +30,35 @@ class CmsController {
     // 6. Fetch Categories (Top level)
     const topCategories = await Category.find({ parentCategory: null, isActive: true }).sort('displayOrder');
 
+    // 7. Fetch Jewellery Spotlight Products
+    const jewelleryCategories = await Category.find({ name: { $regex: /jewel/i } }).select('_id');
+    const jewelleryCatIds = jewelleryCategories.map(c => c._id);
+    const jewelleryProducts = await Product.find({
+      $or: [
+        { category: { $in: jewelleryCatIds } },
+        { tags: { $in: ['jewellery', 'jewelry', 'choker', 'necklace', 'earrings', 'bangles', 'kundan', 'polki'] } }
+      ],
+      status: PRODUCT_STATUS.PUBLISHED
+    }).limit(6);
+
+    // 8. Fetch Real Approved Customer Reviews
+    const reviews = await Review.find({ isApproved: true, rating: { $gte: 4 } })
+      .populate('customer', 'fullName')
+      .populate('product', 'name images thumbnail')
+      .sort('-createdAt')
+      .limit(6);
+
     return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, {
       heroBanners,
+      spotlightBanners,
+      lookbookBanners,
       announcements: storeSettings.announcementBar || [],
       footer: storeSettings.socialLinks || {},
       featuredProducts,
       trendingProducts,
       newArrivals,
+      jewelleryProducts,
+      reviews,
       categories: topCategories
     }, 'Homepage data retrieved'));
   });

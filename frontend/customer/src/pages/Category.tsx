@@ -7,17 +7,7 @@ import ProductCard from '../components/ProductCard';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronRight, SlidersHorizontal, SearchX, X, Sparkles, ShieldCheck, Truck, Filter, RotateCcw } from 'lucide-react';
 import { fetchProducts, API_URL, getCachedProducts } from '../lib/api';
-import { PRODUCTS } from '../data/products';
 import { Button } from '../components/ui/Button';
-
-const CATEGORY_IMAGES: Record<string, string> = {
-  jewellery: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=1920&q=80',
-  women: 'https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?w=1920&q=80',
-  men: 'https://images.unsplash.com/photo-1783188223691-8a233ee51cd8?w=1920&q=80',
-  kids: 'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?w=1920&q=80',
-  bridal: 'https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?w=1920&q=80',
-  clothing: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=1920&q=80'
-};
 
 export const Category: React.FC = () => {
   const { main, sub } = useParams<{ main: string; sub?: string }>();
@@ -37,17 +27,7 @@ export const Category: React.FC = () => {
       setLoading(true);
       const filterKey = sub || main || '';
       const data = await fetchProducts({ category: filterKey });
-      
-      let validData = Array.isArray(data) ? data : [];
-      if (validData.length === 0) {
-        const lowerKey = filterKey.toLowerCase();
-        validData = PRODUCTS.filter(p => 
-          p.category.toLowerCase() === lowerKey || 
-          p.subCategory?.toLowerCase().includes(lowerKey) ||
-          p.name.toLowerCase().includes(lowerKey)
-        );
-      }
-      
+      const validData = Array.isArray(data) ? data : [];
       setProducts(validData);
       setFilteredProducts(validData);
       setLoading(false);
@@ -66,26 +46,28 @@ export const Category: React.FC = () => {
     setFilteredProducts(result);
   }, [priceRange, sortBy, products, loading]);
 
-  const heroImage = CATEGORY_IMAGES[mainClean] || CATEGORY_IMAGES['women'];
+  const firstProductImage = products[0]?.image || '';
 
   return (
     <div className="min-h-screen bg-[#FBF9F6] pb-24 lg:pb-16 text-[#1A1A1A]">
       
       {/* Category Hero Banner */}
-      <div className="relative min-h-[38vh] sm:min-h-[46vh] flex items-center justify-center overflow-hidden bg-[#1A1A1A] text-white">
-        <motion.div
-          initial={{ opacity: 0, scale: 1.05 }}
-          animate={{ opacity: 0.55, scale: 1 }}
-          transition={{ duration: 1 }}
-          className="absolute inset-0"
-        >
-          <img
-            src={heroImage}
-            alt={main}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#FBF9F6] via-black/40 to-black/60" />
-        </motion.div>
+      <div className="relative min-h-[38vh] sm:min-h-[46vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#2D1627] via-[#3B1A34] to-[#1A1A1A] text-white">
+        {firstProductImage && (
+          <motion.div
+            initial={{ opacity: 0, scale: 1.05 }}
+            animate={{ opacity: 0.35, scale: 1 }}
+            transition={{ duration: 1 }}
+            className="absolute inset-0"
+          >
+            <img
+              src={firstProductImage}
+              alt={main}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#FBF9F6] via-black/40 to-black/60" />
+          </motion.div>
+        )}
 
         <div className="relative z-10 text-center px-5 max-w-3xl mx-auto pt-16 pb-12 sm:pt-20 sm:pb-16">
           <nav aria-label="Breadcrumb" className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[10px] text-white uppercase tracking-wider mb-4 font-semibold">

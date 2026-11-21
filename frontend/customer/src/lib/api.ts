@@ -1,6 +1,5 @@
 import { Product } from '../types';
 export type { Product } from '../types';
-import { PRODUCTS } from '../data/products';
 
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
@@ -71,7 +70,8 @@ export const mapBackendProductToFrontend = (backendProduct: any): Product => {
     description: backendProduct.description || backendProduct.shortDescription || '',
     featured: backendProduct.isFeatured || false,
     rating: backendProduct.averageRating || 5,
-    craftAndFabric: backendProduct.craftAndFabric || []
+    craftAndFabric: backendProduct.craftAndFabric || [],
+    productFacts: backendProduct.productFacts || undefined
   };
 };
 
@@ -96,7 +96,7 @@ export const getCachedProducts = (): Product[] => {
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
   } catch {}
-  return PRODUCTS;
+  return [];
 };
 
 export const getCachedFeatured = (): Product[] => {
@@ -107,7 +107,7 @@ export const getCachedFeatured = (): Product[] => {
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
   } catch {}
-  return PRODUCTS.filter(p => p.featured);
+  return [];
 };
 
 export const getCachedNewArrivals = (): Product[] => {
@@ -118,7 +118,7 @@ export const getCachedNewArrivals = (): Product[] => {
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
   } catch {}
-  return PRODUCTS.slice(0, 8);
+  return [];
 };
 
 export const fetchProducts = async (filters: any = {}) => {
@@ -141,16 +141,54 @@ export const fetchProducts = async (filters: any = {}) => {
   }
 };
 
-export const fetchProductById = async (id: string) => {
+export const fetchProductById = async (id: string): Promise<Product | null> => {
   try {
     const response = await fetchWithTimeout(`${API_URL}/products/${id}`, {}, 3800);
     const data = await response.json();
     if (data.success && data.data) {
       return mapBackendProductToFrontend(data.data);
     }
-    return getCachedProducts().find(p => p.id === id) || PRODUCTS.find(p => p.id === id) || PRODUCTS[0];
+    return getCachedProducts().find(p => p.id === id) || null;
   } catch {
-    return getCachedProducts().find(p => p.id === id) || PRODUCTS.find(p => p.id === id) || PRODUCTS[0];
+    return getCachedProducts().find(p => p.id === id) || null;
+  }
+};
+
+export interface HomepageData {
+  heroBanners: any[];
+  spotlightBanners: any[];
+  lookbookBanners: any[];
+  announcements: any[];
+  categories: any[];
+  featuredProducts: Product[];
+  trendingProducts: Product[];
+  newArrivals: Product[];
+  jewelleryProducts: Product[];
+  reviews: any[];
+}
+
+export const fetchHomepageData = async (): Promise<HomepageData | null> => {
+  try {
+    const res = await fetchWithTimeout(`${API_URL}/cms/homepage`, {}, 4000);
+    const data = await res.json();
+    if (data.success && data.data) {
+      return {
+        heroBanners: Array.isArray(data.data.heroBanners) ? data.data.heroBanners : [],
+        spotlightBanners: Array.isArray(data.data.spotlightBanners) ? data.data.spotlightBanners : [],
+        lookbookBanners: Array.isArray(data.data.lookbookBanners) ? data.data.lookbookBanners : [],
+        announcements: Array.isArray(data.data.announcements) ? data.data.announcements : [],
+        categories: Array.isArray(data.data.categories) ? data.data.categories : [],
+        featuredProducts: Array.isArray(data.data.featuredProducts) ? data.data.featuredProducts.map(mapBackendProductToFrontend) : [],
+        trendingProducts: Array.isArray(data.data.trendingProducts) ? data.data.trendingProducts.map(mapBackendProductToFrontend) : [],
+        newArrivals: Array.isArray(data.data.newArrivals) ? data.data.newArrivals.map(mapBackendProductToFrontend) : [],
+        jewelleryProducts: Array.isArray(data.data.jewelleryProducts) ? data.data.jewelleryProducts.map(mapBackendProductToFrontend) : [],
+        reviews: Array.isArray(data.data.reviews) ? data.data.reviews : []
+      };
+    }
+    return null;
+  } catch (err) {
+    console.warn('Could not fetch homepage CMS data:', err);
+    return null;
   }
 };
 

@@ -109,7 +109,7 @@ const Wishlist: React.FC = () => {
                       loading="lazy"
                       onError={(e) => {
                         const target = e.currentTarget;
-                        const fallback = "https://images.unsplash.com/photo-1611591475852-25bb3e76f536?q=80&w=600&auto=format&fit=crop";
+                        const fallback = "/placeholder-product.svg";
                         if (target.src !== fallback) {
                           target.src = fallback;
                         }

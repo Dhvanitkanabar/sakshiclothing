@@ -136,14 +136,9 @@ export const AuthPage: React.FC = () => {
   return (
     <div className="min-h-screen w-full bg-[#1A1A1A] text-white relative flex flex-col justify-between p-6 sm:p-8 select-none">
       {/* Background with luxury vignette */}
-      <div className="absolute inset-0 z-0 overflow-hidden">
-        <img
-          src="https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=2400&auto=format&fit=crop"
-          alt="Sakshi Couture"
-          className="w-full h-full object-cover object-center scale-105"
-        />
-        <div className="absolute inset-0 bg-[#1A1A1A]/75 backdrop-blur-[2px]" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-[#1A1A1A]/60 to-[#1A1A1A]/80" />
+      <div className="absolute inset-0 z-0 overflow-hidden bg-gradient-to-br from-[#2D1627] via-[#1F141E] to-[#120F13]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(198,161,91,0.08),transparent_50%)]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-[#1A1A1A]/80" />
       </div>
 
       {/* Top Header */}

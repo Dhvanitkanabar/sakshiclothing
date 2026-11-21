@@ -5,7 +5,6 @@ import { Product } from '../types';
 import ProductCard from '../components/ProductCard';
 import { motion, AnimatePresence } from 'motion/react';
 import { fetchProducts, getCachedProducts } from '../lib/api';
-import { PRODUCTS } from '../data/products';
 import { SearchX, SlidersHorizontal, X, Sparkles, ArrowRight, RotateCcw } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
@@ -67,7 +66,7 @@ export const Shop: React.FC = () => {
     const loadProducts = async () => {
       const data = await fetchProducts();
       if (!isMounted) return;
-      const validData = (data && data.length > 0) ? data : PRODUCTS;
+      const validData = Array.isArray(data) ? data : [];
       setProducts(validData);
       setFilteredProducts(validData);
       setLoading(false);

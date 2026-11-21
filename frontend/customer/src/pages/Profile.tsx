@@ -77,7 +77,7 @@ const resolveProductImage = (p: any): string => {
     '';
 
   if (!url || url.includes('placeholder.com')) {
-    return 'https://images.unsplash.com/photo-1611591475852-25bb3e76f536?q=80&w=400&auto=format&fit=crop';
+    return '/placeholder-product.svg';
   }
 
   if (url.startsWith('http://') || url.startsWith('https://')) {
@@ -473,7 +473,7 @@ const Profile: React.FC = () => {
                                   className="w-full h-full object-cover"
                                   onError={(e) => {
                                     e.currentTarget.onerror = null;
-                                    e.currentTarget.src = 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=400&auto=format&fit=crop';
+                                    e.currentTarget.src = '/placeholder-product.svg';
                                   }}
                                   referrerPolicy="no-referrer"
                                 />
