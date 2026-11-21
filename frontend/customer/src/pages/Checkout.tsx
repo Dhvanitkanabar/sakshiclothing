@@ -653,7 +653,7 @@ export const Checkout: React.FC = () => {
               </section>
 
               {/* Mobile Place Order Button */}
-              <div className="lg:hidden pt-2">
+              <div className="lg:hidden pt-2 space-y-2">
                 <button
                   disabled={loading}
                   type="submit"
@@ -661,6 +661,12 @@ export const Checkout: React.FC = () => {
                 >
                   {loading ? 'Processing...' : `Place Order — ₹${finalTotal.toLocaleString('en-IN')}`}
                 </button>
+                <p className="text-[11px] text-[#6B7280] text-center px-1 leading-relaxed">
+                  By placing your order, you agree to our{' '}
+                  <Link to="/terms" target="_blank" className="text-[#4A1D3F] underline font-medium">Terms</Link>,{' '}
+                  <Link to="/privacy" target="_blank" className="text-[#4A1D3F] underline font-medium">Privacy Policy</Link>, and{' '}
+                  <Link to="/refund-policy" target="_blank" className="text-[#4A1D3F] underline font-medium">Refunds</Link>.
+                </p>
               </div>
             </form>
           </div>
@@ -752,7 +758,7 @@ export const Checkout: React.FC = () => {
               </div>
 
               {/* Desktop Place Order Button */}
-              <div className="hidden lg:block pt-2">
+              <div className="hidden lg:block pt-2 space-y-2">
                 <button
                   disabled={loading}
                   onClick={() => {
@@ -769,6 +775,12 @@ export const Checkout: React.FC = () => {
                 >
                   {loading ? 'Processing...' : `Place Order — ₹${finalTotal.toLocaleString('en-IN')}`}
                 </button>
+                <p className="text-[11px] text-[#6B7280] text-center px-1 leading-relaxed">
+                  By placing your order, you agree to our{' '}
+                  <Link to="/terms" target="_blank" className="text-[#4A1D3F] underline font-medium">Terms of Service</Link>,{' '}
+                  <Link to="/privacy" target="_blank" className="text-[#4A1D3F] underline font-medium">Privacy Policy</Link>, and{' '}
+                  <Link to="/refund-policy" target="_blank" className="text-[#4A1D3F] underline font-medium">Refund Policy</Link>.
+                </p>
               </div>
 
               <div className="flex items-center justify-center gap-2 text-[11px] text-[#6B7280] pt-1">

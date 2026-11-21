@@ -32,6 +32,11 @@ const Wishlist = lazy(() => import('./pages/Wishlist'));
 const OrderSuccess = lazy(() => import('./pages/OrderSuccess'));
 const PaymentRetry = lazy(() => import('./pages/PaymentRetry'));
 const TrackOrder = lazy(() => import('./pages/TrackOrder'));
+const Terms = lazy(() => import('./pages/Terms'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const RefundPolicy = lazy(() => import('./pages/RefundPolicy'));
+const ShippingPolicy = lazy(() => import('./pages/ShippingPolicy'));
+const ContactUs = lazy(() => import('./pages/ContactUs'));
 
 
 import ScrollToTop from './components/ScrollToTop';
@@ -84,6 +89,11 @@ const AnimatedRoutes = () => {
             <Route path="/payment-retry" element={<PaymentRetry />} />
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/track-order" element={<TrackOrder />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/refund-policy" element={<RefundPolicy />} />
+            <Route path="/shipping-policy" element={<ShippingPolicy />} />
+            <Route path="/contact" element={<ContactUs />} />
 
             {/* OAuth callback — Clerk handles this automatically */}
             <Route path="/sso-callback" element={<AuthenticateWithRedirectCallback />} />

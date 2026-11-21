@@ -149,10 +149,10 @@ export const Footer: React.FC = () => {
         </div>
 
         {/* 3. FOOTER NAVIGATION LINKS */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10 pb-8 border-b border-[#37142E]">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-10 pb-8 border-b border-[#37142E]">
           
           {/* Column 1: Brand & Contact */}
-          <div className="col-span-2 sm:col-span-1 space-y-3">
+          <div className="col-span-2 md:col-span-1 space-y-3">
             <Link to="/" className="inline-block">
               <span className="font-serif text-2xl font-bold tracking-[0.16em] text-white">
                 SAKSHI
@@ -183,7 +183,7 @@ export const Footer: React.FC = () => {
                 className="inline-flex items-center gap-2 px-4 py-2 bg-[#25D366]/15 hover:bg-[#25D366]/25 text-[#4ADE80] border border-[#25D366]/30 rounded-full text-xs font-medium transition-colors min-h-[44px]"
               >
                 <MessageCircle size={15} />
-                <span>WhatsApp Customer Support</span>
+                <span>WhatsApp Support</span>
               </a>
             </div>
           </div>
@@ -216,7 +216,7 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <Link to="/shop?category=Men" className="hover:text-white transition-colors">
-                  Men's Sherwanis & Bandhgalas
+                  Men's Sherwanis & Kurtas
                 </Link>
               </li>
             </ul>
@@ -256,7 +256,7 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Column 4: Customer Care & Policies */}
+          {/* Column 4: Customer Care */}
           <div className="space-y-3">
             <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#C6A15B]">
               Customer Care
@@ -268,19 +268,19 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <span className="text-[#DDD6DF]">
-                  Free Shipping Above ₹{BUSINESS_CONFIG.policies.freeShippingThreshold}
-                </span>
+                <Link to="/contact" className="hover:text-white transition-colors">
+                  Contact Concierge
+                </Link>
               </li>
               <li>
-                <span className="text-[#DDD6DF]">
-                  Cash on Delivery Available
-                </span>
+                <Link to="/shipping-policy" className="hover:text-white transition-colors">
+                  Shipping & Dispatch
+                </Link>
               </li>
               <li>
-                <span className="text-[#DDD6DF]">
-                  {BUSINESS_CONFIG.policies.returnWindowDays}-Day Return & Exchange Policy
-                </span>
+                <Link to="/refund-policy" className="hover:text-white transition-colors">
+                  Returns & Exchanges
+                </Link>
               </li>
               <li>
                 <a href={`tel:${BUSINESS_CONFIG.supportPhone.replace(/\s+/g, '')}`} className="hover:text-white transition-colors">
@@ -290,11 +290,56 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
 
+          {/* Column 5: Legal & Policies */}
+          <div className="space-y-3">
+            <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#C6A15B]">
+              Legal & Compliance
+            </h4>
+            <ul className="space-y-2 text-[#A89FA9] text-xs">
+              <li>
+                <Link to="/terms" className="hover:text-white transition-colors">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link to="/privacy" className="hover:text-white transition-colors">
+                  Privacy Policy (DPDP)
+                </Link>
+              </li>
+              <li>
+                <Link to="/refund-policy" className="hover:text-white transition-colors">
+                  Refund & Cancellation
+                </Link>
+              </li>
+              <li>
+                <Link to="/shipping-policy" className="hover:text-white transition-colors">
+                  Shipping Policy
+                </Link>
+              </li>
+              <li className="pt-1 text-[10px] text-[#A89FA9]">
+                GSTIN: <span className="text-white font-mono">{BUSINESS_CONFIG.legal.gstNumber}</span>
+              </li>
+            </ul>
+          </div>
+
         </div>
 
         {/* 4. COPYRIGHT & PAYMENT CHIPS */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-[#8A818B] pt-2">
-          <p>© 2026 Sakshi Clothing Private Limited. All Rights Reserved. Surat, Gujarat.</p>
+          <div className="space-y-1 text-center sm:text-left">
+            <p>© 2026 {BUSINESS_CONFIG.legal.entityName}. All Rights Reserved. Surat, Gujarat, India.</p>
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-3 gap-y-1 text-[10px] text-[#A89FA9]">
+              <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
+              <span>•</span>
+              <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+              <span>•</span>
+              <Link to="/refund-policy" className="hover:text-white transition-colors">Refunds</Link>
+              <span>•</span>
+              <Link to="/shipping-policy" className="hover:text-white transition-colors">Shipping</Link>
+              <span>•</span>
+              <Link to="/contact" className="hover:text-white transition-colors">Grievance Desk</Link>
+            </div>
+          </div>
 
           <div className="flex items-center gap-2 text-[10px] text-[#DDD6DF]">
             <span className="px-2.5 py-1 rounded bg-[#261C28] border border-[#3E2B40]">UPI</span>

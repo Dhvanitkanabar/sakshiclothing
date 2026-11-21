@@ -1,6 +1,6 @@
 /**
  * Sakshi Clothing — Centralized Backend Business Configuration
- * Defines business settings, operational policies, and contact information.
+ * Defines business settings, operational policies, legal parameters, and contact information.
  * All backend utilities (invoice generator, email service, store settings fallback) import from here.
  */
 
@@ -26,6 +26,19 @@ export const BUSINESS_CONFIG = {
   policies: {
     returnWindowDays: 7,
     codAvailable: true,
+  },
+  grievanceOfficer: {
+    name: 'Grievance Redressal Officer',
+    designation: 'Head of Customer Relations & Compliance',
+    email: process.env.GRIEVANCE_EMAIL || 'sakshiclothing2025@gmail.com',
+    phone: '+91 9316533660',
+    address: 'G-903 Sentosa Heights, Utran, Surat, Gujarat - 394105, India',
+    responseSla: 'Acknowledgment within 48 business hours; resolution within 30 days pursuant to Consumer Protection (E-Commerce) Rules, 2020.',
+  },
+  legal: {
+    entityName: 'Sakshi Clothing',
+    jurisdiction: 'Surat, Gujarat, India',
+    gstNumber: process.env.STORE_GST_NUMBER || '24AABCS1429B1Z1',
   },
   socialLinks: {
     instagram: process.env.INSTAGRAM_URL || 'https://instagram.com/sakshiclothing',

@@ -283,6 +283,12 @@ export const AuthPage: React.FC = () => {
                     </>
                   )}
                 </button>
+                <p className="text-[11px] text-white/50 text-center pt-1 leading-relaxed">
+                  By continuing, you agree to our{' '}
+                  <Link to="/terms" target="_blank" className="text-[#C6A15B] underline hover:text-white transition-colors">Terms</Link>{' '}
+                  and{' '}
+                  <Link to="/privacy" target="_blank" className="text-[#C6A15B] underline hover:text-white transition-colors">Privacy Policy</Link>.
+                </p>
               </form>
             </div>
           )}
@@ -334,13 +340,17 @@ export const AuthPage: React.FC = () => {
           <span>256-Bit Encrypted Secure Sign-In</span>
         </span>
 
-        <div className="flex items-center gap-4">
-          <Link to="/shop" className="hover:text-white transition-colors">
-            Collections
+        <div className="flex items-center gap-3">
+          <Link to="/terms" className="hover:text-white transition-colors">
+            Terms
           </Link>
           <span>•</span>
-          <Link to="/" className="hover:text-white transition-colors">
-            Surat Atelier
+          <Link to="/privacy" className="hover:text-white transition-colors">
+            Privacy
+          </Link>
+          <span>•</span>
+          <Link to="/contact" className="hover:text-white transition-colors">
+            Help
           </Link>
         </div>
       </footer>
