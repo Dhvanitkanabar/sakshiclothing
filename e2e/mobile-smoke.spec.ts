@@ -56,6 +56,31 @@ test.describe('Mobile Viewport Smoke Suite (390x844)', () => {
       variantId: 'var_1',
     };
 
+    await page.route('**/api/v1/products/sakshi-01**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: {
+            _id: 'sakshi-01',
+            name: 'The Noor-e-Jahan Scalloped Raw Silk Bridal Lehenga',
+            category: { name: 'Bridal' },
+            pricing: { basePrice: 145000 },
+            variants: [{ _id: 'var_1', size: 'M', stock: 5, price: 145000 }],
+            images: [{ url: '/placeholder-product.svg' }],
+            thumbnail: { url: '/placeholder-product.svg' },
+            description: 'Intricately handcrafted scalloped bridal lehenga.',
+            productFacts: {
+              material: 'Raw Silk',
+              careInstructions: ['Dry clean only'],
+              isHypoallergenic: false
+            }
+          }
+        }),
+      });
+    });
+
     await page.route('**/api/v1/cart**', async (route) => {
       await route.fulfill({
         status: 200,
@@ -108,6 +133,31 @@ test.describe('Mobile Viewport Smoke Suite (390x844)', () => {
     });
 
     // Mock cart API so CartContext provides active items to checkout
+    await page.route('**/api/v1/products/sakshi-01**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: {
+            _id: 'sakshi-01',
+            name: 'The Noor-e-Jahan Scalloped Raw Silk Bridal Lehenga',
+            category: { name: 'Bridal' },
+            pricing: { basePrice: 145000 },
+            variants: [{ _id: 'var_1', size: 'M', stock: 5, price: 145000 }],
+            images: [{ url: '/placeholder-product.svg' }],
+            thumbnail: { url: '/placeholder-product.svg' },
+            description: 'Intricately handcrafted scalloped bridal lehenga.',
+            productFacts: {
+              material: 'Raw Silk',
+              careInstructions: ['Dry clean only'],
+              isHypoallergenic: false
+            }
+          }
+        }),
+      });
+    });
+
     await page.route('**/api/v1/cart**', async (route) => {
       await route.fulfill({
         status: 200,
