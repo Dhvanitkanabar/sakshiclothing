@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+// Reading this as: Order Success Confirmation Page for Sakshi Clothing, with celebratory editorial typography, gateway polling sync, and instant tracking access. Dials: VARIANCE [8] / MOTION [6] / DENSITY [4].
+
+import React, { useState, useEffect } from 'react';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { 
   CheckCircle2, 
@@ -11,11 +13,11 @@ import {
   Truck, 
   ShieldCheck, 
   Clock, 
-  PackageCheck,
   MessageCircle,
-  FileText
+  RotateCcw
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Button } from '../components/ui/Button';
 
 interface OrderSuccessState {
   orderId: string;
@@ -27,20 +29,15 @@ interface OrderSuccessState {
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
-/**
- * Design Read: Order Success & Confirmation for Sakshi Clothing couture patrons,
- * with refined editorial celebrating artisanal craftsmanship.
- * Dials: VARIANCE 7 / MOTION 6 / DENSITY 5.
- */
-const OrderSuccess = () => {
+export const OrderSuccess: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const stateData = location.state as OrderSuccessState | null;
   const [copied, setCopied] = useState(false);
   const [orderStatus, setOrderStatus] = useState<'pending' | 'confirmed' | 'failed'>(
     stateData?.isPending ? 'pending' : 'confirmed'
   );
 
-  // Persist order data in sessionStorage so refresh doesn't immediately lose context
   const [orderData] = useState(() => {
     if (stateData?.orderId) {
       try {
@@ -55,7 +52,7 @@ const OrderSuccess = () => {
     return null;
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!stateData?.isPolling || !orderData?.orderId) return;
 
     let attempts = 0;
@@ -95,29 +92,23 @@ const OrderSuccess = () => {
 
   if (!orderData) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center px-4 py-20 bg-[#FAF8F5]">
-        <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-stone-200/90 text-center shadow-sm space-y-6">
-          <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mx-auto text-stone-700">
-            <PackageCheck size={28} />
+      <div className="min-h-[70vh] flex items-center justify-center px-4 py-20 bg-[#FBF9F6]">
+        <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-[#E8E5DF] text-center shadow-xs space-y-6">
+          <div className="w-16 h-16 rounded-full bg-[#FAF8F5] flex items-center justify-center mx-auto text-[#6B7280]">
+            <ShoppingBag size={28} />
           </div>
-          <div>
-            <h2 className="text-xl font-sans font-bold text-stone-900">No Recent Order Found</h2>
-            <p className="text-stone-500 text-xs mt-2 leading-relaxed">
-              If you just placed an order, you can review its status and invoice directly from your profile account.
+          <div className="space-y-2">
+            <h2 className="font-serif text-2xl font-medium text-[#1A1A1A]">No Active Order Found</h2>
+            <p className="text-xs text-[#6B7280]">
+              If you recently placed an order, you can check its status anytime on the live order tracking page.
             </p>
           </div>
-          <div className="flex flex-col gap-3">
-            <Link
-              to="/profile"
-              className="w-full py-3 bg-stone-900 hover:bg-black text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-colors"
-            >
-              View My Orders
+          <div className="pt-2 flex flex-col gap-2.5">
+            <Link to="/track-order">
+              <Button variant="primary" fullWidth>Track Your Order</Button>
             </Link>
-            <Link
-              to="/"
-              className="w-full py-3 bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold uppercase tracking-wider rounded-xl transition-colors"
-            >
-              Return to Home
+            <Link to="/shop">
+              <Button variant="outline" fullWidth>Browse Collections</Button>
             </Link>
           </div>
         </div>
@@ -125,259 +116,124 @@ const OrderSuccess = () => {
     );
   }
 
-  const orderNumber = orderData.orderId || 'ORD-SAKSHI';
-  const totalFormatted = typeof orderData.total === 'number' 
-    ? orderData.total.toLocaleString('en-IN') 
-    : orderData.total;
+  const isConfirmed = orderStatus === 'confirmed';
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-stone-900 pt-8 sm:pt-14 pb-24 sm:pb-32 relative overflow-hidden">
-      {/* Subtle luxury ambient glows */}
-      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-amber-100/40 rounded-full blur-[140px] pointer-events-none -z-10" />
-      <div className="absolute top-80 right-10 w-[450px] h-[350px] bg-rose-100/30 rounded-full blur-[120px] pointer-events-none -z-10" />
-
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#FBF9F6] text-[#1A1A1A] py-12 sm:py-20 px-4 sm:px-6">
+      <div className="max-w-2xl mx-auto space-y-8">
         
-        {/* ─── 1. CELEBRATORY CONFIRMATION HERO ───────────────────────── */}
+        {/* Main Success Hero Card */}
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="text-center max-w-2xl mx-auto space-y-4 mb-10 sm:mb-14"
+          transition={{ duration: 0.5 }}
+          className="bg-white rounded-3xl border border-[#E8E5DF] p-6 sm:p-10 shadow-xs text-center space-y-6"
         >
-          {/* Animated Verification Seal */}
-          <div className="relative inline-flex items-center justify-center mb-2">
+          {/* Animated Success Badge */}
+          <div className="relative inline-flex items-center justify-center">
+            <div className="w-20 h-20 rounded-full bg-[#EBF7EE] text-[#15803D] flex items-center justify-center shadow-xs">
+              <CheckCircle2 size={40} strokeWidth={2} />
+            </div>
             <motion.div
-              initial={{ scale: 0.6, rotate: -15 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ delay: 0.15, type: 'spring', stiffness: 220, damping: 18 }}
-              className="w-20 h-20 sm:w-24 sm:h-24 bg-stone-900 rounded-full flex items-center justify-center text-amber-300 shadow-xl shadow-stone-900/15 ring-8 ring-stone-900/5"
+              animate={{ rotate: [0, 15, -15, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute -top-1 -right-1 text-[#C6A15B]"
             >
-              <CheckCircle2 size={42} strokeWidth={2} className="text-emerald-400" />
+              <Sparkles size={22} />
             </motion.div>
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 24, repeat: Infinity, ease: 'linear' }}
-              className="absolute -inset-3 border border-dashed border-amber-600/25 rounded-full pointer-events-none"
-            />
           </div>
 
-          {/* Sub-badge */}
-          {orderStatus === 'pending' ? (
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-800 text-[11px] font-bold uppercase tracking-widest animate-pulse">
-              <Clock size={12} className="text-amber-600" />
-              <span>Payment Confirmation In Progress &bull; Surat Atelier</span>
+          <div className="space-y-2">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#4A1D3F] block">
+              {isConfirmed ? 'Order Confirmed' : 'Verifying Payment…'}
+            </span>
+            <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1A1A] font-medium tracking-tight">
+              Thank You For Your Order
+            </h1>
+            <p className="text-xs sm:text-sm text-[#6B7280] max-w-md mx-auto leading-relaxed">
+              We've received your order and our atelier team in Surat is preparing it with care.
+            </p>
+          </div>
+
+          {/* Order Reference Box */}
+          <div className="bg-[#FAF8F5] rounded-2xl p-4 sm:p-5 border border-[#E8E5DF] max-w-md mx-auto flex items-center justify-between gap-4">
+            <div className="text-left">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280] block">
+                Order Reference
+              </span>
+              <span className="font-mono text-base sm:text-lg font-bold text-[#1A1A1A] tracking-wider">
+                #{orderData.orderId}
+              </span>
             </div>
-          ) : (
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-[11px] font-bold uppercase tracking-widest">
-              <Sparkles size={12} className="text-emerald-600" />
-              <span>Order Confirmed &bull; Surat Atelier</span>
-            </div>
-          )}
+            <button
+              onClick={handleCopyOrderId}
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center text-xs font-semibold text-[#4A1D3F] bg-white border border-[#E8E5DF] rounded-xl px-3 py-1.5 hover:bg-[#FAF8F5] transition-colors shadow-2xs gap-1.5"
+              aria-label="Copy order reference"
+            >
+              {copied ? <Check size={14} className="text-[#15803D]" /> : <Copy size={14} />}
+              <span>{copied ? 'Copied' : 'Copy'}</span>
+            </button>
+          </div>
 
-          {/* Headline (Refined font scale, never wrapping into 4-6 lines) */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-normal text-stone-900 tracking-tight leading-tight">
-            {orderStatus === 'pending' ? 'Verifying your payment' : 'Thank you for your order'}
-          </h1>
-
-          <p className="text-stone-600 font-sans text-xs sm:text-sm leading-relaxed max-w-lg mx-auto">
-            {orderStatus === 'pending'
-              ? 'We received your transaction signal and are awaiting final webhook confirmation from the bank. This page will update automatically.'
-              : 'Your payment has been received successfully. Our master artisans in Surat have begun preparing your handcrafted ensemble with the highest level of craftsmanship.'}
-          </p>
-        </motion.div>
-
-        {/* ─── 2. TWO-COLUMN ASYMMETRIC ATELIER ORDER SPECIFICATIONS ───── */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start mb-10 sm:mb-12">
-          
-          {/* Left Column: Order Details Card (7 Cols) */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25, duration: 0.7 }}
-            className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 border border-stone-200/90 shadow-sm space-y-6"
-          >
-            <div className="flex items-center justify-between pb-5 border-b border-stone-100">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400 block mb-1">
-                  Order Reference
-                </span>
-                <span className="text-base sm:text-lg font-mono font-bold text-stone-900 tracking-wider">
-                  #{orderNumber}
-                </span>
+          {/* Next Steps Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 text-left border-t border-[#F0ECE4]">
+            <div className="p-3.5 rounded-2xl bg-[#FAF8F5] border border-[#E8E5DF] space-y-1">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-[#1A1A1A]">
+                <Truck size={14} className="text-[#4A1D3F]" />
+                <span>Express Courier</span>
               </div>
-              <button
-                type="button"
-                onClick={handleCopyOrderId}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-50 hover:bg-stone-100 border border-stone-200/80 text-xs font-medium text-stone-700 transition-colors"
-                title="Copy Reference"
-              >
-                {copied ? (
-                  <>
-                    <Check size={13} className="text-emerald-600" />
-                    <span className="text-emerald-700 font-bold">Copied</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy size={13} />
-                    <span>Copy ID</span>
-                  </>
-                )}
-              </button>
+              <p className="text-[11px] text-[#6B7280] leading-relaxed">
+                Dispatches within 24 hours. Estimated delivery in 2-4 business days.
+              </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 pb-5 border-b border-stone-100">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400 block mb-1">
-                  Total Paid
-                </span>
-                <span className="text-2xl font-serif font-bold text-stone-900">
-                  ₹{totalFormatted}
-                </span>
+            <div className="p-3.5 rounded-2xl bg-[#FAF8F5] border border-[#E8E5DF] space-y-1">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-[#1A1A1A]">
+                <RotateCcw size={14} className="text-[#4A1D3F]" />
+                <span>7-Day Return</span>
               </div>
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400 block mb-1">
-                  Payment Status
-                </span>
-                {orderStatus === 'pending' ? (
-                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200/60 animate-pulse">
-                    <Clock size={13} /> Awaiting Confirmation
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200/60">
-                    <ShieldCheck size={13} /> Paid (Razorpay)
-                  </span>
-                )}
-              </div>
+              <p className="text-[11px] text-[#6B7280] leading-relaxed">
+                Hassle-free return & size exchange policy on all purchases.
+              </p>
             </div>
 
-            {/* Delivery & Dispatch Highlights */}
-            <div className="space-y-3.5 pt-1">
-              <div className="flex items-start gap-3 text-xs text-stone-600">
-                <Truck size={16} className="text-stone-800 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="text-stone-900 font-bold">Free Express Delivery Across India</strong>
-                  <p className="text-stone-500 text-[11px] mt-0.5">Dispatched within 2 to 4 business days with premium sealed packaging.</p>
-                </div>
+            <div className="p-3.5 rounded-2xl bg-[#FAF8F5] border border-[#E8E5DF] space-y-1">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-[#1A1A1A]">
+                <ShieldCheck size={14} className="text-[#C6A15B]" />
+                <span>Safe Delivery</span>
               </div>
-
-              <div className="flex items-start gap-3 text-xs text-stone-600">
-                <FileText size={16} className="text-stone-800 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="text-stone-900 font-bold">Invoice & Email Confirmation</strong>
-                  <p className="text-stone-500 text-[11px] mt-0.5">A complete tax invoice and order summary has been sent to your registered email.</p>
-                </div>
-              </div>
+              <p className="text-[11px] text-[#6B7280] leading-relaxed">
+                Insured tamper-proof box with serialized invoice receipt.
+              </p>
             </div>
-          </motion.div>
+          </div>
 
-          {/* Right Column: Atelier Fulfillment Journey (5 Cols) */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35, duration: 0.7 }}
-            className="lg:col-span-5 bg-stone-900 text-stone-100 rounded-3xl p-6 sm:p-8 shadow-md space-y-6 flex flex-col justify-between"
-          >
-            <div>
-              <div className="flex items-center justify-between pb-4 border-b border-stone-800 mb-5">
-                <h3 className="text-sm font-sans font-bold uppercase tracking-wider text-amber-300 flex items-center gap-2">
-                  <Clock size={15} /> Atelier Journey
-                </h3>
-                <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-stone-800 text-stone-400">
-                  Step 1 of 4
-                </span>
-              </div>
+          {/* Action CTAs */}
+          <div className="pt-4 flex flex-col sm:flex-row items-center gap-3">
+            <Link to={`/track-order?orderId=${encodeURIComponent(orderData.orderId)}`} className="w-full sm:flex-1">
+              <Button variant="primary" size="lg" fullWidth rightIcon={<ArrowRight size={15} />}>
+                Track Live Order
+              </Button>
+            </Link>
+            <Link to="/shop" className="w-full sm:flex-1">
+              <Button variant="outline" size="lg" fullWidth>
+                Continue Shopping
+              </Button>
+            </Link>
+          </div>
 
-              {/* Progress Steps */}
-              <div className="space-y-4 text-xs">
-                <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-emerald-500 text-stone-950 flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
-                    ✓
-                  </div>
-                  <div>
-                    <span className="font-bold text-white block">Order Placed & Confirmed</span>
-                    <span className="text-stone-400 text-[11px]">Payment received securely via Razorpay</span>
-                  </div>
-                </div>
+          <div className="pt-2 text-center">
+            <a
+              href="https://wa.me/919316533660"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-xs text-[#25D366] font-semibold hover:underline min-h-[44px] py-1"
+            >
+              <MessageCircle size={15} />
+              <span>Need help? Chat with WhatsApp Concierge (+91 9316533660)</span>
+            </a>
+          </div>
 
-                <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-amber-400 text-stone-950 flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5 animate-pulse">
-                    ✦
-                  </div>
-                  <div>
-                    <span className="font-bold text-amber-200 block">Atelier Handcrafting & Prep</span>
-                    <span className="text-stone-400 text-[11px]">Surat weaving, tailoring & quality inspection</span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 opacity-60">
-                  <div className="w-5 h-5 rounded-full border border-stone-700 text-stone-500 flex items-center justify-center text-[10px] shrink-0 mt-0.5">
-                    3
-                  </div>
-                  <div>
-                    <span className="font-bold text-stone-300 block">Artisanal Packaging</span>
-                    <span className="text-stone-500 text-[11px]">Eco garment bags & moisture-sealed</span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 opacity-60">
-                  <div className="w-5 h-5 rounded-full border border-stone-700 text-stone-500 flex items-center justify-center text-[10px] shrink-0 mt-0.5">
-                    4
-                  </div>
-                  <div>
-                    <span className="font-bold text-stone-300 block">Express Delivery</span>
-                    <span className="text-stone-500 text-[11px]">Delivered directly to your door</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Live Tracking Link */}
-            <div className="pt-4 border-t border-stone-800">
-              <Link
-                to={`/track-order?orderId=${encodeURIComponent(orderNumber)}`}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-amber-400 hover:bg-amber-300 text-stone-950 text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm"
-              >
-                <span>Track Order Live</span>
-                <ArrowRight size={14} />
-              </Link>
-            </div>
-          </motion.div>
-
-        </div>
-
-        {/* ─── 3. ACTION SUITE & CONCIERGE HELP ────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.45, duration: 0.7 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 border-t border-stone-200/80"
-        >
-          <Link
-            to="/profile"
-            className="w-full sm:w-auto px-8 py-3.5 bg-stone-900 hover:bg-black text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2.5 shadow-sm"
-          >
-            <span>View in My Orders</span>
-            <ArrowRight size={14} />
-          </Link>
-
-          <Link
-            to="/shop"
-            className="w-full sm:w-auto px-8 py-3.5 bg-white hover:bg-stone-50 text-stone-800 border border-stone-200 text-xs font-bold uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2"
-          >
-            <ShoppingBag size={14} />
-            <span>Continue Shopping</span>
-          </Link>
-
-          <a
-            href={`https://wa.me/919825440058?text=${encodeURIComponent(`Hi Sakshi Clothing! I just placed order #${orderNumber} and wanted to confirm details.`)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full sm:w-auto px-6 py-3.5 text-xs font-bold uppercase tracking-widest text-emerald-800 hover:text-emerald-900 bg-emerald-50/80 hover:bg-emerald-100 border border-emerald-200/70 rounded-xl transition-all flex items-center justify-center gap-2"
-          >
-            <MessageCircle size={15} className="text-emerald-600" />
-            <span>Atelier WhatsApp Support</span>
-          </a>
         </motion.div>
 
       </div>
