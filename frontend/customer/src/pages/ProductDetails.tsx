@@ -28,7 +28,7 @@ import ProductCard from '../components/ProductCard';
 import ProductReviews from '../components/ProductReviews';
 import { useWishlist } from '../context/WishlistContext';
 import { fetchProductById, fetchProducts } from '../lib/api';
-import { PRODUCTS } from '../data/products';
+import { BUSINESS_CONFIG } from '../config/business';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -61,27 +61,35 @@ export const ProductDetails: React.FC = () => {
     const loadProductData = async () => {
       setLoading(true);
       const data = await fetchProductById(id);
-      const chosen = data || PRODUCTS.find(p => p.id === id) || PRODUCTS[0];
-      if (chosen) {
-        setProduct(chosen);
-        if (chosen.variants && chosen.variants.length > 0) {
-          const inStock = chosen.variants.find((v: any) => (v.stock > 0 || v.status !== 'out_of_stock') && v.size);
-          setSelectedSize(inStock?.size || chosen.variants[0]?.size || 'Standard');
-        } else if (chosen.sizes && chosen.sizes.length > 0) {
-          setSelectedSize(chosen.sizes[0] || 'Standard');
+      if (data) {
+        setProduct(data);
+        if (data.variants && data.variants.length > 0) {
+          const inStock = data.variants.find((v: any) => (v.stock > 0 || v.status !== 'out_of_stock') && v.size);
+          setSelectedSize(inStock?.size || data.variants[0]?.size || 'Standard');
+        } else if (data.sizes && data.sizes.length > 0) {
+          setSelectedSize(data.sizes[0] || 'Standard');
         } else {
           setSelectedSize('Standard');
         }
 
         const DEAD_IMG_LIST = ['image-1793650768360-508253073.jpeg'];
-        const validImgs = (chosen.images || []).map((i: any) => typeof i === 'string' ? i : i.url).filter((u: string) => u && !DEAD_IMG_LIST.some(d => u.includes(d)));
-        const primary = validImgs[0] || (chosen.image && !DEAD_IMG_LIST.some(d => chosen.image.includes(d)) ? chosen.image : '');
+        const validImgs = (data.images || []).map((i: any) => typeof i === 'string' ? i : i.url).filter((u: string) => u && !DEAD_IMG_LIST.some(d => u.includes(d)));
+        const primary = validImgs[0] || (data.image && !DEAD_IMG_LIST.some(d => data.image.includes(d)) ? data.image : '');
         setMainImage(primary);
         
-        // Fetch related pieces
-        const related = await fetchProducts({ category: chosen.category, limit: 4 });
-        const validRelated = (related && related.length > 0) ? related : PRODUCTS;
-        setRelatedProducts(validRelated.filter((p: any) => p.id !== chosen.id).slice(0, 4));
+        // Fetch related pieces from database
+        try {
+          const related = await fetchProducts({ category: data.category, limit: 4 });
+          if (Array.isArray(related) && related.length > 0) {
+            setRelatedProducts(related.filter((p: any) => p.id !== data.id).slice(0, 4));
+          } else {
+            setRelatedProducts([]);
+          }
+        } catch {
+          setRelatedProducts([]);
+        }
+      } else {
+        setProduct(null);
       }
       setLoading(false);
     };
@@ -321,12 +329,16 @@ export const ProductDetails: React.FC = () => {
                   <span>Artificial / Imitation Jewellery Specification</span>
                 </div>
                 <p className="text-xs text-[#6B5528] leading-relaxed">
-                  Crafted with premium skin-friendly brass base, anti-tarnish rhodium/gold plating, and sparkling faux Kundan & Polki. Free from lead and nickel for all-day comfort.
+                  {product.productFacts?.hypoallergenicClaim 
+                    ? product.productFacts.hypoallergenicClaim 
+                    : (product.productFacts?.material 
+                        ? `Crafted with ${product.productFacts.material}${product.productFacts.plating ? ` and finished in ${product.productFacts.plating}` : ''}. Designed for skin-friendly celebratory comfort.`
+                        : "Premium imitation fashion jewellery. High-grade brass/alloy base with anti-tarnish protective polish. Safe for sensitive skin.")}
                 </p>
               </div>
             ) : (
               <p className="text-[#4B5563] text-sm leading-relaxed">
-                {product.description || "A masterpiece of contemporary Indian craftsmanship. Designed for celebratory elegance with rich textiles, delicate embroidery, and comfortable drape."}
+                {product.description || ""}
               </p>
             )}
 
@@ -460,48 +472,99 @@ export const ProductDetails: React.FC = () => {
 
               <div className="text-xs text-[#4B5563] leading-relaxed pt-1">
                 {activeTab === 'details' && (
-                  isJewellery ? (
-                    <ul className="space-y-1.5 text-xs">
-                      <li className="flex items-center gap-2">✦ Material: High-grade brass with anti-tarnish micro-polish</li>
-                      <li className="flex items-center gap-2">✦ Stones: Synthetic Kundan, Polki glass & simulated pearls</li>
-                      <li className="flex items-center gap-2">✦ Weight: Featherlight ergonomic design for zero earlobe strain</li>
-                      <li className="flex items-center gap-2">✦ Skin Safety: 100% Nickel & Lead-free certification</li>
-                    </ul>
-                  ) : (
-                    <ul className="space-y-1.5 text-xs">
-                      <li className="flex items-center gap-2">✦ Authentic pure fabric woven by generational artisans</li>
-                      <li className="flex items-center gap-2">✦ Hand-embroidered with intricate zari and gota patti detailing</li>
-                      <li className="flex items-center gap-2">✦ Soft premium lining for all-day celebratory comfort</li>
-                    </ul>
-                  )
+                  <div className="space-y-3">
+                    {/* Database product facts */}
+                    {product.productFacts && (product.productFacts.material || product.productFacts.plating || product.productFacts.stone || product.productFacts.isHypoallergenic) ? (
+                      <ul className="space-y-2 text-xs">
+                        {product.productFacts.material && (
+                          <li className="flex items-start gap-2">
+                            <span className="text-[#C6A15B]">✦</span>
+                            <span><strong>Material / Base:</strong> {product.productFacts.material}</span>
+                          </li>
+                        )}
+                        {product.productFacts.plating && (
+                          <li className="flex items-start gap-2">
+                            <span className="text-[#C6A15B]">✦</span>
+                            <span><strong>Plating & Finish:</strong> {product.productFacts.plating}</span>
+                          </li>
+                        )}
+                        {product.productFacts.stone && (
+                          <li className="flex items-start gap-2">
+                            <span className="text-[#C6A15B]">✦</span>
+                            <span><strong>Stone / Embellishment:</strong> {product.productFacts.stone}</span>
+                          </li>
+                        )}
+                        {product.productFacts.isHypoallergenic && (
+                          <li className="flex items-start gap-2 text-emerald-700">
+                            <span className="text-emerald-600">✓</span>
+                            <span><strong>Skin Safety:</strong> {product.productFacts.hypoallergenicClaim || '100% Lead-free & Nickel-free skin-safe assurance'}</span>
+                          </li>
+                        )}
+                      </ul>
+                    ) : null}
+
+                    {/* Craft & Fabric items from database */}
+                    {Array.isArray(product.craftAndFabric) && product.craftAndFabric.length > 0 && (
+                      <ul className="space-y-1.5 text-xs pt-2 border-t border-[#E8E5DF]">
+                        {product.craftAndFabric.map((line: string, idx: number) => (
+                          <li key={idx} className="flex items-start gap-2">
+                            <span className="text-[#4A1D3F]">✦</span>
+                            <span>{line}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    {/* Fallback to description if no bulleted facts entered */}
+                    {(!product.productFacts || (!product.productFacts.material && !product.productFacts.plating && !product.productFacts.stone)) && (!product.craftAndFabric || product.craftAndFabric.length === 0) && (
+                      <p className="text-xs text-[#6B7280]">
+                        {product.description || 'Authentic designer wear from Sakshi Clothing.'}
+                      </p>
+                    )}
+                  </div>
                 )}
 
                 {activeTab === 'care' && (
-                  isJewellery ? (
-                    <ul className="space-y-1.5 text-xs">
-                      <li>• Keep away from moisture, perfumes, sanitizers, and direct water exposure.</li>
-                      <li>• Store each piece individually in an airtight pouch or zip-lock box.</li>
-                      <li>• Gently wipe clean with a soft dry cotton cloth after every use.</li>
-                    </ul>
-                  ) : (
-                    <ul className="space-y-1.5 text-xs">
-                      <li>• Professional dry cleaning recommended to protect delicate zari embroidery.</li>
-                      <li>• Steam iron inside-out on low heat setting.</li>
-                      <li>• Store in a breathable muslin cloth bag away from direct sunlight.</li>
-                    </ul>
-                  )
+                  <div className="space-y-2 text-xs">
+                    {Array.isArray(product.productFacts?.careInstructions) && product.productFacts.careInstructions.length > 0 ? (
+                      <ul className="space-y-1.5">
+                        {product.productFacts.careInstructions.map((instruction: string, idx: number) => (
+                          <li key={idx} className="flex items-start gap-2">
+                            <span>•</span>
+                            <span>{instruction}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <ul className="space-y-1.5">
+                        {isJewellery ? (
+                          <>
+                            <li>• Store each piece individually in an airtight pouch or box to prevent tarnishing.</li>
+                            <li>• Avoid direct contact with perfumes, sanitizers, body lotions, and water.</li>
+                            <li>• Gently wipe with a soft dry cloth after each wear before storing.</li>
+                          </>
+                        ) : (
+                          <>
+                            <li>• Dry cleaning recommended for delicate fabrics, embroidery, and zari work.</li>
+                            <li>• Gentle hand wash in cold water with mild detergent for daily cotton items.</li>
+                            <li>• Steam iron inside-out on low heat setting. Avoid direct heat on metallic embroidery.</li>
+                          </>
+                        )}
+                      </ul>
+                    )}
+                  </div>
                 )}
 
                 {activeTab === 'delivery' && (
                   <div className="space-y-2 text-xs">
                     <p>
-                      <strong>Free Shipping:</strong> On all orders above ₹999 across India. Delivered via insured express courier within 2-4 business days.
+                      <strong>Free Shipping:</strong> On all orders above ₹{BUSINESS_CONFIG.policies.freeShippingThreshold} across India. Dispatched within 24 hours.
                     </p>
                     <p>
-                      <strong>Cash on Delivery (COD):</strong> Available nationwide with zero extra fees.
+                      <strong>Cash on Delivery (COD):</strong> {BUSINESS_CONFIG.policies.codAvailable ? 'Available nationwide across 19,000+ PIN codes with zero extra fees.' : 'Prepaid only.'}
                     </p>
                     <p>
-                      <strong>7-Day Returns & Exchanges:</strong> Easy return or size exchange within 7 days of delivery.
+                      <strong>{BUSINESS_CONFIG.policies.returnWindowDays}-Day Returns:</strong> {isJewellery ? BUSINESS_CONFIG.policies.jewelleryPolicy : BUSINESS_CONFIG.policies.clothingPolicy}
                     </p>
                   </div>
                 )}
@@ -544,6 +607,16 @@ export const ProductDetails: React.FC = () => {
         maxWidth="lg"
       >
         <div className="space-y-4 text-xs text-[#1A1A1A]">
+          {Array.isArray(product.productFacts?.sizeChartGuide) && product.productFacts.sizeChartGuide.length > 0 && (
+            <div className="p-3 bg-[#FAF8F5] border border-[#E8E5DF] rounded-xl space-y-1">
+              <p className="font-semibold text-[#4A1D3F]">Product Fit Notes:</p>
+              <ul className="space-y-1 text-[#4B5563]">
+                {product.productFacts.sizeChartGuide.map((note: string, idx: number) => (
+                  <li key={idx}>• {note}</li>
+                ))}
+              </ul>
+            </div>
+          )}
           <p className="text-[#6B7280]">
             All measurements are garment body measurements in inches. If you fall between sizes, we recommend sizing up.
           </p>

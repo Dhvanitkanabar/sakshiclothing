@@ -96,6 +96,15 @@ const productSchema = new Schema(
       type: [String],
       default: []
     },
+    productFacts: {
+      material: { type: String, trim: true },
+      plating: { type: String, trim: true },
+      stone: { type: String, trim: true },
+      careInstructions: [{ type: String, trim: true }],
+      isHypoallergenic: { type: Boolean, default: false },
+      hypoallergenicClaim: { type: String, trim: true },
+      sizeChartGuide: [{ type: String, trim: true }]
+    },
     shippingInfo: {
       weight: Number,
       dimensions: {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import ImageUpload from '../../components/ImageUpload';
-import { Package, Layers, Image as ImageIcon, DollarSign, ArrowLeft, CheckCircle2, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Package, Layers, Image as ImageIcon, DollarSign, ArrowLeft, CheckCircle2, AlertTriangle, RefreshCw, Sparkles, ShieldCheck } from 'lucide-react';
 import { adminFetch } from '../../lib/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
@@ -33,7 +33,16 @@ export default function ProductForm() {
     variants: [] as any[],
     status: 'published',
     images: [] as { url: string; publicId: string }[],
-    craftAndFabric: ''
+    craftAndFabric: '',
+    productFacts: {
+      material: '',
+      plating: '',
+      stone: '',
+      careInstructions: '',
+      isHypoallergenic: false,
+      hypoallergenicClaim: '',
+      sizeChartGuide: ''
+    }
   });
 
   const [tagInput, setTagInput] = useState('');
@@ -91,13 +100,30 @@ export default function ProductForm() {
               ? raw.craftAndFabric.join('\n')
               : (raw.craftAndFabric || '');
 
+            const rawFacts = raw.productFacts || {};
+            const careVal = Array.isArray(rawFacts.careInstructions)
+              ? rawFacts.careInstructions.join('\n')
+              : (rawFacts.careInstructions || '');
+            const sizeChartVal = Array.isArray(rawFacts.sizeChartGuide)
+              ? rawFacts.sizeChartGuide.join('\n')
+              : (rawFacts.sizeChartGuide || '');
+
             setFormData(prev => ({
               ...prev,
               ...raw,
               category: raw.category?._id || raw.category || '',
               subCategory: raw.subCategory?._id || raw.subCategory || '',
               images: parsedImages,
-              craftAndFabric: craftAndFabricVal
+              craftAndFabric: craftAndFabricVal,
+              productFacts: {
+                material: rawFacts.material || '',
+                plating: rawFacts.plating || '',
+                stone: rawFacts.stone || '',
+                careInstructions: careVal,
+                isHypoallergenic: Boolean(rawFacts.isHypoallergenic),
+                hypoallergenicClaim: rawFacts.hypoallergenicClaim || '',
+                sizeChartGuide: sizeChartVal
+              }
             }));
           }
         });
@@ -105,13 +131,19 @@ export default function ProductForm() {
   }, [id, isEdit]);
 
   const handleChange = (e: any) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     if (name.includes('.')) {
       const [parent, child] = name.split('.');
-      setFormData(prev => ({ ...prev, [parent]: { ...(prev as any)[parent], [child]: value } }));
+      setFormData(prev => ({
+        ...prev,
+        [parent]: {
+          ...(prev as any)[parent],
+          [child]: type === 'checkbox' ? checked : value
+        }
+      }));
     } else {
       setFormData(prev => {
-        const newData = { ...prev, [name]: value };
+        const newData = { ...prev, [name]: type === 'checkbox' ? checked : value };
         if (name === 'category') {
           // If changing category, check if current subcategory still belongs to it, else reset
           if (newData.subCategory) {
@@ -239,11 +271,34 @@ export default function ProductForm() {
             .filter(Boolean)
         : (Array.isArray(formData.craftAndFabric) ? formData.craftAndFabric : []);
 
+      const careLines = typeof formData.productFacts?.careInstructions === 'string'
+        ? formData.productFacts.careInstructions
+            .split('\n')
+            .map(line => line.trim())
+            .filter(Boolean)
+        : (Array.isArray(formData.productFacts?.careInstructions) ? formData.productFacts.careInstructions : []);
+
+      const sizeChartLines = typeof formData.productFacts?.sizeChartGuide === 'string'
+        ? formData.productFacts.sizeChartGuide
+            .split('\n')
+            .map(line => line.trim())
+            .filter(Boolean)
+        : (Array.isArray(formData.productFacts?.sizeChartGuide) ? formData.productFacts.sizeChartGuide : []);
+
       const payload: any = {
         name: formData.name.trim(),
         slug: formData.slug ? formData.slug.trim().toLowerCase() : formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
         description: formData.description.trim(),
         craftAndFabric: craftLines,
+        productFacts: {
+          material: formData.productFacts?.material?.trim() || '',
+          plating: formData.productFacts?.plating?.trim() || '',
+          stone: formData.productFacts?.stone?.trim() || '',
+          careInstructions: careLines,
+          isHypoallergenic: Boolean(formData.productFacts?.isHypoallergenic),
+          hypoallergenicClaim: formData.productFacts?.hypoallergenicClaim?.trim() || '',
+          sizeChartGuide: sizeChartLines
+        },
         category: formData.category,
         subCategory: formData.subCategory && formData.subCategory.trim() ? formData.subCategory.trim() : undefined,
         status: formData.status || 'published',
@@ -444,6 +499,107 @@ export default function ProductForm() {
                   {tag} <button type="button" onClick={() => removeTag(tag)} className="text-red-500 font-bold">&times;</button>
                 </span>
               ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Real Product Facts (Material, Plating, Stone, Care, Hypoallergenic & Size Chart) */}
+        <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm space-y-6">
+          <div className="border-b border-gray-100 pb-4">
+            <h2 className="text-lg font-bold flex items-center gap-2">
+              <Sparkles size={20} className="text-[#C6A15B]" /> Genuine Product Facts & Specifications
+            </h2>
+            <p className="text-xs text-gray-500 mt-1">
+              Accurate, product-specific specifications. Never show hardcoded materials or fake jewellery claims.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Base Material / Fabric</label>
+              <input 
+                name="productFacts.material" 
+                value={formData.productFacts?.material || ''} 
+                onChange={handleChange} 
+                placeholder="e.g. Pure Georgette / Brass / Cotton Silk" 
+                className="w-full border-gray-200 border p-3 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all outline-none text-xs" 
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Plating / Finish (If Jewellery)</label>
+              <input 
+                name="productFacts.plating" 
+                value={formData.productFacts?.plating || ''} 
+                onChange={handleChange} 
+                placeholder="e.g. 18K Micro Gold Polish / Rhodium / Antique Matte" 
+                className="w-full border-gray-200 border p-3 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all outline-none text-xs" 
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Stone / Embellishment</label>
+              <input 
+                name="productFacts.stone" 
+                value={formData.productFacts?.stone || ''} 
+                onChange={handleChange} 
+                placeholder="e.g. Synthetic Kundan / Glass Polki / Zari Gota" 
+                className="w-full border-gray-200 border p-3 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all outline-none text-xs" 
+              />
+            </div>
+          </div>
+
+          <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-200/60 space-y-3">
+            <div className="flex items-center gap-3">
+              <input 
+                type="checkbox" 
+                id="isHypoallergenic" 
+                name="productFacts.isHypoallergenic" 
+                checked={Boolean(formData.productFacts?.isHypoallergenic)} 
+                onChange={handleChange} 
+                className="w-4 h-4 rounded text-black focus:ring-black cursor-pointer" 
+              />
+              <label htmlFor="isHypoallergenic" className="text-xs font-semibold text-gray-800 cursor-pointer flex items-center gap-1.5">
+                <ShieldCheck size={15} className="text-emerald-600" />
+                <span>Mark as Hypoallergenic / Sensitive Skin Safe</span>
+              </label>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Hypoallergenic Claim / Certification Note</label>
+              <input 
+                name="productFacts.hypoallergenicClaim" 
+                value={formData.productFacts?.hypoallergenicClaim || ''} 
+                onChange={handleChange} 
+                placeholder="e.g. 100% Lead-free and Nickel-free brass base. Safe for sensitive ears." 
+                className="w-full bg-white border-amber-200 border p-2.5 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all outline-none text-xs" 
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-semibold text-gray-700">Care Instructions</label>
+                <span className="text-xs text-gray-400">One bullet per line</span>
+              </div>
+              <textarea 
+                name="productFacts.careInstructions" 
+                value={formData.productFacts?.careInstructions || ''} 
+                onChange={handleChange} 
+                placeholder={"Keep away from water and direct perfume spray\nStore in individual airtight pouches\nWipe with a soft dry lint-free cloth"} 
+                className="w-full border-gray-200 border p-3 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all outline-none min-h-[110px] text-xs leading-relaxed" 
+              />
+            </div>
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-semibold text-gray-700">Size Chart / Fit Guide Notes</label>
+                <span className="text-xs text-gray-400">One line per measurement/tip</span>
+              </div>
+              <textarea 
+                name="productFacts.sizeChartGuide" 
+                value={formData.productFacts?.sizeChartGuide || ''} 
+                onChange={handleChange} 
+                placeholder={"Standard Indian size fit\nModel is wearing size S (Bust: 34, Waist: 28)\nCustom blouse stitching available upon request"} 
+                className="w-full border-gray-200 border p-3 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-all outline-none min-h-[110px] text-xs leading-relaxed" 
+              />
             </div>
           </div>
         </div>

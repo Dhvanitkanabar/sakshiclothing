@@ -1,3 +1,13 @@
+export interface ProductFacts {
+  material?: string;
+  plating?: string;
+  stone?: string;
+  careInstructions?: string[];
+  isHypoallergenic?: boolean;
+  hypoallergenicClaim?: string;
+  sizeChartGuide?: string[];
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -12,6 +22,7 @@ export interface Product {
   featured?: boolean;
   rating?: number;
   craftAndFabric?: string[] | string;
+  productFacts?: ProductFacts;
 }
 
 export interface User {
