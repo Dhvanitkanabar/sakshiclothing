@@ -18,7 +18,7 @@ import SEOHead from '../components/SEOHead';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
 export const Checkout: React.FC = () => {
-  const { cart, totalPrice, clearCart } = useCart();
+  const { cart, totalPrice, clearCart, loading: cartLoading } = useCart();
   const { user, getClerkToken } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -77,10 +77,10 @@ export const Checkout: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (cart.length === 0) {
+    if (!cartLoading && cart.length === 0) {
       navigate('/cart');
     }
-  }, [cart.length, navigate]);
+  }, [cartLoading, cart.length, navigate]);
 
   useEffect(() => {
     if (user) {
@@ -410,6 +410,14 @@ export const Checkout: React.FC = () => {
       setLoading(false);
     }
   };
+
+  if (cartLoading) {
+    return (
+      <div className="min-h-screen bg-[#FBF9F6] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-[#4A1D3F] border-t-transparent animate-spin"></div>
+      </div>
+    );
+  }
 
   if (cart.length === 0) {
     return null;

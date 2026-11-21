@@ -39,6 +39,8 @@ frontend/customer/patch_checkout.cjs
 # Test outputs
 test-results/
 playwright-report/
+lighthouse*.json
+backups/
 
 # OS generated files
 .DS_Store

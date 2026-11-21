@@ -5,6 +5,7 @@ import { useAuth as useClerkAuth } from '@clerk/clerk-react';
 
 interface CartContextType {
   cart: CartItem[];
+  loading: boolean;
   addToCart: (product: Product, size: string, quantity: number) => Promise<boolean>;
   removeFromCart: (productId: string, size: string) => void;
   updateQuantity: (productId: string, size: string, quantity: number) => void;
@@ -199,8 +200,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const totalPrice = cart.reduce((total, item) => total + item.price * item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart, totalPrice, isCartOpen, setIsCartOpen }}>
-      {!loading && children}
+    <CartContext.Provider value={{ cart, loading, addToCart, removeFromCart, updateQuantity, clearCart, totalPrice, isCartOpen, setIsCartOpen }}>
+      {children}
     </CartContext.Provider>
   );
 };
