@@ -1,9 +1,11 @@
+// Reading this as: Customer Account Dashboard & Orders Sanctuary for Sakshi Clothing patrons, with real-time order sync, invoice access, addresses, and loyalty points. Dials: VARIANCE [8] / MOTION [6] / DENSITY [5].
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useUser } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  Package, User as UserIcon, LogOut, ChevronRight, ShoppingBag,
+  Package, LogOut, ChevronRight, ShoppingBag,
   MapPin, CreditCard, Settings, FileText, XCircle, RefreshCcw,
   Clock, CheckCircle, Truck, Award, Sparkles
 } from 'lucide-react';
@@ -11,9 +13,10 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   fetchOrders, cancelOrder, getInvoiceUrl,
-  fetchAddresses, addAddress, deleteAddress, setDefaultAddress,
+  fetchAddresses, deleteAddress, setDefaultAddress,
   authedFetch, API_URL
 } from '../lib/api';
+import { Button } from '../components/ui/Button';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type OrderStatus =
@@ -36,21 +39,21 @@ interface Order {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const STATUS_BADGE: Record<string, string> = {
-  pending: 'bg-amber-50 text-amber-700 border border-amber-200/60',
-  pending_approval: 'bg-amber-50 text-amber-700 border border-amber-200/60',
-  confirmed: 'bg-emerald-50 text-emerald-700 border border-emerald-200/60',
-  processing: 'bg-blue-50 text-blue-700 border border-blue-200/60',
-  packed: 'bg-purple-50 text-purple-700 border border-purple-200/60',
-  shipped: 'bg-indigo-50 text-indigo-700 border border-indigo-200/60',
-  dispatched: 'bg-indigo-50 text-indigo-700 border border-indigo-200/60',
-  in_transit: 'bg-blue-50 text-blue-700 border border-blue-200/60',
-  out_for_delivery: 'bg-orange-50 text-orange-700 border border-orange-200/60',
-  outForDelivery: 'bg-orange-50 text-orange-700 border border-orange-200/60',
-  delivered: 'bg-green-50 text-green-700 border border-green-200/60',
-  rejected: 'bg-rose-50 text-rose-700 border border-rose-200/60',
-  cancelled: 'bg-rose-50 text-rose-700 border border-rose-200/60',
-  returned: 'bg-gray-100 text-gray-700 border border-gray-200/60',
-  refunded: 'bg-gray-100 text-gray-500 border border-gray-200/60',
+  pending: 'bg-[#FAF8F5] text-[#4A1D3F] border border-[#E8E5DF]',
+  pending_approval: 'bg-[#FAF8F5] text-[#4A1D3F] border border-[#E8E5DF]',
+  confirmed: 'bg-emerald-50 text-emerald-800 border border-emerald-200',
+  processing: 'bg-blue-50 text-blue-800 border border-blue-200',
+  packed: 'bg-[#4A1D3F]/10 text-[#4A1D3F] border border-[#4A1D3F]/20',
+  shipped: 'bg-indigo-50 text-indigo-800 border border-indigo-200',
+  dispatched: 'bg-indigo-50 text-indigo-800 border border-indigo-200',
+  in_transit: 'bg-blue-50 text-blue-800 border border-blue-200',
+  out_for_delivery: 'bg-amber-50 text-amber-900 border border-amber-200',
+  outForDelivery: 'bg-amber-50 text-amber-900 border border-amber-200',
+  delivered: 'bg-emerald-50 text-emerald-800 border border-emerald-200',
+  rejected: 'bg-rose-50 text-[#B43E2B] border border-rose-200',
+  cancelled: 'bg-rose-50 text-[#B43E2B] border border-rose-200',
+  returned: 'bg-stone-100 text-[#1A1A1A] border border-stone-200',
+  refunded: 'bg-stone-100 text-[#6B7280] border border-stone-200',
 };
 
 const STATUS_ICON: Record<string, React.ReactNode> = {
@@ -86,14 +89,12 @@ const resolveProductImage = (p: any): string => {
   return `${baseUrl}${cleanPath}`;
 };
 
-// ─── Profile Component ─────────────────────────────────────────────────────
-const Profile = () => {
+const Profile: React.FC = () => {
   const navigate = useNavigate();
   const { user, isSignedIn, logout, loading: authLoading } = useAuth();
   const { user: clerkUser } = useUser();
 
-  // Use MongoDB user data if available, fall back to Clerk
-  const displayName = user?.fullName || clerkUser?.fullName || clerkUser?.firstName || 'User';
+  const displayName = user?.fullName || clerkUser?.fullName || clerkUser?.firstName || 'Patron';
   const displayEmail = user?.email || clerkUser?.primaryEmailAddress?.emailAddress || '';
   const displayAvatar = user?.avatar?.url || clerkUser?.imageUrl;
   const displayRole = user?.role || 'user';
@@ -103,10 +104,8 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('orders');
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
-
   const [loyaltyData, setLoyaltyData] = useState<{ points: number, transactions: any[] }>({ points: 0, transactions: [] });
 
-  // Load loyalty
   const loadLoyalty = useCallback(async () => {
     if (!user) return;
     try {
@@ -115,7 +114,7 @@ const Profile = () => {
       if (data.success && data.data) {
         setLoyaltyData(data.data);
       }
-    } catch (err) { }
+    } catch { }
   }, [user]);
 
   const loadOrders = useCallback(async (isSilent = false) => {
@@ -162,7 +161,6 @@ const Profile = () => {
     }
   }, [user]);
 
-  // Load addresses
   const loadAddresses = useCallback(async () => {
     if (!user) return;
     const data = await fetchAddresses();
@@ -172,7 +170,6 @@ const Profile = () => {
   useEffect(() => {
     loadOrders();
 
-    // Auto-poll orders every 4 seconds for two-way simultaneous updates
     const timer = setInterval(() => {
       loadOrders(true);
     }, 4000);
@@ -196,6 +193,7 @@ const Profile = () => {
       try { channel?.close(); } catch {}
     };
   }, [loadOrders]);
+
   useEffect(() => { if (activeTab === 'addresses') loadAddresses(); }, [activeTab, loadAddresses]);
   useEffect(() => { if (activeTab === 'loyalty') loadLoyalty(); }, [activeTab, loadLoyalty]);
 
@@ -236,48 +234,48 @@ const Profile = () => {
 
   const menuItems = [
     { id: 'orders', label: 'Order History', icon: Package },
-    { id: 'addresses', label: 'Addresses', icon: MapPin },
-    { id: 'loyalty', label: 'Loyalty Points', icon: Award },
+    { id: 'addresses', label: 'Saved Addresses', icon: MapPin },
+    { id: 'loyalty', label: 'Privilege Points', icon: Award },
   ];
 
   return (
-    <div className="bg-[#FAF8F5] min-h-screen text-stone-900 selection:bg-amber-400 selection:text-black pt-10 sm:pt-16 pb-28 lg:pb-20">
+    <div className="bg-[#FBF9F6] min-h-screen text-[#1A1A1A] pt-6 sm:pt-10 pb-28 lg:pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Mobile/Tablet User Profile Header Card */}
-        <div className="lg:hidden bg-white rounded-3xl p-5 sm:p-6 border border-stone-200/90 shadow-sm mb-6">
+        <div className="lg:hidden bg-white rounded-3xl p-5 sm:p-6 border border-[#E8E5DF] shadow-xs mb-6">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-stone-100 rounded-2xl flex items-center justify-center border border-stone-200 overflow-hidden shrink-0">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#FAF8F5] rounded-2xl flex items-center justify-center border border-[#E8E5DF] overflow-hidden shrink-0">
               {displayAvatar ? (
                 <img src={displayAvatar} alt={displayName} className="w-full h-full object-cover" />
               ) : (
-                <span className="text-2xl font-bold text-stone-400 font-sans">{displayName.charAt(0).toUpperCase()}</span>
+                <span className="text-2xl font-serif font-bold text-[#4A1D3F]">{displayName.charAt(0).toUpperCase()}</span>
               )}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 mb-0.5">
-                <h1 className="text-xl sm:text-2xl font-sans font-bold text-stone-900 truncate">{displayName}</h1>
-                <span className="px-2 py-0.5 bg-amber-50 text-amber-900 text-[9px] font-sans font-bold uppercase tracking-wider rounded-md border border-amber-200 shrink-0">
+                <h1 className="text-xl sm:text-2xl font-serif font-medium text-[#1A1A1A] truncate">{displayName}</h1>
+                <span className="px-2 py-0.5 bg-[#FAF8F5] text-[#4A1D3F] text-[9px] font-bold uppercase tracking-wider rounded-md border border-[#E8E5DF] shrink-0">
                   {displayRole}
                 </span>
               </div>
-              <p className="text-xs text-stone-500 font-sans truncate">{displayEmail}</p>
+              <p className="text-xs text-[#6B7280] truncate">{displayEmail}</p>
             </div>
           </div>
 
           {/* Quick Metrics Strip */}
-          <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-stone-100 text-center">
-            <div className="bg-stone-50 rounded-xl p-2.5">
-              <span className="text-base sm:text-lg font-sans font-bold text-stone-900 block">{orders.length}</span>
-              <span className="text-[9px] font-sans text-stone-400 uppercase tracking-wider">Orders</span>
+          <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-[#E8E5DF] text-center">
+            <div className="bg-[#FAF8F5] rounded-xl p-2.5">
+              <span className="text-base sm:text-lg font-bold text-[#1A1A1A] block">{orders.length}</span>
+              <span className="text-[9px] text-[#6B7280] uppercase tracking-wider">Orders</span>
             </div>
-            <div className="bg-stone-50 rounded-xl p-2.5">
-              <span className="text-base sm:text-lg font-sans font-bold text-amber-700 block">{loyaltyData.points}</span>
-              <span className="text-[9px] font-sans text-stone-400 uppercase tracking-wider">Points</span>
+            <div className="bg-[#FAF8F5] rounded-xl p-2.5">
+              <span className="text-base sm:text-lg font-bold text-[#C6A15B] block">{loyaltyData.points}</span>
+              <span className="text-[9px] text-[#6B7280] uppercase tracking-wider">Points</span>
             </div>
-            <div className="bg-stone-50 rounded-xl p-2.5">
-              <span className="text-base sm:text-lg font-sans font-bold text-stone-900 block">{addresses.length}</span>
-              <span className="text-[9px] font-sans text-stone-400 uppercase tracking-wider">Addresses</span>
+            <div className="bg-[#FAF8F5] rounded-xl p-2.5">
+              <span className="text-base sm:text-lg font-bold text-[#1A1A1A] block">{addresses.length}</span>
+              <span className="text-[9px] text-[#6B7280] uppercase tracking-wider">Addresses</span>
             </div>
           </div>
         </div>
@@ -288,10 +286,10 @@ const Profile = () => {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-sans font-bold uppercase tracking-wider whitespace-nowrap transition-all shrink-0 ${
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all shrink-0 min-h-[44px] ${
                 activeTab === item.id
-                  ? 'bg-stone-900 text-white shadow-md'
-                  : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-100'
+                  ? 'bg-[#4A1D3F] text-white shadow-xs'
+                  : 'bg-white text-[#6B7280] border border-[#E8E5DF] hover:bg-[#FAF8F5]'
               }`}
             >
               <item.icon size={14} />
@@ -301,7 +299,7 @@ const Profile = () => {
           {(displayRole === 'admin' || displayRole === 'superadmin') && (
             <Link
               to="/admin"
-              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-sans font-bold uppercase tracking-wider whitespace-nowrap bg-rose-50 text-rose-700 border border-rose-200 shrink-0"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider whitespace-nowrap bg-rose-50 text-[#B43E2B] border border-rose-200 shrink-0 min-h-[44px]"
             >
               <Settings size={14} />
               <span>Admin</span>
@@ -309,7 +307,7 @@ const Profile = () => {
           )}
           <button
             onClick={logout}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-sans font-bold uppercase tracking-wider whitespace-nowrap bg-white text-red-600 border border-red-200 shrink-0 hover:bg-red-50"
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider whitespace-nowrap bg-white text-[#B43E2B] border border-rose-200 shrink-0 hover:bg-rose-50 min-h-[44px]"
           >
             <LogOut size={14} />
             <span>Logout</span>
@@ -320,45 +318,45 @@ const Profile = () => {
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
           {/* Desktop Left Sidebar */}
           <aside className="hidden lg:block w-72 xl:w-80 shrink-0 sticky top-24 space-y-6">
-            <div className="bg-white rounded-3xl p-6 border border-stone-200/90 shadow-sm space-y-4">
-              <div className="w-20 h-20 bg-stone-100 rounded-2xl flex items-center justify-center border border-stone-200 overflow-hidden mx-auto">
+            <div className="bg-white rounded-3xl p-6 border border-[#E8E5DF] shadow-xs space-y-4">
+              <div className="w-20 h-20 bg-[#FAF8F5] rounded-2xl flex items-center justify-center border border-[#E8E5DF] overflow-hidden mx-auto">
                 {displayAvatar ? (
                   <img src={displayAvatar} alt={displayName} className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-3xl font-bold text-stone-400 font-sans">{displayName.charAt(0).toUpperCase()}</span>
+                  <span className="text-3xl font-serif font-bold text-[#4A1D3F]">{displayName.charAt(0).toUpperCase()}</span>
                 )}
               </div>
               <div className="text-center space-y-1">
-                <h2 className="text-xl font-sans font-bold text-stone-900">{displayName}</h2>
-                <p className="text-xs text-stone-500 font-sans truncate">{displayEmail}</p>
-                <span className="inline-block px-3 py-0.5 bg-amber-50 text-amber-900 text-[9px] font-sans font-bold uppercase tracking-wider rounded-full border border-amber-200 mt-1">
+                <h2 className="text-xl font-serif font-medium text-[#1A1A1A]">{displayName}</h2>
+                <p className="text-xs text-[#6B7280] truncate">{displayEmail}</p>
+                <span className="inline-block px-3 py-0.5 bg-[#FAF8F5] text-[#4A1D3F] text-[9px] font-bold uppercase tracking-wider rounded-full border border-[#E8E5DF] mt-1">
                   {displayRole}
                 </span>
               </div>
 
               {/* Sidebar Quick Stats */}
-              <div className="grid grid-cols-2 gap-2 pt-4 border-t border-stone-100 text-center">
-                <div className="bg-stone-50 rounded-xl p-2.5">
-                  <span className="text-lg font-sans font-bold text-stone-900 block">{orders.length}</span>
-                  <span className="text-[9px] font-sans text-stone-400 uppercase tracking-wider">Orders</span>
+              <div className="grid grid-cols-2 gap-2 pt-4 border-t border-[#E8E5DF] text-center">
+                <div className="bg-[#FAF8F5] rounded-xl p-2.5">
+                  <span className="text-lg font-bold text-[#1A1A1A] block">{orders.length}</span>
+                  <span className="text-[9px] text-[#6B7280] uppercase tracking-wider">Orders</span>
                 </div>
-                <div className="bg-stone-50 rounded-xl p-2.5">
-                  <span className="text-lg font-sans font-bold text-amber-700 block">{loyaltyData.points}</span>
-                  <span className="text-[9px] font-sans text-stone-400 uppercase tracking-wider">Points</span>
+                <div className="bg-[#FAF8F5] rounded-xl p-2.5">
+                  <span className="text-lg font-bold text-[#C6A15B] block">{loyaltyData.points}</span>
+                  <span className="text-[9px] text-[#6B7280] uppercase tracking-wider">Points</span>
                 </div>
               </div>
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="bg-white rounded-3xl p-3 border border-stone-200/90 shadow-sm space-y-1">
+            <nav className="bg-white rounded-3xl p-3 border border-[#E8E5DF] shadow-xs space-y-1">
               {menuItems.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center justify-between p-3.5 rounded-2xl text-xs font-sans font-bold uppercase tracking-wider transition-all ${
+                  className={`w-full flex items-center justify-between p-3.5 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all min-h-[44px] ${
                     activeTab === item.id
-                      ? 'bg-stone-900 text-white shadow-md'
-                      : 'text-stone-600 hover:text-stone-950 hover:bg-stone-50'
+                      ? 'bg-[#4A1D3F] text-white shadow-xs'
+                      : 'text-[#6B7280] hover:text-[#1A1A1A] hover:bg-[#FAF8F5]'
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -372,7 +370,7 @@ const Profile = () => {
               {(displayRole === 'admin' || displayRole === 'superadmin') && (
                 <Link
                   to="/admin"
-                  className="w-full flex items-center gap-3 p-3.5 text-rose-600 hover:bg-rose-50 rounded-2xl text-xs font-sans font-bold uppercase tracking-wider transition-all"
+                  className="w-full flex items-center gap-3 p-3.5 text-[#B43E2B] hover:bg-rose-50 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all min-h-[44px]"
                 >
                   <Settings size={16} />
                   <span>Admin Panel</span>
@@ -381,7 +379,7 @@ const Profile = () => {
 
               <button
                 onClick={logout}
-                className="w-full flex items-center gap-3 p-3.5 text-stone-500 hover:text-red-600 hover:bg-red-50 rounded-2xl text-xs font-sans font-bold uppercase tracking-wider transition-all"
+                className="w-full flex items-center gap-3 p-3.5 text-[#6B7280] hover:text-[#B43E2B] hover:bg-rose-50 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all min-h-[44px]"
               >
                 <LogOut size={16} />
                 <span>Logout</span>
@@ -391,17 +389,17 @@ const Profile = () => {
 
           {/* Main Content Area */}
           <main className="flex-1 min-w-0 space-y-6 sm:space-y-8">
-            <header className="hidden lg:block space-y-1 pb-4 border-b border-stone-200/80">
-              <span className="text-[10px] font-sans font-bold uppercase tracking-[0.25em] text-amber-800">
-                Member Sanctuary
+            <header className="hidden lg:block space-y-1 pb-4 border-b border-[#E8E5DF]">
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#C6A15B]">
+                Patron Sanctuary
               </span>
-              <h1 className="text-3xl xl:text-4xl font-sans font-bold text-stone-900">
+              <h1 className="text-3xl xl:text-4xl font-serif font-medium text-[#1A1A1A]">
                 {menuItems.find((i) => i.id === activeTab)?.label}
               </h1>
             </header>
 
             <AnimatePresence mode="wait">
-              {/* ── Orders Tab ── */}
+              {/* Orders Tab */}
               {activeTab === 'orders' && (
                 <motion.div
                   key="orders"
@@ -413,35 +411,35 @@ const Profile = () => {
                   {loading ? (
                     <div className="space-y-4">
                       {[1, 2, 3].map((i) => (
-                        <div key={i} className="h-44 bg-stone-200/60 animate-pulse rounded-3xl" />
+                        <div key={i} className="h-44 bg-white/70 animate-pulse rounded-3xl border border-[#E8E5DF]" />
                       ))}
                     </div>
                   ) : orders.length > 0 ? (
                     orders.map((order) => (
                       <motion.div
                         key={order._id}
-                        className="bg-white border border-stone-200/90 rounded-3xl overflow-hidden hover:shadow-xl transition-all duration-300"
+                        className="bg-white border border-[#E8E5DF] rounded-3xl overflow-hidden hover:border-[#4A1D3F]/30 shadow-xs transition-all duration-300"
                       >
                         {/* Order Header */}
-                        <div className="bg-stone-50/80 p-4 sm:p-6 border-b border-stone-100">
+                        <div className="bg-[#FAF8F5] p-4 sm:p-6 border-b border-[#E8E5DF]">
                           <div className="grid grid-cols-2 sm:grid-cols-4 lg:flex lg:items-center lg:justify-between gap-3 sm:gap-4">
                             <div>
-                              <p className="text-[9px] text-stone-400 font-sans uppercase tracking-wider font-bold">Reference</p>
-                              <p className="text-xs sm:text-sm font-sans font-bold text-stone-900">#{order.orderNumber}</p>
+                              <p className="text-[9px] text-[#6B7280] uppercase tracking-wider font-bold">Reference</p>
+                              <p className="text-xs sm:text-sm font-bold text-[#1A1A1A]">#{order.orderNumber}</p>
                             </div>
                             <div>
-                              <p className="text-[9px] text-stone-400 font-sans uppercase tracking-wider font-bold">Placed Date</p>
-                              <p className="text-xs sm:text-sm font-sans text-stone-800">
+                              <p className="text-[9px] text-[#6B7280] uppercase tracking-wider font-bold">Placed Date</p>
+                              <p className="text-xs sm:text-sm text-[#1A1A1A]">
                                 {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                               </p>
                             </div>
                             <div>
-                              <p className="text-[9px] text-stone-400 font-sans uppercase tracking-wider font-bold">Total Amount</p>
-                              <p className="text-xs sm:text-sm font-sans font-bold text-amber-900">₹{order.total.toLocaleString('en-IN')}</p>
+                              <p className="text-[9px] text-[#6B7280] uppercase tracking-wider font-bold">Total Amount</p>
+                              <p className="text-xs sm:text-sm font-bold text-[#4A1D3F]">₹{order.total.toLocaleString('en-IN')}</p>
                             </div>
                             <div>
-                              <p className="text-[9px] text-stone-400 font-sans uppercase tracking-wider font-bold">Status</p>
-                              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-sans font-bold uppercase tracking-wider ${STATUS_BADGE[order.status] || 'bg-stone-100 text-stone-700'}`}>
+                              <p className="text-[9px] text-[#6B7280] uppercase tracking-wider font-bold">Status</p>
+                              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${STATUS_BADGE[order.status] || 'bg-[#FAF8F5] text-[#1A1A1A]'}`}>
                                 {STATUS_ICON[order.status]}
                                 {(order.status || 'pending').replace(/_/g, ' ')}
                               </span>
@@ -449,10 +447,10 @@ const Profile = () => {
                           </div>
 
                           {order.tracking?.estimatedDeliveryTime && order.status !== 'rejected' && order.status !== 'cancelled' && (
-                            <div className="mt-3 pt-3 border-t border-stone-200/60 flex items-center gap-2">
-                              <Sparkles size={12} className="text-emerald-600" />
-                              <span className="text-xs font-sans text-stone-600">Estimated Delivery:</span>
-                              <span className="text-xs font-sans font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/60">
+                            <div className="mt-3 pt-3 border-t border-[#E8E5DF] flex items-center gap-2">
+                              <Sparkles size={12} className="text-[#C6A15B]" />
+                              <span className="text-xs text-[#6B7280]">Estimated Delivery:</span>
+                              <span className="text-xs font-bold text-[#4A1D3F] bg-[#FAF8F5] px-2.5 py-0.5 rounded-full border border-[#E8E5DF]">
                                 {order.tracking.estimatedDeliveryTime}
                               </span>
                             </div>
@@ -463,9 +461,9 @@ const Profile = () => {
                         <div className="p-4 sm:p-6 space-y-4">
                           <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-2">
                             {order.items.map((item, idx) => (
-                              <div key={idx} className="w-16 sm:w-20 aspect-[3/4] bg-stone-100 rounded-2xl overflow-hidden relative shrink-0 border border-stone-200">
+                              <div key={idx} className="w-16 sm:w-20 aspect-[3/4] bg-[#FAF8F5] rounded-2xl overflow-hidden relative shrink-0 border border-[#E8E5DF]">
                                 {item.quantity > 1 && (
-                                  <span className="absolute top-1 right-1 bg-stone-900/90 text-white text-[8px] font-sans font-bold px-1.5 py-0.5 rounded-md z-10">
+                                  <span className="absolute top-1 right-1 bg-[#1A1A1A]/90 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-md z-10">
                                     ×{item.quantity}
                                   </span>
                                 )}
@@ -479,8 +477,8 @@ const Profile = () => {
                                   }}
                                   referrerPolicy="no-referrer"
                                 />
-                                <div className="absolute inset-0 bg-stone-900/40 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity">
-                                  <span className="text-[8px] text-white font-sans font-bold">{item.selectedSize || 'Std'}</span>
+                                <div className="absolute inset-0 bg-[#1A1A1A]/40 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity">
+                                  <span className="text-[8px] text-white font-bold">{item.selectedSize || 'Std'}</span>
                                 </div>
                               </div>
                             ))}
@@ -491,7 +489,7 @@ const Profile = () => {
                             <div className="pt-2">
                               <button
                                 onClick={() => setExpandedOrder(expandedOrder === order._id ? null : order._id)}
-                                className="text-xs font-sans font-bold uppercase tracking-wider text-stone-500 hover:text-stone-950 transition-colors flex items-center gap-1.5"
+                                className="text-xs font-bold uppercase tracking-wider text-[#6B7280] hover:text-[#1A1A1A] transition-colors flex items-center gap-1.5 min-h-[44px] py-1"
                               >
                                 <ChevronRight
                                   size={13}
@@ -507,12 +505,12 @@ const Profile = () => {
                                     exit={{ height: 0, opacity: 0 }}
                                     className="overflow-hidden mt-3"
                                   >
-                                    <div className="pl-3 sm:pl-4 border-l-2 border-stone-200 space-y-2.5 py-1">
+                                    <div className="pl-3 sm:pl-4 border-l-2 border-[#E8E5DF] space-y-2.5 py-1">
                                       {[...order.timeline].reverse().map((event, i) => (
                                         <div key={i} className="text-xs">
-                                          <p className="font-sans font-bold text-stone-900 capitalize">{event.status}</p>
-                                          {event.note && <p className="text-stone-500 text-[11px]">{event.note}</p>}
-                                          <p className="text-stone-400 text-[10px] mt-0.5">
+                                          <p className="font-bold text-[#1A1A1A] capitalize">{event.status}</p>
+                                          {event.note && <p className="text-[#6B7280] text-[11px]">{event.note}</p>}
+                                          <p className="text-[#9CA3AF] text-[10px] mt-0.5">
                                             {new Date(event.date).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                           </p>
                                         </div>
@@ -524,50 +522,50 @@ const Profile = () => {
                             </div>
                           )}
 
-                          {/* Actions */}
-                          <div className="pt-4 border-t border-stone-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <p className="text-xs text-stone-500 font-sans truncate max-w-sm">
-                              {order.address || 'Address provided at checkout'}
+                          {/* Actions Suite */}
+                          <div className="pt-4 border-t border-[#E8E5DF] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <p className="text-xs text-[#6B7280] truncate max-w-sm">
+                              {order.address || 'Delivery Address'}
                             </p>
                             <div className="flex flex-wrap items-center gap-2">
                               <Link
                                 to={`/track-order?orderId=${order.orderNumber}`}
-                                className="inline-flex items-center gap-1.5 text-xs font-sans font-bold uppercase tracking-wider text-white bg-stone-900 hover:bg-amber-800 transition-colors px-3.5 py-2 rounded-xl shadow-xs"
+                                className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white bg-[#4A1D3F] hover:bg-[#3B1732] transition-colors px-3.5 py-2.5 rounded-xl shadow-xs min-h-[44px]"
                               >
-                                <Truck size={12} />
+                                <Truck size={13} />
                                 <span>Track Live</span>
                               </Link>
                               <a
                                 href={getInvoiceUrl(order._id)}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 text-xs font-sans font-medium text-stone-700 hover:text-stone-950 transition-colors border border-stone-200 px-3.5 py-2 rounded-xl bg-white"
+                                className="inline-flex items-center gap-1.5 text-xs font-medium text-[#1A1A1A] hover:bg-[#FAF8F5] transition-colors border border-[#E8E5DF] px-3.5 py-2.5 rounded-xl bg-white min-h-[44px]"
                               >
-                                <FileText size={12} />
+                                <FileText size={13} />
                                 <span>Invoice</span>
                               </a>
                               <Link
                                 to="/shop"
-                                className="inline-flex items-center gap-1.5 text-xs font-sans font-medium text-stone-700 hover:text-stone-950 transition-colors border border-stone-200 px-3.5 py-2 rounded-xl bg-white"
+                                className="inline-flex items-center gap-1.5 text-xs font-medium text-[#1A1A1A] hover:bg-[#FAF8F5] transition-colors border border-[#E8E5DF] px-3.5 py-2.5 rounded-xl bg-white min-h-[44px]"
                               >
-                                <RefreshCcw size={12} />
+                                <RefreshCcw size={13} />
                                 <span>Reorder</span>
                               </Link>
                               {order.paymentStatus === 'failed' && (
                                 <button
                                   onClick={() => navigate('/payment-retry', { state: { orderId: order._id, amount: order.total, gateway: order.paymentMethod } })}
-                                  className="inline-flex items-center gap-1.5 text-xs font-sans font-bold uppercase tracking-wider text-white bg-amber-600 hover:bg-amber-700 transition-colors px-3.5 py-2 rounded-xl shadow-xs"
+                                  className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white bg-[#B43E2B] hover:bg-[#962F1F] transition-colors px-3.5 py-2.5 rounded-xl shadow-xs min-h-[44px]"
                                 >
-                                  <CreditCard size={12} />
-                                  <span>Retry</span>
+                                  <CreditCard size={13} />
+                                  <span>Retry Pay</span>
                                 </button>
                               )}
                               {(order.status === 'pending' || order.status === 'processing') && (
                                 <button
                                   onClick={() => handleCancelOrder(order._id)}
-                                  className="inline-flex items-center gap-1 text-xs font-sans font-medium text-red-600 hover:text-red-700 transition-colors border border-red-200 px-3 py-2 rounded-xl hover:bg-red-50"
+                                  className="inline-flex items-center gap-1 text-xs font-medium text-[#B43E2B] hover:bg-rose-50 transition-colors border border-rose-200 px-3 py-2.5 rounded-xl min-h-[44px]"
                                 >
-                                  <XCircle size={12} />
+                                  <XCircle size={13} />
                                   <span>Cancel</span>
                                 </button>
                               )}
@@ -577,27 +575,25 @@ const Profile = () => {
                       </motion.div>
                     ))
                   ) : (
-                    <div className="text-center py-20 sm:py-28 bg-white rounded-3xl border border-dashed border-stone-200 p-6 space-y-5">
-                      <div className="inline-flex items-center justify-center w-20 h-20 bg-stone-100 rounded-full text-stone-400">
+                    <div className="text-center py-20 sm:py-28 bg-white rounded-3xl border border-dashed border-[#E8E5DF] p-6 space-y-5">
+                      <div className="inline-flex items-center justify-center w-20 h-20 bg-[#FAF8F5] rounded-full text-[#4A1D3F]">
                         <ShoppingBag size={36} />
                       </div>
                       <div className="space-y-1">
-                        <h3 className="text-xl sm:text-2xl font-sans font-bold text-stone-800">Your Wardrobe Awaits</h3>
-                        <p className="text-xs sm:text-sm text-stone-500 font-sans">You haven't placed any orders yet.</p>
+                        <h3 className="text-xl sm:text-2xl font-serif font-medium text-[#1A1A1A]">Your Wardrobe Awaits</h3>
+                        <p className="text-xs text-[#6B7280]">You haven't placed any orders with Sakshi Clothing yet.</p>
                       </div>
-                      <Link
-                        to="/shop"
-                        className="inline-flex items-center gap-2 px-8 py-3.5 bg-stone-900 text-white text-xs font-sans font-bold uppercase tracking-wider rounded-2xl hover:bg-amber-800 transition-all shadow-md"
-                      >
-                        <span>Discover Collection</span>
-                        <ChevronRight size={14} />
+                      <Link to="/shop">
+                        <Button variant="primary" size="lg" rightIcon={<ChevronRight size={15} />}>
+                          Discover Collections
+                        </Button>
                       </Link>
                     </div>
                   )}
                 </motion.div>
               )}
 
-              {/* ── Addresses Tab ── */}
+              {/* Addresses Tab */}
               {activeTab === 'addresses' && (
                 <motion.div
                   key="addresses"
@@ -611,38 +607,38 @@ const Profile = () => {
                       <div
                         key={addr._id}
                         className={`bg-white rounded-3xl p-5 sm:p-7 border-2 transition-all ${
-                          addr.isDefault ? 'border-amber-400 shadow-md' : 'border-stone-200/90 hover:border-stone-300'
+                          addr.isDefault ? 'border-[#C6A15B] shadow-xs' : 'border-[#E8E5DF] hover:border-[#4A1D3F]/30'
                         }`}
                       >
                         <div className="flex justify-between items-start mb-3">
-                          <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-stone-600 bg-stone-100 px-3 py-1 rounded-full">
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-[#1A1A1A] bg-[#FAF8F5] border border-[#E8E5DF] px-3 py-1 rounded-full">
                             {addr.addressType || 'Home'}
                           </span>
                           {addr.isDefault && (
-                            <span className="text-[9px] font-sans font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
-                              Default
+                            <span className="text-[9px] font-bold uppercase tracking-wider text-[#4A1D3F] bg-[#FAF8F5] border border-[#4A1D3F]/30 px-3 py-1 rounded-full">
+                              Default Address
                             </span>
                           )}
                         </div>
-                        <h4 className="font-sans font-bold text-stone-900 text-base">{addr.fullName}</h4>
-                        <p className="text-xs text-stone-600 font-sans mt-2 leading-relaxed">
+                        <h4 className="font-serif font-medium text-[#1A1A1A] text-base">{addr.fullName}</h4>
+                        <p className="text-xs text-[#6B7280] mt-2 leading-relaxed">
                           {addr.houseNumber}, {addr.street}<br />
                           {addr.area && `${addr.area}, `}{addr.city}, {addr.state} — {addr.pincode}<br />
                           {addr.country}
                         </p>
-                        <p className="text-xs text-stone-400 font-sans mt-2">📞 {addr.phone}</p>
-                        <div className="flex items-center gap-3 mt-5 pt-3 border-t border-stone-100">
+                        <p className="text-xs text-[#9CA3AF] mt-2">📞 {addr.phone}</p>
+                        <div className="flex items-center gap-3 mt-5 pt-3 border-t border-[#E8E5DF]">
                           {!addr.isDefault && (
                             <button
                               onClick={() => handleSetDefault(addr._id)}
-                              className="text-xs font-sans font-bold uppercase tracking-wider text-amber-900 hover:text-stone-900 transition-colors"
+                              className="text-xs font-bold uppercase tracking-wider text-[#4A1D3F] hover:text-[#3B1732] transition-colors min-h-[44px] py-1"
                             >
                               Set Default
                             </button>
                           )}
                           <button
                             onClick={() => handleDeleteAddress(addr._id)}
-                            className="text-xs font-sans font-bold uppercase tracking-wider text-red-500 hover:text-red-700 transition-colors ml-auto"
+                            className="text-xs font-bold uppercase tracking-wider text-[#B43E2B] hover:text-[#962F1F] transition-colors ml-auto min-h-[44px] py-1"
                           >
                             Remove
                           </button>
@@ -651,23 +647,22 @@ const Profile = () => {
                     ))}
 
                     {addresses.length === 0 && (
-                      <div className="col-span-full text-center py-16 bg-white rounded-3xl border border-dashed border-stone-200 p-6">
-                        <MapPin size={36} className="mx-auto text-stone-300 mb-2" />
-                        <p className="text-stone-500 font-sans text-sm">No saved addresses found.</p>
+                      <div className="col-span-full text-center py-16 bg-white rounded-3xl border border-dashed border-[#E8E5DF] p-6">
+                        <MapPin size={36} className="mx-auto text-[#6B7280] mb-2" />
+                        <p className="text-[#6B7280] text-sm">No saved addresses found.</p>
                       </div>
                     )}
                   </div>
 
-                  <Link
-                    to="/checkout"
-                    className="inline-flex items-center gap-2 px-6 py-3.5 bg-stone-900 text-white rounded-2xl text-xs font-sans font-bold uppercase tracking-wider hover:bg-amber-800 transition-all shadow-md"
-                  >
-                    <span>+ Add Address via Checkout</span>
+                  <Link to="/checkout">
+                    <Button variant="primary" size="md">
+                      + Add Address via Checkout
+                    </Button>
                   </Link>
                 </motion.div>
               )}
 
-              {/* ── Loyalty Tab ── */}
+              {/* Loyalty Tab */}
               {activeTab === 'loyalty' && (
                 <motion.div
                   key="loyalty"
@@ -676,56 +671,58 @@ const Profile = () => {
                   exit={{ opacity: 0, y: -15 }}
                   className="space-y-6"
                 >
-                  <div className="bg-gradient-to-r from-stone-900 via-stone-950 to-amber-950 text-white p-6 sm:p-10 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6">
-                    <div className="space-y-2 text-center sm:text-left">
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-400/20 text-amber-300 rounded-full text-xs font-sans uppercase tracking-wider font-bold">
+                  <div className="bg-[#4A1D3F] text-white p-6 sm:p-10 rounded-3xl shadow-md border border-[#3B1732] flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-80 h-80 bg-[#C6A15B]/15 rounded-full blur-3xl pointer-events-none" />
+
+                    <div className="space-y-2 text-center sm:text-left relative z-10">
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 text-[#C6A15B] rounded-full text-xs uppercase tracking-wider font-bold border border-white/15">
                         <Award size={13} />
-                        <span>Atelier Privilege Tier</span>
+                        <span>Privilege Circle Tier</span>
                       </div>
-                      <h2 className="text-2xl sm:text-3xl font-sans font-bold">Sakshi Patron Rewards</h2>
-                      <p className="text-stone-300 text-xs sm:text-sm font-light max-w-md">
-                        Earn 1 point for every ₹100 spent. Redeem directly as privilege credit at checkout.
+                      <h2 className="text-2xl sm:text-3xl font-serif font-medium text-white">Sakshi Patron Rewards</h2>
+                      <p className="text-white/80 text-xs sm:text-sm font-light max-w-md">
+                        Earn 1 privilege point for every ₹100 spent. Redeem directly as credit on your next bespoke or jewellery order.
                       </p>
                     </div>
 
-                    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20 text-center min-w-[160px]">
-                      <span className="text-[10px] font-sans uppercase tracking-wider text-amber-300 block mb-1">
+                    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20 text-center min-w-[160px] relative z-10">
+                      <span className="text-[10px] uppercase tracking-wider text-[#C6A15B] block mb-1">
                         Available Balance
                       </span>
-                      <span className="text-4xl sm:text-5xl font-sans font-extrabold text-amber-400">
+                      <span className="text-4xl sm:text-5xl font-serif font-bold text-white">
                         {loyaltyData.points}
                       </span>
-                      <span className="text-[10px] font-sans text-stone-300 block mt-1">Privilege Points</span>
+                      <span className="text-[10px] text-white/70 block mt-1">Privilege Points</span>
                     </div>
                   </div>
 
                   {/* Transaction History */}
-                  <div className="bg-white border border-stone-200/90 rounded-3xl overflow-hidden shadow-sm">
-                    <div className="p-5 sm:p-6 border-b border-stone-100 bg-stone-50/60 flex items-center justify-between">
-                      <h3 className="font-sans font-bold text-stone-900 text-base">Points Activity</h3>
-                      <span className="text-xs text-stone-500 font-sans">{loyaltyData.transactions.length} entries</span>
+                  <div className="bg-white border border-[#E8E5DF] rounded-3xl overflow-hidden shadow-xs">
+                    <div className="p-5 sm:p-6 border-b border-[#E8E5DF] bg-[#FAF8F5] flex items-center justify-between">
+                      <h3 className="font-serif font-medium text-[#1A1A1A] text-base">Points Activity</h3>
+                      <span className="text-xs text-[#6B7280]">{loyaltyData.transactions.length} entries</span>
                     </div>
 
                     {loyaltyData.transactions.length === 0 ? (
-                      <p className="text-stone-400 font-sans text-sm text-center py-12">No points history available yet.</p>
+                      <p className="text-[#6B7280] text-sm text-center py-12">No points history available yet.</p>
                     ) : (
-                      <div className="divide-y divide-stone-100">
+                      <div className="divide-y divide-[#E8E5DF]">
                         {loyaltyData.transactions.map((tx: any) => (
-                          <div key={tx._id} className="p-4 sm:p-6 flex items-center justify-between hover:bg-stone-50/60 transition-colors">
+                          <div key={tx._id} className="p-4 sm:p-6 flex items-center justify-between hover:bg-[#FAF8F5] transition-colors">
                             <div className="space-y-1">
-                              <span className={`inline-block px-2.5 py-0.5 text-[9px] font-sans font-bold uppercase tracking-wider rounded-md ${
+                              <span className={`inline-block px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-md ${
                                 tx.type === 'earned'
                                   ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                                   : tx.type === 'redeemed'
                                   ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                                  : 'bg-stone-100 text-stone-700'
+                                  : 'bg-[#FAF8F5] text-[#1A1A1A]'
                               }`}>
                                 {tx.type}
                               </span>
-                              <p className="text-xs sm:text-sm font-sans font-bold text-stone-900">{tx.description || 'Points Adjustment'}</p>
-                              <p className="text-[10px] text-stone-400 font-sans">{new Date(tx.createdAt).toLocaleDateString()}</p>
+                              <p className="text-xs sm:text-sm font-semibold text-[#1A1A1A]">{tx.description || 'Points Adjustment'}</p>
+                              <p className="text-[10px] text-[#9CA3AF]">{new Date(tx.createdAt).toLocaleDateString()}</p>
                             </div>
-                            <div className={`text-base sm:text-xl font-sans font-bold ${tx.points > 0 ? 'text-emerald-700' : 'text-stone-800'}`}>
+                            <div className={`text-base sm:text-xl font-bold ${tx.points > 0 ? 'text-emerald-700' : 'text-[#1A1A1A]'}`}>
                               {tx.points > 0 ? `+${tx.points}` : tx.points}
                             </div>
                           </div>
