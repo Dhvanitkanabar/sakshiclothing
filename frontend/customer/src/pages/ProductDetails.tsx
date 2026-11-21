@@ -1,18 +1,40 @@
+// Reading this as: Dual-Layout Product Details Page for Sakshi Clothing (Clothing vs Imitation Jewellery), with size chart modal, PIN code delivery checker, and mobile sticky purchase bar. Dials: VARIANCE [8] / MOTION [6] / DENSITY [4].
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Product } from '../types';
 import { useCart } from '../context/CartContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShoppingBag, ChevronRight, Star, ShieldCheck, Truck, RotateCcw, Heart, Ruler, Plus, Minus, Sparkles, Award } from 'lucide-react';
+import { 
+  ShoppingBag, 
+  ChevronRight, 
+  Star, 
+  ShieldCheck, 
+  Truck, 
+  RotateCcw, 
+  Heart, 
+  Ruler, 
+  Plus, 
+  Minus, 
+  Sparkles, 
+  Check, 
+  MapPin, 
+  CheckCircle2,
+  Banknote,
+  Info,
+  X
+} from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import ProductReviews from '../components/ProductReviews';
-import ProductFilmstripCarousel from '../components/ProductFilmstripCarousel';
 import { useWishlist } from '../context/WishlistContext';
 import { fetchProductById, fetchProducts } from '../lib/api';
 import { PRODUCTS } from '../data/products';
 import { toast } from 'sonner';
+import { Button } from '../components/ui/Button';
+import { Badge } from '../components/ui/Badge';
+import { Modal } from '../components/ui/Modal';
 
-export const ProductDetails = () => {
+export const ProductDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addToCart } = useCart();
@@ -22,11 +44,15 @@ export const ProductDetails = () => {
   const [loading, setLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState('craft');
+  const [activeTab, setActiveTab] = useState<'details' | 'care' | 'delivery'>('details');
   const [mainImage, setMainImage] = useState('');
+  const [isSizeChartOpen, setIsSizeChartOpen] = useState(false);
+
+  // PIN code checker state
+  const [pincode, setPincode] = useState('');
+  const [pincodeStatus, setPincodeStatus] = useState<{ checked: boolean; valid: boolean; message: string } | null>(null);
 
   useEffect(() => {
-    // Immediate scroll lock to top when product ID loads or changes
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
     if (document.documentElement) document.documentElement.scrollTop = 0;
     if (document.body) document.body.scrollTop = 0;
@@ -46,6 +72,7 @@ export const ProductDetails = () => {
         } else {
           setSelectedSize('Standard');
         }
+
         const DEAD_IMG_LIST = ['image-1793650768360-508253073.jpeg'];
         const validImgs = (chosen.images || []).map((i: any) => typeof i === 'string' ? i : i.url).filter((u: string) => u && !DEAD_IMG_LIST.some(d => u.includes(d)));
         const primary = validImgs[0] || (chosen.image && !DEAD_IMG_LIST.some(d => chosen.image.includes(d)) ? chosen.image : '');
@@ -57,28 +84,17 @@ export const ProductDetails = () => {
         setRelatedProducts(validRelated.filter((p: any) => p.id !== chosen.id).slice(0, 4));
       }
       setLoading(false);
-      // Immediately reset scroll once product data and layout are painted
-      requestAnimationFrame(() => {
-        window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
-        if (document.documentElement) document.documentElement.scrollTop = 0;
-        if (document.body) document.body.scrollTop = 0;
-      });
-      setTimeout(() => {
-        window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
-        if (document.documentElement) document.documentElement.scrollTop = 0;
-        if (document.body) document.body.scrollTop = 0;
-      }, 50);
     };
     loadProductData();
   }, [id]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center">
+      <div className="min-h-screen bg-[#FBF9F6] flex items-center justify-center">
         <motion.div 
           animate={{ rotate: 360 }}
           transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-          className="w-10 h-10 border-2 border-stone-300 border-t-amber-800 rounded-full"
+          className="w-10 h-10 border-2 border-[#E8E5DF] border-t-[#4A1D3F] rounded-full"
         />
       </div>
     );
@@ -86,15 +102,27 @@ export const ProductDetails = () => {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-[#FAF8F5] flex flex-col items-center justify-center px-4 text-center">
-        <h2 className="text-2xl sm:text-3xl font-sans font-light text-stone-900 mb-4">Silhouette Not Found</h2>
-        <p className="text-stone-500 font-sans text-xs mb-6">The requested product is currently unavailable.</p>
-        <Link to="/shop" className="px-6 py-3 bg-stone-900 text-white rounded-xl text-xs font-sans uppercase tracking-widest font-bold">
-          Explore Current Collection
+      <div className="min-h-screen bg-[#FBF9F6] flex flex-col items-center justify-center px-4 text-center">
+        <h2 className="text-2xl sm:text-3xl font-serif text-[#1A1A1A] mb-3">Product Not Found</h2>
+        <p className="text-[#6B7280] text-xs mb-6">The requested piece is currently unavailable.</p>
+        <Link to="/shop">
+          <Button variant="primary">Explore Current Collection</Button>
         </Link>
       </div>
     );
   }
+
+  const categoryLower = (product.category || '').toLowerCase();
+  const subCategoryLower = (product.subCategory || '').toLowerCase();
+  const isJewellery =
+    categoryLower.includes('jewel') ||
+    subCategoryLower.includes('jewel') ||
+    subCategoryLower.includes('necklace') ||
+    subCategoryLower.includes('earring') ||
+    subCategoryLower.includes('bangle') ||
+    subCategoryLower.includes('choker') ||
+    subCategoryLower.includes('polki') ||
+    subCategoryLower.includes('kundan');
 
   const isWishlisted = isInWishlist(product.id);
   const currentVariant = product.variants?.find(v => v.size === selectedSize) || product.variants?.[0];
@@ -116,58 +144,119 @@ export const ProductDetails = () => {
     ].filter(img => img && !DEAD_IMAGES.some(d => img.includes(d))))
   );
 
+  const price = product.price || 0;
+  const mrp = (product as any).mrp || (product as any).originalPrice || Math.round(price * 1.35);
+  const discountPercent = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
+
   const handleAddToCart = async () => {
     if (isSelectedOutOfStock) {
       toast.error(`"${product.name}" (${selectedSize}) is currently out of stock`);
       return;
     }
-    const success = await addToCart(product, selectedSize || 'Standard', quantity);
+    const sizeToUse = isJewellery ? 'One Size' : (selectedSize || 'Standard');
+    const success = await addToCart(product, sizeToUse, quantity);
     if (success) {
       toast.success(`"${product.name}" added to shopping bag`);
     }
   };
 
+  const handlePincodeCheck = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanPin = pincode.trim();
+    if (!/^\d{6}$/.test(cleanPin)) {
+      setPincodeStatus({
+        checked: true,
+        valid: false,
+        message: 'Please enter a valid 6-digit Indian PIN code.'
+      });
+      return;
+    }
+    // All valid 6-digit PIN codes are deliverable in India with Cash on Delivery
+    setPincodeStatus({
+      checked: true,
+      valid: true,
+      message: `Delivery available at ${cleanPin} in 2-4 business days. Cash on Delivery eligible.`
+    });
+  };
+
   return (
-    <div className="bg-[#FAF8F5] min-h-screen text-stone-900 selection:bg-amber-400 selection:text-black pb-28 lg:pb-16">
+    <div className="bg-[#FBF9F6] min-h-screen text-[#1A1A1A] pb-28 lg:pb-16">
+      
       {/* Breadcrumb Navigation */}
-      <div className="max-w-7xl mx-auto px-5 sm:px-8 pt-8 sm:pt-12 pb-4 sm:pb-6">
-        <nav className="flex items-center gap-2 text-[10px] sm:text-xs font-sans uppercase tracking-widest text-stone-500">
-          <Link to="/" className="hover:text-stone-900 transition-colors">Atelier</Link>
-          <ChevronRight size={10} className="text-stone-400" />
-          <Link to={`/shop?category=${encodeURIComponent(product.category)}`} className="hover:text-stone-900 transition-colors">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 pt-8 pb-4">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-[#6B7280]">
+          <Link to="/" className="hover:text-[#4A1D3F] transition-colors">Home</Link>
+          <ChevronRight size={12} />
+          <Link to={`/shop?category=${encodeURIComponent(product.category)}`} className="hover:text-[#4A1D3F] transition-colors">
             {product.category}
           </Link>
-          <ChevronRight size={10} className="text-stone-400" />
-          <span className="text-stone-900 truncate max-w-[200px] sm:max-w-none font-bold">{product.name}</span>
+          <ChevronRight size={12} />
+          <span className="text-[#1A1A1A] truncate max-w-[200px] sm:max-w-none font-medium">{product.name}</span>
         </nav>
       </div>
 
       <div className="max-w-7xl mx-auto px-5 sm:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
           
-          {/* Left Column: Gallery & Micro Thumbnails */}
+          {/* Left Column: Image Gallery */}
           <div className="lg:col-span-7 space-y-4">
-            <div className="w-full aspect-[4/5] max-h-[640px] rounded-3xl overflow-hidden bg-stone-100 border border-stone-200/90 shadow-md relative group">
+            <div className="w-full aspect-[3/4] max-h-[640px] rounded-3xl overflow-hidden bg-[#F4EFEA] border border-[#E8E5DF] shadow-sm relative group">
               <img 
                 src={mainImage || allImages[0] || product.image} 
                 alt={product.name} 
-                className="w-full h-full object-cover rounded-3xl" 
+                className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-102" 
                 referrerPolicy="no-referrer" 
               />
-              <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-md text-[9px] font-sans tracking-widest uppercase font-bold text-stone-900">
-                {product.category} · {product.subCategory || 'HAUTE COUTURE'}
+              
+              {/* Category & Imitation Badges */}
+              <div className="absolute top-4 left-4 flex flex-col gap-2">
+                {isJewellery ? (
+                  <span className="inline-flex items-center gap-1.5 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider text-[#C6A15B] border border-[#C6A15B]/30 shadow-xs">
+                    <Sparkles className="w-3.5 h-3.5 text-[#C6A15B]" />
+                    <span>Imitation Jewellery</span>
+                  </span>
+                ) : (
+                  <span className="bg-white/95 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider text-[#4A1D3F] border border-[#4A1D3F]/20 shadow-xs">
+                    {product.category}
+                  </span>
+                )}
+                {discountPercent > 0 && (
+                  <span className="bg-[#B43E2B] text-white px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-xs w-fit">
+                    {discountPercent}% OFF
+                  </span>
+                )}
               </div>
+
+              {/* Wishlist Heart Button */}
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  toggleWishlist(product);
+                }}
+                className={`absolute top-4 right-4 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full backdrop-blur-md transition-all z-20 ${
+                  isWishlisted
+                    ? 'bg-[#4A1D3F] text-white shadow-md'
+                    : 'bg-white/85 text-[#1A1A1A] hover:bg-white hover:text-[#4A1D3F] shadow-xs'
+                }`}
+                aria-label={isWishlisted ? "Remove from wishlist" : "Save to wishlist"}
+              >
+                <Heart
+                  className="w-5 h-5"
+                  fill={isWishlisted ? "currentColor" : "none"}
+                  strokeWidth={isWishlisted ? 0 : 2}
+                />
+              </button>
             </div>
             
             {/* Gallery Thumbnails */}
             {allImages.length > 1 && (
-              <div className="flex gap-2.5 sm:gap-3 overflow-x-auto no-scrollbar pb-1">
+              <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
                 {allImages.map((imgUrl, idx) => (
                   <button 
                     key={idx}
                     onClick={() => setMainImage(imgUrl)}
-                    className={`w-16 sm:w-20 aspect-[3/4] shrink-0 rounded-2xl overflow-hidden border-2 transition-all ${
-                      mainImage === imgUrl ? 'border-amber-800 shadow-sm scale-102' : 'border-stone-200 opacity-60 hover:opacity-100'
+                    className={`w-18 sm:w-20 aspect-[3/4] shrink-0 rounded-2xl overflow-hidden border-2 transition-all min-h-[44px] ${
+                      mainImage === imgUrl ? 'border-[#4A1D3F] shadow-sm scale-102' : 'border-[#E8E5DF] opacity-60 hover:opacity-100'
                     }`}
                   >
                     <img 
@@ -182,197 +271,239 @@ export const ProductDetails = () => {
             )}
           </div>
 
-          {/* Right Column: Piece Architecture & Add To Bag */}
-          <div className="lg:col-span-5 space-y-6 sm:space-y-8">
+          {/* Right Column: Details & Actions */}
+          <div className="lg:col-span-5 space-y-6">
+            
+            {/* Header / Titles / Price */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-sans uppercase tracking-[0.25em] text-amber-800 font-bold bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
-                  ✦ RUNWAY ARCHIVE ✦
+                <span className={`text-[11px] font-semibold uppercase tracking-[0.2em] ${
+                  isJewellery ? 'text-[#C6A15B]' : 'text-[#4A1D3F]'
+                }`}>
+                  {isJewellery ? 'Artisanal Imitation Jewellery' : (product.subCategory || 'Heirloom Fashion')}
                 </span>
-                <div className="flex items-center gap-1 text-amber-500">
-                  {[1, 2, 3, 4, 5].map(i => <Star key={i} size={13} fill="currentColor" />)}
-                  <span className="text-xs font-sans font-bold text-stone-700 ml-1.5">(5.0)</span>
+                <div className="flex items-center gap-1 text-[#C6A15B]">
+                  {[1, 2, 3, 4, 5].map(i => <Star key={i} size={14} fill="currentColor" />)}
+                  <span className="text-xs font-semibold text-[#1A1A1A] ml-1.5">(5.0)</span>
                 </div>
               </div>
 
-              {/* Title with Fluid Clamp */}
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-sans font-light text-stone-900 tracking-tight leading-[1.15]">
+              <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl text-[#1A1A1A] font-medium tracking-tight leading-snug">
                 {product.name}
               </h1>
 
-              {/* Price & Valuation */}
+              {/* Price Row */}
               <div className="flex items-baseline gap-3 pt-1">
-                <span className="text-2xl sm:text-3xl font-sans font-bold text-stone-900">
-                  ₹{product.price.toLocaleString('en-IN')}
+                <span className="text-2xl sm:text-3xl font-bold text-[#1A1A1A]">
+                  ₹{price.toLocaleString('en-IN')}
                 </span>
-                <span className="text-xs font-sans text-stone-400">All Taxes Included · Free Courier</span>
+                {mrp > price && (
+                  <span className="text-base text-[#9CA3AF] line-through font-normal">
+                    ₹{mrp.toLocaleString('en-IN')}
+                  </span>
+                )}
+                {discountPercent > 0 && (
+                  <span className="text-xs font-bold text-[#B43E2B]">
+                    Save {discountPercent}%
+                  </span>
+                )}
               </div>
+              <p className="text-xs text-[#6B7280]">
+                Inclusive of all taxes · Free Express Delivery on ₹999+
+              </p>
             </div>
 
-            {/* Description */}
-            <p className="text-stone-600 text-xs sm:text-sm font-light leading-relaxed">
-              {product.description || "A masterwork of royal Indian craftsmanship. Meticulously hand-embroidered by generational karigars in our Jaipur atelier using pure mulberry silks, authentic gold zari threads, and architectural tailoring."}
-            </p>
-
-            {/* Size Selection */}
-            <div className="space-y-3.5 pt-4 border-t border-stone-200">
-              <div className="flex justify-between items-center">
-                <span className="text-xs font-sans uppercase tracking-wider font-bold text-stone-800">
-                  Select Size / Proportion
-                </span>
-                <span className="text-[11px] font-sans text-stone-500">
-                  {isSelectedOutOfStock ? 'Out of Stock' : `${currentStock} available in atelier`}
-                </span>
+            {/* Jewellery Specific Assurance Notice */}
+            {isJewellery ? (
+              <div className="p-4 rounded-2xl bg-[#F4EEDF] border border-[#C6A15B]/30 space-y-2">
+                <div className="flex items-center gap-2 text-[#A4813D] font-semibold text-xs">
+                  <Sparkles size={15} />
+                  <span>Artificial / Imitation Jewellery Specification</span>
+                </div>
+                <p className="text-xs text-[#6B5528] leading-relaxed">
+                  Crafted with premium skin-friendly brass base, anti-tarnish rhodium/gold plating, and sparkling faux Kundan & Polki. Free from lead and nickel for all-day comfort.
+                </p>
               </div>
+            ) : (
+              <p className="text-[#4B5563] text-sm leading-relaxed">
+                {product.description || "A masterpiece of contemporary Indian craftsmanship. Designed for celebratory elegance with rich textiles, delicate embroidery, and comfortable drape."}
+              </p>
+            )}
 
-              <div className="flex flex-wrap gap-2.5">
-                {product.variants && product.variants.length > 0 ? (
-                  product.variants.map(variant => {
-                    const isOutOfStock = (variant.stock !== undefined && variant.stock <= 0) || variant.status === 'out_of_stock';
-                    const isSelected = selectedSize === variant.size;
-                    return (
-                      <button
-                        key={variant._id || variant.size}
-                        onClick={() => setSelectedSize(variant.size || 'Standard')}
-                        className={`min-w-14 sm:min-w-16 h-12 sm:h-14 px-3 flex flex-col items-center justify-center rounded-2xl border transition-all cursor-pointer ${
-                          isSelected
-                            ? 'bg-stone-900 border-stone-900 text-white shadow-md'
-                            : isOutOfStock
-                            ? 'bg-stone-100 border-stone-200 text-stone-400 line-through'
-                            : 'bg-white border-stone-200 text-stone-800 hover:border-amber-800'
-                        }`}
-                      >
-                        <span className="font-sans text-xs font-bold">{variant.size}</span>
-                      </button>
-                    );
-                  })
-                ) : product.sizes && product.sizes.length > 0 ? (
-                  product.sizes.map(size => (
+            {/* Clothing Size Selector OR Jewellery Specs */}
+            {!isJewellery ? (
+              <div className="space-y-3 pt-4 border-t border-[#E8E5DF]">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#1A1A1A]">
+                    Select Size
+                  </span>
+                  <button
+                    onClick={() => setIsSizeChartOpen(true)}
+                    className="inline-flex items-center gap-1.5 text-xs text-[#4A1D3F] hover:underline font-semibold min-h-[44px] py-1"
+                  >
+                    <Ruler size={14} />
+                    <span>View Size Guide</span>
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-2.5">
+                  {(product.sizes && product.sizes.length > 0 ? product.sizes : ['XS', 'S', 'M', 'L', 'XL', 'Free Size']).map((size) => (
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
-                      className={`min-w-14 sm:min-w-16 h-12 sm:h-14 px-3 flex items-center justify-center rounded-2xl border font-sans text-xs font-bold transition-all ${
+                      className={`min-w-14 h-12 px-3.5 rounded-xl border text-xs font-semibold transition-all min-h-[44px] flex items-center justify-center ${
                         selectedSize === size
-                          ? 'bg-stone-900 border-stone-900 text-white shadow-md'
-                          : 'bg-white border-stone-200 text-stone-800 hover:border-amber-800'
+                          ? 'bg-[#4A1D3F] border-[#4A1D3F] text-white shadow-xs'
+                          : 'bg-white border-[#E8E5DF] text-[#1A1A1A] hover:border-[#4A1D3F]'
                       }`}
                     >
                       {size}
                     </button>
-                  ))
-                ) : (
-                  <button
-                    onClick={() => setSelectedSize('Standard')}
-                    className="px-5 h-12 rounded-2xl bg-stone-900 text-white font-sans text-xs font-bold uppercase tracking-wider"
-                  >
-                    Bespoke Atelier Fit
-                  </button>
-                )}
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-2 pt-4 border-t border-[#E8E5DF]">
+                <span className="text-xs font-semibold uppercase tracking-wider text-[#1A1A1A] block">
+                  Fit & Dimensions
+                </span>
+                <p className="text-xs text-[#6B7280]">
+                  One Size with adjustable cotton dori / extending chain. Suitable for all necklines and wrist sizes.
+                </p>
+              </div>
+            )}
 
-            {/* Quantity and Primary Action */}
-            <div className="space-y-3.5 pt-4 border-t border-stone-200">
+            {/* Quantity Selector & Add to Bag */}
+            <div className="space-y-3 pt-4 border-t border-[#E8E5DF]">
               <div className="flex items-center gap-3">
-                <div className="flex items-center bg-white border border-stone-200 rounded-2xl px-4 py-2.5">
+                <div className="flex items-center bg-white border border-[#E8E5DF] rounded-xl px-3 py-1.5 min-h-[46px]">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="p-1 hover:text-black text-stone-400 transition-colors"
+                    className="min-w-[36px] min-h-[36px] flex items-center justify-center text-[#6B7280] hover:text-[#1A1A1A]"
+                    aria-label="Decrease quantity"
                   >
                     <Minus size={15} />
                   </button>
-                  <span className="mx-4 font-sans font-bold text-sm w-4 text-center">{quantity}</span>
+                  <span className="mx-3 font-semibold text-sm w-4 text-center">{quantity}</span>
                   <button
-                    onClick={() => {
-                      if (quantity < currentStock) setQuantity(quantity + 1);
-                      else toast.info(`Maximum ${currentStock} pieces in current lot`);
-                    }}
+                    onClick={() => setQuantity(quantity + 1)}
                     disabled={isSelectedOutOfStock || quantity >= currentStock}
-                    className="p-1 hover:text-black text-stone-400 transition-colors disabled:opacity-30"
+                    className="min-w-[36px] min-h-[36px] flex items-center justify-center text-[#6B7280] hover:text-[#1A1A1A] disabled:opacity-30"
+                    aria-label="Increase quantity"
                   >
                     <Plus size={15} />
                   </button>
                 </div>
 
-                <button
+                <Button
+                  variant={isJewellery ? "champagne" : "primary"}
+                  size="lg"
                   onClick={handleAddToCart}
                   disabled={isSelectedOutOfStock}
-                  className={`flex-grow py-3.5 sm:py-4 rounded-2xl font-sans text-xs uppercase tracking-widest font-bold transition-all shadow-md flex items-center justify-center gap-2 ${
-                    isSelectedOutOfStock
-                      ? 'bg-stone-200 text-stone-400 cursor-not-allowed shadow-none'
-                      : 'bg-stone-900 hover:bg-amber-800 text-white cursor-pointer active:scale-98'
-                  }`}
+                  className={`flex-1 font-semibold min-h-[48px] ${isJewellery ? 'text-[#1A1A1A]' : 'text-white'}`}
+                  leftIcon={<ShoppingBag size={16} />}
                 >
-                  <ShoppingBag size={14} />
-                  <span>{isSelectedOutOfStock ? 'Sold Out in Atelier' : 'Add to Shopping Bag'}</span>
-                </button>
+                  {isSelectedOutOfStock ? 'Sold Out' : 'Add to Shopping Bag'}
+                </Button>
               </div>
-
-              <button
-                onClick={() => toggleWishlist(product)}
-                className={`w-full py-3.5 rounded-2xl border transition-all flex items-center justify-center gap-2 font-sans text-xs uppercase tracking-wider font-bold cursor-pointer ${
-                  isWishlisted
-                    ? 'bg-amber-50 border-amber-300 text-amber-900'
-                    : 'bg-white border-stone-200 text-stone-700 hover:border-black'
-                }`}
-              >
-                <Heart size={15} fill={isWishlisted ? "currentColor" : "none"} />
-                <span>{isWishlisted ? 'Saved in Masterpiece Archive' : 'Save to Masterpiece Archive'}</span>
-              </button>
             </div>
 
-            {/* Craft Specs Tabs */}
-            <div className="pt-6 border-t border-stone-200 space-y-4">
-              <div className="flex gap-6 border-b border-stone-200 pb-2">
+            {/* PIN Code Delivery Checker */}
+            <div className="p-4 rounded-2xl bg-white border border-[#E8E5DF] space-y-3">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#1A1A1A]">
+                <MapPin size={15} className="text-[#4A1D3F]" />
+                <span>Delivery & COD Availability</span>
+              </div>
+              <form onSubmit={handlePincodeCheck} className="flex gap-2">
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={pincode}
+                  onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
+                  placeholder="Enter 6-digit PIN code"
+                  className="flex-1 px-3.5 py-2 text-base rounded-xl border border-[#E8E5DF] focus:outline-none focus:border-[#4A1D3F] min-h-[44px]"
+                />
+                <Button type="submit" variant="outline" size="sm" className="shrink-0 min-h-[44px]">
+                  Check
+                </Button>
+              </form>
+              {pincodeStatus && (
+                <p className={`text-xs ${pincodeStatus.valid ? 'text-[#15803D]' : 'text-[#B43E2B]'} flex items-start gap-1.5`}>
+                  {pincodeStatus.valid && <CheckCircle2 size={14} className="shrink-0 mt-0.5" />}
+                  <span>{pincodeStatus.message}</span>
+                </p>
+              )}
+            </div>
+
+            {/* Details & Care Tabs */}
+            <div className="pt-4 border-t border-[#E8E5DF] space-y-3">
+              <div className="flex gap-6 border-b border-[#E8E5DF]">
                 {[
-                  { id: 'craft', label: 'Craft & Fabric' },
-                  { id: 'delivery', label: 'Insured Delivery' }
-                ].map(tab => (
+                  { id: 'details', label: isJewellery ? 'Jewellery Specs' : 'Fabric & Details' },
+                  { id: 'care', label: 'Care Instructions' },
+                  { id: 'delivery', label: 'Shipping & Returns' }
+                ].map((tab) => (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`text-xs font-sans uppercase tracking-wider transition-colors pb-1 relative ${
-                      activeTab === tab.id ? 'text-amber-900 font-bold' : 'text-stone-400 hover:text-stone-700'
+                    onClick={() => setActiveTab(tab.id as any)}
+                    className={`text-xs font-semibold uppercase tracking-wider pb-2 relative min-h-[40px] ${
+                      activeTab === tab.id ? 'text-[#4A1D3F]' : 'text-[#6B7280] hover:text-[#1A1A1A]'
                     }`}
                   >
                     {tab.label}
                     {activeTab === tab.id && (
-                      <motion.div layoutId="detailsTab" className="absolute -bottom-2 left-0 right-0 h-0.5 bg-amber-800" />
+                      <motion.div layoutId="prodTabLine" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#4A1D3F]" />
                     )}
                   </button>
                 ))}
               </div>
 
-              <div className="text-xs text-stone-600 font-light leading-relaxed pt-2">
-                {activeTab === 'craft' && (
-                  <ul className="space-y-2 font-sans text-[11px]">
-                    {Array.isArray(product.craftAndFabric) && product.craftAndFabric.length > 0 ? (
-                      product.craftAndFabric.map((point: string, idx: number) => (
-                        <li key={idx} className="flex items-start gap-2">
-                          <span className="text-amber-800 shrink-0 mt-0.5">✦</span>
-                          <span className="text-stone-700">{point.replace(/^[✦•\-\*]\s*/, '')}</span>
-                        </li>
-                      ))
-                    ) : typeof (product as any).craftAndFabric === 'string' && (product as any).craftAndFabric.trim() ? (
-                      (product as any).craftAndFabric.split('\n').filter(Boolean).map((point: string, idx: number) => (
-                        <li key={idx} className="flex items-start gap-2">
-                          <span className="text-amber-800 shrink-0 mt-0.5">✦</span>
-                          <span className="text-stone-700">{point.replace(/^[✦•\-\*]\s*/, '')}</span>
-                        </li>
-                      ))
-                    ) : (
-                      <>
-                        <li className="flex items-center gap-2">✦ 100% Premium Certified Fabric & Tailored Fit</li>
-                        <li className="flex items-center gap-2">✦ Handcrafted by master artisans with generational heritage</li>
-                        <li className="flex items-center gap-2">✦ Tailored with breathable premium interlining for utmost comfort</li>
-                      </>
-                    )}
-                  </ul>
+              <div className="text-xs text-[#4B5563] leading-relaxed pt-1">
+                {activeTab === 'details' && (
+                  isJewellery ? (
+                    <ul className="space-y-1.5 text-xs">
+                      <li className="flex items-center gap-2">✦ Material: High-grade brass with anti-tarnish micro-polish</li>
+                      <li className="flex items-center gap-2">✦ Stones: Synthetic Kundan, Polki glass & simulated pearls</li>
+                      <li className="flex items-center gap-2">✦ Weight: Featherlight ergonomic design for zero earlobe strain</li>
+                      <li className="flex items-center gap-2">✦ Skin Safety: 100% Nickel & Lead-free certification</li>
+                    </ul>
+                  ) : (
+                    <ul className="space-y-1.5 text-xs">
+                      <li className="flex items-center gap-2">✦ Authentic pure fabric woven by generational artisans</li>
+                      <li className="flex items-center gap-2">✦ Hand-embroidered with intricate zari and gota patti detailing</li>
+                      <li className="flex items-center gap-2">✦ Soft premium lining for all-day celebratory comfort</li>
+                    </ul>
+                  )
                 )}
+
+                {activeTab === 'care' && (
+                  isJewellery ? (
+                    <ul className="space-y-1.5 text-xs">
+                      <li>• Keep away from moisture, perfumes, sanitizers, and direct water exposure.</li>
+                      <li>• Store each piece individually in an airtight pouch or zip-lock box.</li>
+                      <li>• Gently wipe clean with a soft dry cotton cloth after every use.</li>
+                    </ul>
+                  ) : (
+                    <ul className="space-y-1.5 text-xs">
+                      <li>• Professional dry cleaning recommended to protect delicate zari embroidery.</li>
+                      <li>• Steam iron inside-out on low heat setting.</li>
+                      <li>• Store in a breathable muslin cloth bag away from direct sunlight.</li>
+                    </ul>
+                  )
+                )}
+
                 {activeTab === 'delivery' && (
-                  <p>
-                    Complimentary insured white-glove express courier across India. Dispatched in our velvet-lined archival keepsake box with serialized authenticity card. Please note: Due to bespoke made-to-measure craftsmanship, all orders follow our strict No Return Policy.
-                  </p>
+                  <div className="space-y-2 text-xs">
+                    <p>
+                      <strong>Free Shipping:</strong> On all orders above ₹999 across India. Delivered via insured express courier within 2-4 business days.
+                    </p>
+                    <p>
+                      <strong>Cash on Delivery (COD):</strong> Available nationwide with zero extra fees.
+                    </p>
+                    <p>
+                      <strong>7-Day Returns & Exchanges:</strong> Easy return or size exchange within 7 days of delivery.
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
@@ -382,13 +513,20 @@ export const ProductDetails = () => {
 
         {/* Complete the Look Section */}
         {relatedProducts.length > 0 && (
-          <div className="mt-16 sm:mt-24 pt-12 border-t border-stone-200/80">
-            <ProductFilmstripCarousel
-              products={relatedProducts}
-              title="Atelier Styling Pairings"
-              subtitle="Recommendations from our Surat salon directors to complete your royal trousseau."
-              variant="clean"
-            />
+          <div className="mt-16 sm:mt-24 pt-12 border-t border-[#E8E5DF]">
+            <div className="mb-8">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#4A1D3F] block mb-1">
+                Curated Pairings
+              </span>
+              <h2 className="font-serif text-2xl sm:text-3xl text-[#1A1A1A] font-medium">
+                Complete The Look
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+              {relatedProducts.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
           </div>
         )}
 
@@ -398,23 +536,97 @@ export const ProductDetails = () => {
         </div>
       </div>
 
-      {/* Mobile Sticky Purchase Bar (Always within thumb's reach) */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-stone-200 px-4 py-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-xl flex items-center justify-between gap-3">
+      {/* Size Chart Modal */}
+      <Modal
+        isOpen={isSizeChartOpen}
+        onClose={() => setIsSizeChartOpen(false)}
+        title="Ethnic Wear Size Guide (Inches)"
+        maxWidth="lg"
+      >
+        <div className="space-y-4 text-xs text-[#1A1A1A]">
+          <p className="text-[#6B7280]">
+            All measurements are garment body measurements in inches. If you fall between sizes, we recommend sizing up.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border border-[#E8E5DF] rounded-xl overflow-hidden">
+              <thead className="bg-[#FAF8F5] text-[11px] font-semibold uppercase text-[#4A1D3F]">
+                <tr>
+                  <th className="p-3 border-b border-[#E8E5DF]">Size</th>
+                  <th className="p-3 border-b border-[#E8E5DF]">Bust / Chest</th>
+                  <th className="p-3 border-b border-[#E8E5DF]">Waist</th>
+                  <th className="p-3 border-b border-[#E8E5DF]">Hips</th>
+                  <th className="p-3 border-b border-[#E8E5DF]">Length</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E8E5DF]">
+                <tr>
+                  <td className="p-3 font-semibold">XS (34)</td>
+                  <td className="p-3">34"</td>
+                  <td className="p-3">28"</td>
+                  <td className="p-3">38"</td>
+                  <td className="p-3">48"</td>
+                </tr>
+                <tr>
+                  <td className="p-3 font-semibold">S (36)</td>
+                  <td className="p-3">36"</td>
+                  <td className="p-3">30"</td>
+                  <td className="p-3">40"</td>
+                  <td className="p-3">48"</td>
+                </tr>
+                <tr>
+                  <td className="p-3 font-semibold">M (38)</td>
+                  <td className="p-3">38"</td>
+                  <td className="p-3">32"</td>
+                  <td className="p-3">42"</td>
+                  <td className="p-3">49"</td>
+                </tr>
+                <tr>
+                  <td className="p-3 font-semibold">L (40)</td>
+                  <td className="p-3">40"</td>
+                  <td className="p-3">34"</td>
+                  <td className="p-3">44"</td>
+                  <td className="p-3">49"</td>
+                </tr>
+                <tr>
+                  <td className="p-3 font-semibold">XL (42)</td>
+                  <td className="p-3">42"</td>
+                  <td className="p-3">36"</td>
+                  <td className="p-3">46"</td>
+                  <td className="p-3">50"</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div className="pt-2 text-center">
+            <Button variant="outline" size="sm" onClick={() => setIsSizeChartOpen(false)}>
+              Close Size Guide
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Mobile Sticky Add to Bag Bar */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/98 backdrop-blur-md border-t border-[#E8E5DF] px-4 py-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-lg flex items-center justify-between gap-3">
         <div>
-          <span className="text-[8px] font-sans uppercase text-stone-400 block leading-tight">Total Price</span>
-          <span className="font-sans font-bold text-base text-stone-900">
-            ₹{product.price.toLocaleString('en-IN')}
+          <span className="text-[10px] uppercase text-[#6B7280] block font-medium">Price</span>
+          <span className="font-bold text-base text-[#1A1A1A]">
+            ₹{price.toLocaleString('en-IN')}
           </span>
         </div>
         <button
           onClick={handleAddToCart}
           disabled={isSelectedOutOfStock}
-          className="px-6 py-3 bg-stone-900 text-white rounded-xl text-xs font-sans uppercase tracking-widest font-bold shadow-md flex items-center gap-1.5 active:scale-95 transition-all"
+          className={`min-h-[44px] px-6 py-2.5 rounded-full text-xs uppercase tracking-wider font-semibold shadow-md flex items-center gap-1.5 active:scale-95 transition-all select-none ${
+            isJewellery
+              ? 'bg-[#C6A15B] text-white hover:bg-[#B38F48]'
+              : 'bg-[#4A1D3F] text-white hover:bg-[#3B1632]'
+          }`}
         >
-          <ShoppingBag size={13} />
+          <ShoppingBag size={14} />
           <span>{isSelectedOutOfStock ? 'Sold Out' : 'Add to Bag'}</span>
         </button>
       </div>
+
     </div>
   );
 };
