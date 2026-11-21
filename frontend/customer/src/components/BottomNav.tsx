@@ -1,10 +1,12 @@
+// Reading this as: Mobile Bottom Navigation Bar for Sakshi Clothing, with deep plum accenting, safe-area inset protection, and guaranteed 44px tap ergonomics. Dials: VARIANCE [8] / MOTION [6] / DENSITY [4].
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Sparkles, Grid, ShoppingBag, User, Heart } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useCart } from '../context/CartContext';
 
-export const BottomNav = () => {
+export const BottomNav: React.FC = () => {
   const location = useLocation();
   const { cart, setIsCartOpen } = useCart();
   const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
@@ -28,7 +30,7 @@ export const BottomNav = () => {
   return (
     <nav 
       aria-label="Mobile Navigation" 
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-[100] bg-[#FAF8F5]/95 backdrop-blur-2xl border-t border-stone-200/90 px-4 py-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-2xl transition-all"
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-[100] bg-[#FBF9F6]/95 backdrop-blur-md border-t border-[#E8E5DF] px-3 py-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-lg transition-all"
     >
       <div className="flex justify-around items-center max-w-md mx-auto">
         {navItems.map((item) => {
@@ -40,18 +42,18 @@ export const BottomNav = () => {
               <button
                 key={item.label}
                 onClick={() => setIsCartOpen(true)}
-                className="relative flex flex-col items-center gap-1 group py-1 px-3 focus:outline-none"
+                className="relative flex flex-col items-center justify-center gap-1 min-w-[50px] min-h-[44px] py-1 px-2 focus:outline-none"
                 aria-label="Open Shopping Bag"
               >
-                <div className="relative text-stone-700 group-hover:text-amber-800 transition-colors">
-                  <Icon size={19} strokeWidth={2} />
+                <div className="relative text-[#6B7280] hover:text-[#4A1D3F] transition-colors">
+                  <Icon size={20} strokeWidth={2} />
                   {item.badge !== undefined && item.badge > 0 && (
-                    <span className="absolute -top-1 -right-2 bg-stone-900 text-amber-300 text-[8px] font-sans font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                    <span className="absolute -top-1 -right-2 bg-[#4A1D3F] text-white text-[9px] font-sans font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
                       {item.badge}
                     </span>
                   )}
                 </div>
-                <span className="text-[8px] font-sans font-bold uppercase tracking-[0.16em] text-stone-600 group-hover:text-stone-950 transition-colors">
+                <span className="text-[9px] font-sans font-semibold uppercase tracking-wider text-[#6B7280]">
                   {item.label}
                 </span>
               </button>
@@ -62,25 +64,25 @@ export const BottomNav = () => {
             <Link
               key={item.label}
               to={item.path || '/'}
-              className="relative flex flex-col items-center gap-1 group py-1 px-3 focus:outline-none"
+              className="relative flex flex-col items-center justify-center gap-1 min-w-[50px] min-h-[44px] py-1 px-2 focus:outline-none"
             >
               <motion.div
-                whileTap={{ scale: 0.85 }}
+                whileTap={{ scale: 0.88 }}
                 className={`relative transition-colors duration-200 ${
-                  isActive ? 'text-amber-900' : 'text-stone-500 hover:text-stone-950'
+                  isActive ? 'text-[#4A1D3F]' : 'text-[#6B7280] hover:text-[#1A1A1A]'
                 }`}
               >
-                <Icon size={19} strokeWidth={isActive ? 2.4 : 1.8} />
+                <Icon size={20} strokeWidth={isActive ? 2.4 : 1.8} />
               </motion.div>
-              <span className={`text-[8px] font-sans font-bold uppercase tracking-[0.16em] transition-colors duration-200 ${
-                isActive ? 'text-amber-950 font-black' : 'text-stone-500'
+              <span className={`text-[9px] font-sans font-semibold uppercase tracking-wider transition-colors duration-200 ${
+                isActive ? 'text-[#4A1D3F] font-bold' : 'text-[#6B7280]'
               }`}>
                 {item.label}
               </span>
               {isActive && (
                 <motion.div 
                   layoutId="active-bottom-nav-dot"
-                  className="w-1 h-1 rounded-full bg-amber-800 absolute -bottom-1"
+                  className="w-1.5 h-1.5 rounded-full bg-[#4A1D3F] absolute -bottom-0.5"
                 />
               )}
             </Link>
