@@ -1,105 +1,82 @@
-import React, { useState, useEffect, useRef } from 'react';
+// Reading this as: Storefront Home Page for Sakshi Clothing (Indian ethnic fashion & artificial jewellery), targeting women 18-40, with clean, bright, youthful editorial luxury. Dials: VARIANCE [8] / MOTION [6] / DENSITY [4].
+
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence, useScroll, useSpring } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   ArrowRight, 
-  ArrowLeft,
   ShoppingBag, 
   Sparkles, 
   ShieldCheck, 
   Truck, 
-  RefreshCw, 
+  RotateCcw, 
   Star, 
-  Heart, 
   ChevronRight,
-  Clock,
-  Copy,
-  Pause,
-  Play,
-  Flame,
-  Crown,
-  Gem,
-  Award
+  Banknote,
+  Heart,
+  CheckCircle2,
+  Gem
 } from 'lucide-react';
 import { Product } from '../types';
 import ProductCard from '../components/ProductCard';
 import { fetchProducts, fetchFeaturedProducts, fetchNewArrivals, getCachedProducts, getCachedFeatured, getCachedNewArrivals } from '../lib/api';
-import { PRODUCTS } from '../data/products';
-import { useCart } from '../context/CartContext';
-import { useWishlist } from '../context/WishlistContext';
-import { toast } from 'sonner';
-import { ShimmerBadge } from '../components/watermelon/ShimmerBadge';
-import { SpringTabs } from '../components/watermelon/SpringTabs';
-import { ShimmerButton } from '../components/watermelon/ShimmerButton';
-import { GlowCard } from '../components/watermelon/GlowCard';
-import { CounterBadge } from '../components/watermelon/CounterBadge';
-import { FloatingActionDock } from '../components/watermelon/FloatingActionDock';
-import { ScrollRibbon } from '../components/watermelon/ScrollRibbon';
-import { ScrollMetricBar } from '../components/watermelon/ScrollMetricBar';
+import { SectionHeading } from '../components/ui/SectionHeading';
+import { Badge } from '../components/ui/Badge';
+import { Button } from '../components/ui/Button';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
-  const { addToCart } = useCart();
-  const { toggleWishlist, isInWishlist } = useWishlist();
 
-  // Instant 0ms startup: Initialize immediately with cached/authentic dataset
+  // Instant 0ms startup from cached dataset with live background refresh
   const [products, setProducts] = useState<Product[]>(getCachedProducts);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>(getCachedFeatured);
   const [newArrivals, setNewArrivals] = useState<Product[]>(getCachedNewArrivals);
-  const [activeTab, setActiveTab] = useState<'all' | 'women' | 'men' | 'kids' | 'jewellery'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'clothing' | 'jewellery'>('all');
   const [loading, setLoading] = useState(false);
 
-  // Global Page Scroll Progress for Fluid Velocity Indicator
-  const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001
-  });
-
-  // 1. HERO CAROUSEL STATE WITH REAL-TIME PROGRESS
+  // Hero carousel state
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isSlidePaused, setIsSlidePaused] = useState(false);
+
   const heroSlides = [
     {
       id: 1,
-      tag: "Women's Couture & Contemporary 2026",
-      title: "Handcrafted Luxury Apparel & Designer Ensembles",
-      subtitle: "Bespoke contemporary and festive ensembles tailored by master artisans. Woven with rich handlooms, delicate embroidery, and refined modern silhouettes.",
+      eyebrow: "Festive & Wedding Collection 2026",
+      title: "Timeless Indian Silhouettes, Modern Grace",
+      subtitle: "Handcrafted Sarees, Designer Lehengas & Artisanal Kurti Ensembles tailored in Surat with pure handloom aesthetics.",
       image: "https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=2000&auto=format&fit=crop",
-      ctaPrimary: "Shop Women's Collection",
-      linkPrimary: "/shop?category=Women",
-      ctaSecondary: "Explore Designs",
-      linkSecondary: "/shop?category=Women",
-      badge: "Curated Designer Excellence"
+      primaryCta: "Shop Ethnic Clothing",
+      primaryLink: "/shop?category=Women",
+      secondaryCta: "Explore Imitation Jewellery",
+      secondaryLink: "/shop?category=Jewellery",
+      offerTag: "FREE Express Shipping on ₹999+"
     },
     {
       id: 2,
-      tag: "Distinguished Menswear Edit",
-      title: "Royal Sherwanis, Kurtas & Tailored Bandhgalas",
-      subtitle: "Structured canvas, clean royal lines, rich textured fabrics, and hand-engraved metal crest buttons for every celebration.",
-      image: "https://images.unsplash.com/photo-1783188223691-8a233ee51cd8?q=80&w=2000&auto=format&fit=crop",
-      ctaPrimary: "Shop Menswear",
-      linkPrimary: "/shop?category=Men",
-      ctaSecondary: "View Kurtas & Jackets",
-      linkSecondary: "/shop?category=Men",
-      badge: "Artisan Tailored Quality"
+      eyebrow: "Curated Artificial & Fashion Jewellery",
+      title: "Artisanal Imitation Jewellery That Shines With You",
+      subtitle: "Hypoallergenic, skin-friendly brass choker sets, regal jhumkas, and kada bangles designed to elevate your festive look.",
+      image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=2000&auto=format&fit=crop",
+      primaryCta: "Discover Jewellery",
+      primaryLink: "/shop?category=Jewellery",
+      secondaryCta: "View Festive Sarees",
+      secondaryLink: "/shop?category=Women&sub=Heritage Sarees",
+      offerTag: "100% Skin-Friendly Brass & Plating"
     },
     {
       id: 3,
-      tag: "Kids & Fine Jewellery Universes",
-      title: "Festive Kids Ensembles & Polki Jewellery Suites",
-      subtitle: "Comfortable celebratory attire for children and certified handcrafted jewellery suites to complete every special moment.",
+      eyebrow: "Everyday & Occasion Kurta Sets",
+      title: "Effortless Elegance for the Contemporary Woman",
+      subtitle: "Bespoke Anarkalis, breathable cotton silks, and versatile co-ord sets crafted for weddings, pujas, and celebrations.",
       image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=2000&auto=format&fit=crop",
-      ctaPrimary: "Shop Jewellery",
-      linkPrimary: "/shop?category=Jewellery",
-      ctaSecondary: "Explore Kids Wear",
-      linkSecondary: "/shop?category=Kids",
-      badge: "Handcrafted & Certified"
+      primaryCta: "Shop New Arrivals",
+      primaryLink: "/shop?sort=newest",
+      secondaryCta: "Browse All Collections",
+      secondaryLink: "/shop",
+      offerTag: "Cash on Delivery Available"
     }
   ];
 
-  // Auto-advance hero slides every 5.5 seconds
   useEffect(() => {
     if (isSlidePaused) return;
     const timer = setInterval(() => {
@@ -108,7 +85,6 @@ export const Home: React.FC = () => {
     return () => clearInterval(timer);
   }, [heroSlides.length, isSlidePaused]);
 
-  // Non-blocking background sync: updates real-time store catalog without blocking initial page render
   useEffect(() => {
     let isMounted = true;
     const loadStoreData = async () => {
@@ -118,13 +94,12 @@ export const Home: React.FC = () => {
           fetchFeaturedProducts(),
           fetchNewArrivals()
         ]);
-
         if (!isMounted) return;
         if (all && all.length > 0) setProducts(all);
         if (feat && feat.length > 0) setFeaturedProducts(feat);
         if (arrivals && arrivals.length > 0) setNewArrivals(arrivals);
       } catch (err) {
-        console.warn('Background store sync deferred to cached dataset:', err);
+        console.warn('Background sync fallback to cache:', err);
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -136,14 +111,17 @@ export const Home: React.FC = () => {
   // Filter products by tab
   const getTabProducts = () => {
     switch (activeTab) {
-      case 'women':
-        return products.filter(p => p.category?.toLowerCase() === 'women');
-      case 'men':
-        return products.filter(p => p.category?.toLowerCase() === 'men');
-      case 'kids':
-        return products.filter(p => p.category?.toLowerCase() === 'kids');
+      case 'clothing':
+        return products.filter((p) => {
+          const cat = (p.category || '').toLowerCase();
+          return cat !== 'jewellery' && !cat.includes('jewel');
+        });
       case 'jewellery':
-        return products.filter(p => p.category?.toLowerCase() === 'jewellery' || p.subCategory?.toLowerCase().includes('jewel'));
+        return products.filter((p) => {
+          const cat = (p.category || '').toLowerCase();
+          const sub = (p.subCategory || '').toLowerCase();
+          return cat === 'jewellery' || cat.includes('jewel') || sub.includes('jewel');
+        });
       case 'all':
       default:
         return products;
@@ -151,326 +129,207 @@ export const Home: React.FC = () => {
   };
 
   const displayedProducts = getTabProducts();
-  const spotlightProduct = displayedProducts[0] || PRODUCTS[0];
-  const gridProducts = displayedProducts.slice(1, 9);
 
-  // 2. RUNWAY CAROUSEL STATE WITH CONTINUOUS AUTO-SCROLL
-  const runwayRef = useRef<HTMLDivElement>(null);
-  const [isRunwayAutoplaying, setIsRunwayAutoplaying] = useState(true);
-  const [runwayScrollProgress, setRunwayScrollProgress] = useState(0);
-
-  const handleRunwayScroll = () => {
-    if (!runwayRef.current) return;
-    const { scrollLeft, scrollWidth, clientWidth } = runwayRef.current;
-    const totalScrollable = scrollWidth - clientWidth;
-    if (totalScrollable > 0) {
-      setRunwayScrollProgress(scrollLeft / totalScrollable);
-    }
-  };
-
-  const scrollRunway = (direction: 'left' | 'right') => {
-    if (!runwayRef.current) return;
-    const scrollAmount = direction === 'left' ? -340 : 340;
-    runwayRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-  };
-
-  // Continuous auto-sliding on runway carousel
-  useEffect(() => {
-    if (!isRunwayAutoplaying) return;
-    const autoScrollTimer = setInterval(() => {
-      if (!runwayRef.current) return;
-      const { scrollLeft, scrollWidth, clientWidth } = runwayRef.current;
-      if (scrollLeft + clientWidth >= scrollWidth - 20) {
-        runwayRef.current.scrollTo({ left: 0, behavior: 'smooth' });
-      } else {
-        runwayRef.current.scrollBy({ left: 340, behavior: 'smooth' });
-      }
-    }, 4200);
-    return () => clearInterval(autoScrollTimer);
-  }, [isRunwayAutoplaying]);
-
-  const handleQuickAdd = async (product: Product, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    await addToCart(product, product.sizes?.[0] || 'M', 1);
-  };
-
-  // 3. CURATED FASHION UNIVERSES (COOL, AVANT-GARDE CATEGORIES)
-  const categories = [
+  // Curated Visual Category Tiles
+  const categoryTiles = [
     {
-      name: "WOMEN'S COLLECTION",
-      number: "01",
-      count: "Ethnic & Contemporary Wear",
-      image: "https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=800&auto=format&fit=crop",
-      desc: "Anarkalis, Sarees, Kurta Sets & Dresses",
-      link: "/shop?category=Women"
-    },
-    {
-      name: "MEN'S COLLECTION",
-      number: "02",
-      count: "Kurtas, Jackets & Sherwanis",
-      image: "https://images.unsplash.com/photo-1783188223691-8a233ee51cd8?q=80&w=800&auto=format&fit=crop",
-      desc: "Bandhgalas, Festive Kurtas & Royal Brocades",
-      link: "/shop?category=Men"
-    },
-    {
-      name: "KIDS COLLECTION",
-      number: "03",
-      count: "Celebration & Daily Wear",
-      image: "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?q=80&w=800&auto=format&fit=crop",
-      desc: "Boys & Girls Festive Ensembles",
-      link: "/shop?category=Kids"
-    },
-    {
-      name: "FINE JEWELLERY",
-      number: "04",
-      count: "Handcrafted Polki & Jadau",
-      image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=800&auto=format&fit=crop",
-      desc: "Necklaces, Chokers, Earrings & Suites",
-      link: "/shop?category=Jewellery"
-    },
-    {
-      name: "HEIRLOOM DRAPES",
-      number: "05",
-      count: "Artisanal Sarees",
+      title: "Heritage Sarees",
+      subtitle: "Banarasi & Chanderi Drapes",
       image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop",
-      desc: "Banarasi, Chanderi & Tissue Organza",
-      link: "/shop?category=Women&sub=Heritage Sarees"
+      link: "/shop?category=Women&sub=Heritage Sarees",
+      isJewellery: false,
     },
     {
-      name: "JODHPUR SUITS",
-      number: "06",
-      count: "Architectural Bandhgalas",
-      image: "https://plus.unsplash.com/premium_photo-1682090774051-77cdd6b1e7cd?q=80&w=800&auto=format&fit=crop",
-      desc: "Bespoke tailoring with royal silhouettes",
-      link: "/shop?category=Men&sub=Suits & Jackets"
+      title: "Bridal & Party Lehengas",
+      subtitle: "Opulent Volume & Gota Patti",
+      image: "https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=800&auto=format&fit=crop",
+      link: "/shop?category=Women&sub=Bridal Lehengas",
+      isJewellery: false,
+    },
+    {
+      title: "Kurtis & Suits",
+      subtitle: "Everyday & Festive Sets",
+      image: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?q=80&w=800&auto=format&fit=crop",
+      link: "/shop?category=Women&sub=Artisanal Sets",
+      isJewellery: false,
+    },
+    {
+      title: "Imitation Choker Sets",
+      subtitle: "Skin-Safe Brass & Faux Stones",
+      image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=800&auto=format&fit=crop",
+      link: "/shop?category=Jewellery",
+      isJewellery: true,
+    },
+    {
+      title: "Jhumkas & Earrings",
+      subtitle: "Chandbalis & Meenakari",
+      image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=800&auto=format&fit=crop",
+      link: "/shop?category=Jewellery",
+      isJewellery: true,
+    },
+    {
+      title: "Festive Co-ord Sets",
+      subtitle: "Contemporary Indo-Western",
+      image: "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?q=80&w=800&auto=format&fit=crop",
+      link: "/shop?category=Women",
+      isJewellery: false,
     }
   ];
 
-  // 4. INTERACTIVE BRIDAL ANATOMY WITH AUTO-PULSE
-  const [activeHotspot, setActiveHotspot] = useState<number>(1);
-  const hotspots = [
-    {
-      id: 1,
-      x: "52%",
-      y: "32%",
-      title: "Real Zari Kadwa Brocade",
-      desc: "Woven across 140 uninterrupted hours using genuine silver and metallic gold threads on Varanasi pit looms.",
-      tag: "PIT LOOM WEAVE"
-    },
-    {
-      id: 2,
-      x: "36%",
-      y: "56%",
-      title: "Gossamer Scalloped Organza Veil",
-      desc: "Featherlight sheer organza trimmed with hand-cut scalloped gota patti and delicate micro-pearl edging.",
-      tag: "ATELIER FINISH"
-    },
-    {
-      id: 3,
-      x: "62%",
-      y: "74%",
-      title: "18th-Century Rajputana Zardozi",
-      desc: "Pure metallic dabka wiring and bugle beads hand-stitched onto dense mulberry raw silk for an imposing royal relief.",
-      tag: "ROYAL EMBROIDERY"
-    }
-  ];
-
-  // Auto-cycle anatomy hotspot every 4.5 seconds
-  useEffect(() => {
-    const spotTimer = setInterval(() => {
-      setActiveHotspot((prev) => (prev % hotspots.length) + 1);
-    }, 4500);
-    return () => clearInterval(spotTimer);
-  }, [hotspots.length]);
-
-  // 5. ATELIER KARIGAR ARCHIVE TABS
-  const [atelierStep, setAtelierStep] = useState(0);
-  const atelierSteps = [
-    {
-      num: "01",
-      title: "Finest Natural & Handloom Fabrics",
-      subtitle: "Ethical & Organic Textiles",
-      desc: "We exclusively source premium handloom cottons, chiffons, rich silks, and tailored textiles for comfort and celestial drape.",
-      stat: "100%",
-      statLabel: "Quality & Purity Certified",
-      image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1200&auto=format&fit=crop"
-    },
-    {
-      num: "02",
-      title: "Generational Hand Zardozi",
-      subtitle: "Metalsmithing in Pure Thread",
-      desc: "Jaipur master artisans stitch real metallic gold dabka wires by hand, spending up to 240 hours on a single bridal panel.",
-      stat: "240+",
-      statLabel: "Hours per Garment",
-      image: "https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=1200&auto=format&fit=crop"
-    },
-    {
-      num: "03",
-      title: "Generational Pit Looms",
-      subtitle: "Unbroken Varanasi Tradition",
-      desc: "Hand-thrown shuttles weaving less than 1 inch of solid gold zari kadwa jaal per day, creating family heirlooms.",
-      stat: "140",
-      statLabel: "Loom Hours",
-      image: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?q=80&w=1200&auto=format&fit=crop"
-    },
-    {
-      num: "04",
-      title: "Architectural Canvas Tailoring",
-      subtitle: "Bespoke Anatomical Fit",
-      desc: "Structured with Italian horsehair canvas and mulmul lining for effortless movement and razor-sharp silhouette.",
-      stat: "45+",
-      statLabel: "Master Artisan Guilds",
-      image: "https://images.unsplash.com/photo-1783188223691-8a233ee51cd8?q=80&w=1200&auto=format&fit=crop"
-    }
-  ];
-
-  // 6. PATRON TESTIMONIALS (REAL EDITORIAL QUOTES)
-  const [activeTestimonial, setActiveTestimonial] = useState(0);
+  // Verified Customer Testimonials
   const testimonials = [
     {
-      name: 'Aarohi Singhania',
-      location: 'Fashion Director, Mumbai',
-      text: 'The Noor-e-Jahan bridal lehenga was the centerpiece of my wedding week. The drape of the 120-gram mulberry raw silk and the weight of the zardozi are in a league of their own.',
-      item: 'Piece: The Noor-e-Jahan Scalloped Raw Silk Bridal Lehenga',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop'
+      name: "Pooja Trivedi",
+      city: "Ahmedabad",
+      rating: 5,
+      review: "The Kadwa Banarasi Saree was breathtaking for my sister's wedding. The zari work is exquisite and the fabric feels truly royal. Express delivery arrived in just 2 days!",
+      item: "The Maharani Katan Silk Saree",
     },
     {
-      name: 'Rudra Pratap Singh',
-      location: 'Architect & Collector, London',
-      text: 'Acquired the Jodhpur Imperial Brocade Sherwani for my private reception. The structured shoulder canvas, hand-engraved brass crest buttons, and silk finish are supreme.',
-      item: 'Piece: The Jodhpur Imperial Brocade Royal Sherwani',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop'
+      name: "Ananya Deshmukh",
+      city: "Pune",
+      rating: 5,
+      review: "I was skeptical ordering imitation jewellery online, but the Polki Choker set blew me away! The finish is subtle and skin-friendly without any irritation. 10/10 recommend.",
+      item: "The Kohinoor Polki Imitation Choker Suite",
     },
     {
-      name: 'Dr. Meera Varma',
-      location: 'Patron of Arts, Dubai',
-      text: 'The Katan Silk Kadwa Banarasi Saree is a certified family heirloom. Soft, lustrous, and authentic. The Silk Mark verification and custom archival box made the unboxing unforgettable.',
-      item: 'Piece: The Maharani Katan Silk Kadwa Banarasi Saree',
-      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200&auto=format&fit=crop'
+      name: "Rhea Sen",
+      city: "Bangalore",
+      rating: 5,
+      review: "The fit of the Anarkali set was perfect right out of the box. Cash on delivery was seamless and the packaging felt like unboxing a boutique luxury package.",
+      item: "The Chandni Hand-Embroidered Anarkali",
     }
   ];
 
-  useEffect(() => {
-    const testTimer = setInterval(() => {
-      setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
-    }, 5500);
-    return () => clearInterval(testTimer);
-  }, [testimonials.length]);
-
-
   return (
-    <div className="bg-[#FAF8F5] text-stone-900 min-h-screen overflow-x-hidden selection:bg-amber-400 selection:text-black pb-24 lg:pb-0">
+    <div className="bg-[#FBF9F6] text-[#1A1A1A] min-h-screen">
       
-      {/* Global Fluid Scroll Depth Progress Bar */}
-      <motion.div
-        style={{ scaleX }}
-        className="fixed top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-500 via-amber-300 to-yellow-200 origin-left z-50 pointer-events-none shadow-sm"
-      />
-
-      {/* 1. CINEMATIC HERO LOOKBOOK (RESPONSIVE & MOBILE FIRST) */}
+      {/* ─── 1. HERO CAROUSEL BANNER ─────────────────────────────────── */}
       <section 
-        id="hero-section"
+        id="hero-banner"
         onMouseEnter={() => setIsSlidePaused(true)}
         onMouseLeave={() => setIsSlidePaused(false)}
-        className="relative min-h-[580px] sm:min-h-[700px] lg:min-h-[820px] w-full overflow-hidden bg-stone-950 text-white flex items-center py-16 sm:py-24"
+        className="relative w-full min-h-[560px] sm:min-h-[640px] lg:min-h-[740px] bg-[#1A1A1A] text-white flex items-center overflow-hidden"
       >
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide}
-            initial={{ opacity: 0, scale: 1.08 }}
+            initial={{ opacity: 0, scale: 1.05 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 1.1, ease: "easeOut" }}
             className="absolute inset-0 z-0"
           >
             <img
               src={heroSlides[currentSlide].image}
               alt={heroSlides[currentSlide].title}
-              className="w-full h-full object-cover object-center opacity-65"
+              className="w-full h-full object-cover object-center opacity-55"
+              fetchPriority="high"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/65 to-black/35" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/30" />
+            {/* Elegant multi-stop gradients for maximum readability */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/30" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
           </motion.div>
         </AnimatePresence>
 
-        {/* Hero Content Area */}
-        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 w-full">
-          <div className="max-w-3xl space-y-4 sm:space-y-6">
-            {/* Tag Badge */}
+        {/* Content Container */}
+        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 w-full py-16 sm:py-24">
+          <div className="max-w-2xl space-y-4 sm:space-y-6">
+            
+            {/* Offer Pill */}
             <motion.div
-              key={`tag-${currentSlide}`}
+              key={`pill-${currentSlide}`}
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#4A1D3F]/90 backdrop-blur-md text-[#C6A15B] border border-[#C6A15B]/30 text-xs font-semibold uppercase tracking-wider shadow-sm"
             >
-              <ShimmerBadge variant="gold" size="md">
-                {heroSlides[currentSlide].tag}
-              </ShimmerBadge>
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>{heroSlides[currentSlide].offerTag}</span>
             </motion.div>
 
-            {/* Split H1 Headline with Fluid Clamp */}
+            {/* Split H1 Headline */}
             <motion.h1
-              key={`title-${currentSlide}`}
-              initial={{ opacity: 0, y: 25 }}
+              key={`h1-${currentSlide}`}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.1 }}
-              className="text-3xl sm:text-5xl lg:text-6xl font-sans font-extrabold text-white tracking-tight leading-[1.12]"
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="font-serif text-3xl sm:text-5xl lg:text-6xl text-white font-medium tracking-tight leading-[1.12]"
             >
               {heroSlides[currentSlide].title}
             </motion.h1>
 
             {/* Subtitle */}
             <motion.p
-              key={`desc-${currentSlide}`}
+              key={`sub-${currentSlide}`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
-              className="text-stone-300 text-xs sm:text-sm md:text-base font-light max-w-2xl leading-relaxed"
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-[#E5E0D8] text-sm sm:text-base font-light max-w-xl leading-relaxed"
             >
               {heroSlides[currentSlide].subtitle}
             </motion.p>
 
-            {/* Dual Responsive Action Buttons */}
+            {/* Responsive Dual Action CTAs */}
             <motion.div
-              key={`actions-${currentSlide}`}
+              key={`cta-${currentSlide}`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.3 }}
-              className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2 sm:pt-4"
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2"
             >
-              <Link to={heroSlides[currentSlide].linkPrimary}>
-                <ShimmerButton
-                  variant="gold"
-                  size="md"
-                  icon={<ArrowRight size={14} className="order-last ml-1" />}
+              <Link to={heroSlides[currentSlide].primaryLink}>
+                <Button 
+                  variant="champagne" 
+                  size="lg" 
+                  fullWidth 
+                  className="font-semibold shadow-lg text-[#1A1A1A]"
+                  rightIcon={<ArrowRight className="w-4 h-4" />}
                 >
-                  {heroSlides[currentSlide].ctaPrimary}
-                </ShimmerButton>
+                  {heroSlides[currentSlide].primaryCta}
+                </Button>
               </Link>
-              <Link to={heroSlides[currentSlide].linkSecondary}>
-                <ShimmerButton variant="outline" size="md">
-                  {heroSlides[currentSlide].ctaSecondary}
-                </ShimmerButton>
+              <Link to={heroSlides[currentSlide].secondaryLink}>
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  fullWidth 
+                  className="bg-white/10 hover:bg-white text-white hover:text-[#1A1A1A] border-white/30 font-semibold"
+                >
+                  {heroSlides[currentSlide].secondaryCta}
+                </Button>
               </Link>
             </motion.div>
 
-            {/* Verification Badge */}
-            <div className="pt-2 flex items-center gap-2 text-stone-400 text-[11px] font-sans">
-              <ShieldCheck size={14} className="text-amber-400" />
-              <span>{heroSlides[currentSlide].badge}</span>
+            {/* Value Check Strip */}
+            <div className="pt-2 flex items-center gap-4 text-xs text-white/80 font-medium">
+              <span className="flex items-center gap-1.5">
+                <Truck className="w-4 h-4 text-[#C6A15B]" />
+                <span>Free Express Shipping</span>
+              </span>
+              <span>·</span>
+              <span className="flex items-center gap-1.5">
+                <Banknote className="w-4 h-4 text-[#C6A15B]" />
+                <span>COD Available</span>
+              </span>
+              <span>·</span>
+              <span className="flex items-center gap-1.5">
+                <RotateCcw className="w-4 h-4 text-[#C6A15B]" />
+                <span>7-Day Returns</span>
+              </span>
             </div>
+
           </div>
         </div>
 
-        {/* Slide Indicator Dots on Mobile / Mini Rail */}
+        {/* Carousel Slide Indicators */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
           {heroSlides.map((s, idx) => (
             <button
               key={s.id}
               onClick={() => setCurrentSlide(idx)}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                currentSlide === idx ? 'w-8 bg-amber-400' : 'w-2 bg-white/40 hover:bg-white/70'
+              className={`h-1.5 rounded-full transition-all duration-300 min-h-[44px] flex items-center px-1 ${
+                currentSlide === idx ? 'w-8 bg-[#C6A15B]' : 'w-3 bg-white/40 hover:bg-white/70'
               }`}
               aria-label={`Go to slide ${idx + 1}`}
             />
@@ -478,792 +337,345 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Liquid Scrolling Ribbon 1 (After Hero) */}
-      <ScrollRibbon
-        dark={true}
-        speed={32}
-        items={[
-          '100% Pure Mulberry Silk',
-          'Hand-Embroidered in Jaipur',
-          '24K Gold-Finished Dabka Wirework',
-          'Silk Mark India Certified',
-          'Complimentary Worldwide Courier',
-          'Bespoke Bridal Tailoring',
-          'Rajputana Heritage Weaves'
-        ]}
-      />
-
-      {/* 2. BRAND PHILOSOPHY MANIFESTO WITH LUXURY SCROLL REVEAL */}
-      <motion.section 
-        id="manifesto-section"
-        initial={{ opacity: 0, y: 60, scale: 0.98 }}
-        whileInView={{ opacity: 1, y: 0, scale: 1 }}
-        viewport={{ once: true, amount: 0.25, margin: "0px 0px -50px 0px" }}
-        transition={{ duration: 0.85, ease: [0.19, 1, 0.22, 1] }}
-        className="py-20 sm:py-28 px-6 max-w-7xl mx-auto border-b border-stone-200/80"
-      >
-        <div className="max-w-4xl mx-auto text-center space-y-4 sm:space-y-6">
-          <motion.span 
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.12 }}
-            className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-900 block"
-          >
-            The Atelier Philosophy
-          </motion.span>
-          <motion.h2 
-            initial={{ opacity: 0, y: 25 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.2, ease: [0.19, 1, 0.22, 1] }}
-            className="text-2xl sm:text-4xl md:text-5xl font-sans font-bold text-stone-900 leading-tight"
-          >
-            We do not produce seasonal fashion. <br className="hidden sm:inline" />
-            <span className="font-extrabold text-amber-950">We sculpt wearable heirlooms.</span>
-          </motion.h2>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.28 }}
-            className="text-stone-600 text-xs sm:text-sm md:text-base font-normal max-w-2xl mx-auto leading-relaxed"
-          >
-            In an age of industrial haste, Sakshi stands at the nexus of radical craft, certified 100% Ahimsa mulberry silks, and royal Rajputana zardozi needlework.
-          </motion.p>
-        </div>
-      </motion.section>
-
-      {/* 3. THE LIVING RUNWAY ARCHIVE (TOUCH CAROUSEL WITH SCROLL REVEAL) */}
-      <motion.section 
-        id="runway-section" 
-        initial={{ opacity: 0, y: 65, scale: 0.98 }}
-        whileInView={{ opacity: 1, y: 0, scale: 1 }}
-        viewport={{ once: true, amount: 0.12, margin: "0px 0px -60px 0px" }}
-        transition={{ duration: 0.85, ease: [0.19, 1, 0.22, 1] }}
-        className="py-18 sm:py-28 px-5 sm:px-8 max-w-7xl mx-auto"
-      >
-        <motion.div 
-          initial={{ opacity: 0, y: 25 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, delay: 0.1, ease: [0.19, 1, 0.22, 1] }}
-          className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-12 gap-4"
-        >
-          <div>
-            <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-900 mb-2">
-              <Sparkles size={13} className="text-amber-800" />
-              <span>Spring / Summer '26 Edit</span>
-            </div>
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-sans font-bold text-stone-900 tracking-tight">
-              The Living Runway Archive
-            </h2>
-            <p className="text-stone-600 text-xs sm:text-sm font-normal mt-1">
-              Fresh arrivals and new fashion collections hand-crafted by master artisans in Jaipur.
-            </p>
-          </div>
-
-          {/* Carousel Controls */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsRunwayAutoplaying(!isRunwayAutoplaying)}
-              className="px-3.5 py-2 rounded-full border border-stone-300 bg-white hover:bg-stone-100 text-stone-700 text-xs font-sans flex items-center gap-1.5 shadow-xs transition-colors"
-            >
-              {isRunwayAutoplaying ? (
-                <>
-                  <Pause size={12} />
-                  <span>Pause</span>
-                </>
-              ) : (
-                <>
-                  <Play size={12} />
-                  <span>Play</span>
-                </>
-              )}
-            </button>
-            <button
-              onClick={() => scrollRunway('left')}
-              className="w-10 h-10 rounded-full border border-stone-300 bg-white hover:bg-amber-400 hover:border-amber-400 text-stone-800 transition-all flex items-center justify-center shadow-xs"
-              aria-label="Previous pieces"
-            >
-              <ArrowLeft size={16} />
-            </button>
-            <button
-              onClick={() => scrollRunway('right')}
-              className="w-10 h-10 rounded-full bg-stone-900 hover:bg-amber-800 text-white transition-all flex items-center justify-center shadow-md"
-              aria-label="Next pieces"
-            >
-              <ArrowRight size={16} />
-            </button>
-          </div>
-        </motion.div>
-
-        {/* Scroll Progress Bar */}
-        <div className="w-full h-1 bg-stone-200 rounded-full mb-6 overflow-hidden">
-          <motion.div 
-            className="h-full bg-gradient-to-r from-amber-600 to-amber-400 rounded-full"
-            style={{ width: `${Math.max(15, runwayScrollProgress * 100)}%` }}
-          />
-        </div>
-
-        {/* Smooth Horizontal Track with Momentum & Hover Pause */}
-        <div 
-          ref={runwayRef}
-          onScroll={handleRunwayScroll}
-          onMouseEnter={() => setIsRunwayAutoplaying(false)}
-          onMouseLeave={() => setIsRunwayAutoplaying(true)}
-          className="flex items-stretch gap-4 sm:gap-6 overflow-x-auto no-scrollbar scroll-smooth pb-4 pt-1 snap-x snap-mandatory cursor-grab active:cursor-grabbing"
-        >
-          {products.map((prod) => {
-            const isWish = isInWishlist(prod.id);
-            return (
-              <div 
-                key={`runway-${prod.id}`}
-                className="w-[270px] sm:w-[320px] shrink-0 bg-white rounded-3xl p-3.5 sm:p-4 border border-stone-200/90 hover:border-amber-400 hover:shadow-xl transition-all duration-300 flex flex-col justify-between group snap-center"
-              >
-                {/* Image Portal */}
-                <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-stone-100 mb-3.5">
-                  <Link 
-                    to={`/product/${prod.id}`} 
-                    className="block w-full h-full"
-                    onClick={() => {
-                      window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
-                    }}
-                  >
-                    <img
-                      src={prod.image}
-                      alt={prod.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                      referrerPolicy="no-referrer"
-                    />
-                  </Link>
-
-                  {/* Wishlist Heart */}
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      toggleWishlist(prod);
-                    }}
-                    className={`absolute top-3 right-3 p-2.5 rounded-full backdrop-blur-md transition-all ${
-                      isWish 
-                        ? 'bg-amber-400 text-stone-950 scale-105 shadow-md' 
-                        : 'bg-black/35 text-white hover:bg-black/60'
-                    }`}
-                    aria-label="Save to Wishlist"
-                  >
-                    <Heart size={14} fill={isWish ? 'currentColor' : 'none'} />
-                  </button>
-
-                  {/* Category Pill */}
-                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-white/90 backdrop-blur-md text-[9px] font-sans tracking-widest uppercase text-stone-900 font-bold">
-                    {prod.category}
-                  </div>
-                </div>
-
-                {/* Garment Details & Direct Add */}
-                <div className="space-y-2.5">
-                  <div>
-                    <span className="text-[10px] font-sans tracking-widest uppercase text-stone-500 block mb-0.5">
-                      {prod.subCategory || 'HAUTE COUTURE'}
-                    </span>
-                    <Link 
-                      to={`/product/${prod.id}`}
-                      onClick={() => {
-                        window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
-                      }}
-                    >
-                      <h3 className="text-sm sm:text-base font-sans font-bold text-stone-900 group-hover:text-amber-900 transition-colors truncate">
-                        {prod.name}
-                      </h3>
-                    </Link>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2 border-t border-stone-100">
-                    <div>
-                      <p className="text-[9px] text-stone-400 font-sans uppercase tracking-wider">Price</p>
-                      <p className="text-base sm:text-lg font-sans font-bold text-stone-900">₹{prod.price.toLocaleString('en-IN')}</p>
-                    </div>
-
-                    <button
-                      onClick={(e) => handleQuickAdd(prod, e)}
-                      className="px-3.5 py-2 bg-stone-900 hover:bg-amber-400 hover:text-stone-950 text-white rounded-xl text-xs font-sans uppercase tracking-wider font-bold transition-all duration-300 flex items-center gap-1.5 shadow-xs"
-                    >
-                      <ShoppingBag size={12} />
-                      <span>Add</span>
-                    </button>
-                  </div>
-                </div>
+      {/* ─── 2. TRUST VALUE PROPOSITIONS BAR ─────────────────────────── */}
+      <section className="bg-white border-y border-[#E8E5DF] py-6 sm:py-8 shadow-xs">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-[#F6EFF4] flex items-center justify-center shrink-0 text-[#4A1D3F]">
+                <Truck className="w-5 h-5" />
               </div>
-            );
-          })}
-        </div>
-      </motion.section>
-
-      {/* Liquid Scrolling Ribbon 2 (Between Runway and Universes) */}
-      <ScrollRibbon
-        direction="right"
-        dark={false}
-        speed={30}
-        items={[
-          'Royal Bridal Lehengas',
-          'Tailored Silk Sherwanis',
-          'Banarasi Katan Sarees',
-          'Heritage Kundan Jewellery',
-          'Scalloped Organza Veils',
-          'Custom Couture Fit',
-          'Private Atelier Appointments'
-        ]}
-      />
-
-      {/* 4. SHOP BY UNIVERSE - 6 HIGH-FASHION ARCHED CARDS (STAGGERED SCROLL REVEAL) */}
-      <motion.section 
-        id="universes-section"
-        initial={{ opacity: 0, y: 65, scale: 0.98 }}
-        whileInView={{ opacity: 1, y: 0, scale: 1 }}
-        viewport={{ once: true, amount: 0.15, margin: "0px 0px -50px 0px" }}
-        transition={{ duration: 0.85, ease: [0.19, 1, 0.22, 1] }}
-        className="py-18 sm:py-28 px-5 sm:px-8 max-w-7xl mx-auto border-t border-stone-200/80"
-      >
-        <motion.div 
-          initial={{ opacity: 0, y: 25 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, delay: 0.1, ease: [0.19, 1, 0.22, 1] }}
-          className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-12 gap-4"
-        >
-          <div>
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-900 block mb-2">
-              Curated Ateliers
-            </span>
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-sans font-bold text-stone-900 tracking-tight">
-              Curated Fashion Universes
-            </h2>
-            <p className="text-stone-600 text-xs sm:text-sm font-normal mt-1">
-              Explore specialized couture worlds from royal bridal trousseaus to Varanasi pit-loom silks.
-            </p>
-          </div>
-          <Link 
-            to="/shop" 
-            className="text-xs font-sans uppercase tracking-wider font-bold text-stone-900 hover:text-amber-800 transition-colors flex items-center gap-1 shrink-0"
-          >
-            <span>Explore All Universes</span>
-            <ChevronRight size={14} />
-          </Link>
-        </motion.div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5 sm:gap-5">
-          {categories.map((cat, idx) => (
-            <motion.div
-              key={cat.name}
-              initial={{ opacity: 0, scale: 0.9, y: 30 }}
-              whileInView={{ opacity: 1, scale: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: idx * 0.08, ease: [0.16, 1, 0.3, 1] }}
-              className="h-full"
-            >
-              <Link
-                to={cat.link}
-                className="group flex flex-col items-center text-center p-4 sm:p-5 bg-white rounded-3xl border border-stone-200/90 hover:border-amber-400 hover:shadow-xl transition-all duration-300 relative h-full"
-              >
-                <span className="absolute top-3 right-3 text-[9px] font-sans text-stone-300 group-hover:text-amber-800 transition-colors font-bold">
-                  {cat.number}
-                </span>
-                <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full overflow-hidden mb-3 border-2 border-stone-100 group-hover:border-amber-400 transition-colors shadow-md">
-                  <img
-                    src={cat.image}
-                    alt={cat.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                  />
-                </div>
-                <h3 className="text-xs sm:text-sm font-sans font-bold text-stone-900 group-hover:text-amber-900 transition-colors">
-                  {cat.name}
-                </h3>
-                <p className="text-[9px] sm:text-[10px] text-stone-500 font-sans mt-1 line-clamp-1">
-                  {cat.count}
-                </p>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
-      </motion.section>
-
-      {/* Animated Metrics Strip Between Universes and Catalog */}
-      <ScrollMetricBar />
-
-      {/* 5. ELEVATED EDITORIAL CATALOG (SCROLL REVEAL) */}
-      <motion.section 
-        id="catalog-section"
-        initial={{ opacity: 0, y: 70, scale: 0.98 }}
-        whileInView={{ opacity: 1, y: 0, scale: 1 }}
-        viewport={{ once: true, amount: 0.1, margin: "0px 0px -50px 0px" }}
-        transition={{ duration: 0.85, ease: [0.19, 1, 0.22, 1] }}
-        className="py-18 sm:py-28 px-5 sm:px-8 max-w-7xl mx-auto bg-stone-100/70 rounded-3xl border border-stone-200/80 my-8"
-      >
-        <motion.div 
-          initial={{ opacity: 0, y: 25 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, delay: 0.1, ease: [0.19, 1, 0.22, 1] }}
-          className="flex flex-col lg:flex-row lg:items-end justify-between mb-8 sm:mb-12 gap-6"
-        >
-          <div>
-            <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-amber-900 mb-2">
-              <Crown size={13} className="text-amber-800" />
-              <span>The Salon Archive · 2026 Editions</span>
-            </div>
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-sans font-bold text-stone-900 tracking-tight">
-              The Curated Catalog
-            </h2>
-            <p className="text-stone-600 text-xs sm:text-sm font-normal mt-1">
-              Certified pure fabrics, intricate Rajputana needlecraft, and unapologetic Indian elegance.
-            </p>
-          </div>
-
-          {/* Filter Tabs with Watermelon SpringTabs */}
-          <div className="pb-2 overflow-x-auto no-scrollbar">
-            <SpringTabs
-              tabs={[
-                { id: 'all', label: 'All Collections' },
-                { id: 'women', label: "Women's Collection" },
-                { id: 'men', label: "Men's Collection" },
-                { id: 'kids', label: "Kids Collection" },
-                { id: 'jewellery', label: 'Fine Jewellery' },
-              ]}
-              activeTab={activeTab}
-              onChange={(id) => setActiveTab(id as any)}
-              size="md"
-            />
-          </div>
-        </motion.div>
-
-        {/* Editorial Asymmetric Layout: Spotlight Feature + Garment Grid OR Coming Soon State */}
-        {displayedProducts.length === 0 ? (
-          <div className="py-20 sm:py-28 px-6 text-center bg-white rounded-3xl border border-stone-200 shadow-sm max-w-2xl mx-auto space-y-4 my-8">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-100/80 text-amber-900 border border-amber-200/80 text-[10px] font-sans font-bold uppercase tracking-widest">
-              <Sparkles size={12} className="text-amber-600" />
-              <span>New Arrivals Dropping Soon</span>
-            </div>
-            <h3 className="text-2xl sm:text-3xl font-sans font-bold text-stone-900 capitalize">
-              {activeTab} Collection Coming Soon...
-            </h3>
-            <p className="text-xs sm:text-sm text-stone-500 font-light max-w-md mx-auto leading-relaxed">
-              Our master artisans and designers are currently curating and handcrafting our upcoming {activeTab} collection. Exquisite fabrics, bespoke silhouettes, and heirloom craftsmanship will be unveiled shortly.
-            </p>
-            <div className="pt-2">
-              <button
-                onClick={() => setActiveTab('all')}
-                className="px-6 py-3 bg-stone-900 hover:bg-amber-800 text-white rounded-xl text-xs font-sans uppercase tracking-widest font-bold transition-all shadow-md"
-              >
-                Explore Available Garments
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
-            {/* Spotlight Masterwork Card (Left 4 cols) */}
-            {spotlightProduct && (
-              <div className="lg:col-span-4 bg-white rounded-3xl p-5 sm:p-6 border border-amber-300/40 shadow-xl space-y-4 relative group">
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-sans uppercase tracking-[0.25em] text-amber-800 font-bold bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
-                    ✦ ATELIER SPOTLIGHT ✦
-                  </span>
-                  <span className="text-[10px] text-stone-500 font-sans">Quality Certified</span>
-                </div>
-
-                <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-stone-100">
-                  <Link 
-                    to={`/product/${spotlightProduct.id}`}
-                    onClick={() => {
-                      window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
-                    }}
-                  >
-                    <img
-                      src={spotlightProduct.image}
-                      alt={spotlightProduct.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                      referrerPolicy="no-referrer"
-                    />
-                  </Link>
-                  <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-white text-[10px] font-sans">
-                    Artisanal Handcraft
-                  </div>
-                </div>
-
-                <div className="space-y-2 pt-1">
-                  <span className="text-[10px] font-sans tracking-widest uppercase text-stone-500">
-                    {spotlightProduct.subCategory || 'CURATED APPAREL'}
-                  </span>
-                  <Link 
-                    to={`/product/${spotlightProduct.id}`}
-                    onClick={() => {
-                      window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
-                    }}
-                  >
-                    <h3 className="text-lg sm:text-xl font-sans font-bold text-stone-900 hover:text-amber-900 transition-colors">
-                      {spotlightProduct.name}
-                    </h3>
-                  </Link>
-                  <p className="text-xs text-stone-600 font-light leading-relaxed line-clamp-2">
-                    {spotlightProduct.description}
-                  </p>
-                  <div className="flex items-center justify-between pt-3 border-t border-stone-100">
-                    <div>
-                      <span className="text-[9px] font-sans uppercase text-stone-400 block">Price</span>
-                      <span className="text-lg sm:text-xl font-sans font-bold text-stone-900">
-                        ₹{spotlightProduct.price.toLocaleString('en-IN')}
-                      </span>
-                    </div>
-                    <button
-                      onClick={(e) => handleQuickAdd(spotlightProduct, e)}
-                      className="px-4 sm:px-5 py-2.5 bg-gradient-to-r from-amber-400 to-amber-300 text-stone-950 font-sans text-xs uppercase tracking-wider font-bold rounded-xl shadow-md hover:scale-105 transition-all flex items-center gap-1.5"
-                    >
-                      <ShoppingBag size={14} />
-                      <span>Add to Bag</span>
-                    </button>
-                  </div>
-                </div>
+              <div>
+                <h4 className="font-semibold text-xs sm:text-sm text-[#1A1A1A]">Free Shipping</h4>
+                <p className="text-[11px] text-[#6B7280]">On all orders above ₹999 across India</p>
               </div>
-            )}
+            </div>
 
-            {/* Grid of Garments (Right 8 cols) - 2 columns on mobile */}
-            <div className="lg:col-span-8">
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-6">
-                {loading ? (
-                  [1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={i} className="aspect-[3/4] bg-stone-200/60 rounded-3xl animate-pulse" />
-                  ))
-                ) : gridProducts.length > 0 ? (
-                  gridProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))
-                ) : (
-                  <div className="col-span-full py-16 text-center bg-white rounded-3xl border border-stone-200">
-                    <ShoppingBag size={40} className="mx-auto text-stone-300 mb-3" />
-                    <p className="text-stone-600 font-sans text-lg">No garments found in this selection.</p>
-                  </div>
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-[#F4EEDF] flex items-center justify-center shrink-0 text-[#C6A15B]">
+                <Banknote className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-xs sm:text-sm text-[#1A1A1A]">Cash on Delivery</h4>
+                <p className="text-[11px] text-[#6B7280]">Pay at your doorstep anywhere in India</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-[#F6EFF4] flex items-center justify-center shrink-0 text-[#4A1D3F]">
+                <RotateCcw className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-xs sm:text-sm text-[#1A1A1A]">7-Day Easy Returns</h4>
+                <p className="text-[11px] text-[#6B7280]">Hassle-free size exchange & returns</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-[#F4EEDF] flex items-center justify-center shrink-0 text-[#C6A15B]">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-xs sm:text-sm text-[#1A1A1A]">Skin-Safe Imitation</h4>
+                <p className="text-[11px] text-[#6B7280]">Lead-free hypoallergenic jewellery polish</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 3. CATEGORY TILES EXPLORER ───────────────────────────────── */}
+      <section className="py-16 sm:py-24 max-w-7xl mx-auto px-5 sm:px-8">
+        <SectionHeading
+          eyebrow="Curated Edits"
+          title="Explore by Category"
+          subtitle="Discover handcrafted Indian ethnic wear and stunning artificial jewellery created for celebratory moments."
+          actionHref="/shop"
+          actionText="View All Collections"
+        />
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5 sm:gap-5">
+          {categoryTiles.map((cat) => (
+            <Link
+              key={cat.title}
+              to={cat.link}
+              className="group flex flex-col bg-white rounded-2xl border border-[#E8E5DF] overflow-hidden p-3 transition-all duration-300 hover:border-[#4A1D3F]/40 hover:shadow-md"
+            >
+              <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-[#FAF8F5] mb-2.5">
+                <img
+                  src={cat.image}
+                  alt={cat.title}
+                  loading="lazy"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                {cat.isJewellery && (
+                  <span className="absolute top-2 left-2 bg-white/90 backdrop-blur-md px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider text-[#C6A15B] border border-[#C6A15B]/30 shadow-xs">
+                    Imitation
+                  </span>
                 )}
               </div>
-            </div>
-          </div>
-        )}
-
-        <div className="mt-12 sm:mt-16 text-center">
-          <Link
-            to="/shop"
-            className="inline-flex items-center gap-3 px-8 sm:px-10 py-3.5 sm:py-4 bg-stone-900 hover:bg-amber-800 text-white rounded-2xl text-xs font-sans uppercase tracking-widest font-bold transition-all duration-300 shadow-xl"
-          >
-            <span>Explore All {products.length || 12} Atelier Masterpieces</span>
-            <ArrowRight size={15} />
-          </Link>
-        </div>
-      </motion.section>
-
-      {/* 6. CRAFT ANATOMY HOTSPOT SHOWCASE (SCROLL REVEAL) */}
-      <motion.section 
-        id="anatomy-section"
-        initial={{ opacity: 0, y: 70, scale: 0.98 }}
-        whileInView={{ opacity: 1, y: 0, scale: 1 }}
-        viewport={{ once: true, amount: 0.12, margin: "0px 0px -50px 0px" }}
-        transition={{ duration: 0.85, ease: [0.19, 1, 0.22, 1] }}
-        className="py-20 sm:py-28 bg-[#141210] text-[#f5efe6] px-5 sm:px-8 relative overflow-hidden my-6 rounded-3xl"
-      >
-        <div className="max-w-7xl mx-auto">
-          <motion.div 
-            initial={{ opacity: 0, y: 25 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.1, ease: [0.19, 1, 0.22, 1] }}
-            className="text-center max-w-2xl mx-auto mb-12 sm:mb-16 space-y-3"
-          >
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400 block">
-              Precision & Artisanship
-            </span>
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-sans font-bold text-white leading-tight">
-              Behind the Craft of Royal Couture
-            </h2>
-            <p className="text-stone-400 text-xs sm:text-sm font-normal leading-relaxed">
-              Every Sakshi piece is brought to life through centuries-old Indian handloom and metalsmithing embroidery techniques.
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 items-center">
-            {/* Interactive Image Frame with Hotspots */}
-            <div className="lg:col-span-7 relative rounded-3xl overflow-hidden aspect-[4/5] bg-stone-900 shadow-2xl border border-white/10 group">
-              <img
-                src="https://images.unsplash.com/photo-1651132164857-b61aa4cf7472?q=80&w=1400&auto=format&fit=crop"
-                alt="Bridal Haute Couture Anatomy"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/25" />
-
-              {/* Pulsing Hotspot Pins */}
-              {hotspots.map((spot) => (
-                <div
-                  key={spot.id}
-                  style={{ left: spot.x, top: spot.y }}
-                  className="absolute -translate-x-1/2 -translate-y-1/2 z-20"
-                >
-                  <button
-                    onClick={() => setActiveHotspot(spot.id)}
-                    className="relative group/pin p-2"
-                    aria-label={spot.title}
-                  >
-                    <span className="absolute inset-0 rounded-full bg-amber-400/40 animate-ping" />
-                    <span className={`w-8 h-8 rounded-full flex items-center justify-center font-sans text-xs font-bold transition-all shadow-xl ${
-                      activeHotspot === spot.id 
-                        ? 'bg-amber-400 text-stone-950 scale-125 ring-4 ring-amber-400/40' 
-                        : 'bg-stone-950/90 text-amber-300 border border-amber-400/50 hover:bg-amber-400 hover:text-black'
-                    }`}>
-                      {spot.id}
-                    </span>
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            {/* Hotspot Details Card */}
-            <div className="lg:col-span-5 space-y-4 sm:space-y-6">
-              {hotspots.map((spot) => {
-                const isSelected = activeHotspot === spot.id;
-                return (
-                  <motion.div
-                    key={spot.id}
-                    onClick={() => setActiveHotspot(spot.id)}
-                    className={`p-5 sm:p-7 rounded-3xl border transition-all duration-300 cursor-pointer ${
-                      isSelected 
-                        ? 'bg-[#1e1a16] border-amber-400 shadow-2xl scale-[1.02]' 
-                        : 'bg-[#181512]/60 border-white/10 opacity-70 hover:opacity-100 hover:border-white/20'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2 sm:mb-3">
-                      <span className="text-[9px] font-sans uppercase tracking-[0.25em] text-amber-400 font-bold">
-                        {spot.tag}
-                      </span>
-                      <span className="w-6 h-6 rounded-full bg-amber-400/20 text-amber-300 text-xs font-sans flex items-center justify-center">
-                        {spot.id}
-                      </span>
-                    </div>
-                    <h3 className="text-lg sm:text-2xl font-sans font-semibold text-white mb-1.5 sm:mb-2">
-                      {spot.title}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-stone-300 font-normal leading-relaxed">
-                      {spot.desc}
-                    </p>
-                  </motion.div>
-                );
-              })}
-
-              <div className="pt-2">
-                <Link
-                  to="/shop?category=Women&sub=Bridal Lehengas"
-                  className="w-full py-4 bg-gradient-to-r from-amber-400 to-amber-300 hover:from-white hover:to-white text-stone-950 rounded-2xl text-xs font-sans uppercase tracking-wider font-bold transition-all duration-300 shadow-xl flex items-center justify-center gap-2"
-                >
-                  <span>Shop This Bridal Look</span>
-                  <ArrowRight size={14} />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </motion.section>
-
-      {/* 7. MAISON EXCELLENCE & ARTISANAL GUARANTEE (SCROLL REVEAL) */}
-      <motion.section 
-        id="authenticity-section"
-        initial={{ opacity: 0, scale: 0.96, y: 50 }}
-        whileInView={{ opacity: 1, scale: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2, margin: "0px 0px -50px 0px" }}
-        transition={{ duration: 0.85, ease: [0.19, 1, 0.22, 1] }}
-        className="px-5 sm:px-8 max-w-7xl mx-auto my-16 sm:my-24"
-      >
-        <div className="bg-gradient-to-r from-stone-950 via-[#1b1714] to-amber-950/80 text-white rounded-3xl p-6 sm:p-12 relative overflow-hidden shadow-2xl border border-amber-900/40 flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8">
-          <div className="space-y-3 sm:space-y-4 max-w-xl text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-400/15 border border-amber-400/25 text-amber-300 rounded-full text-xs font-sans uppercase tracking-wider">
-              <ShieldCheck size={13} className="text-amber-400" />
-              <span>AUTHENTICITY & CRAFTSMANSHIP GUARANTEE</span>
-            </div>
-            <h3 className="text-2xl sm:text-4xl md:text-5xl font-sans font-light leading-tight">
-              Heirloom Artistry. <span className="italic font-normal text-amber-300">Certified Quality.</span>
-            </h3>
-            <p className="text-stone-300 text-xs sm:text-sm md:text-base font-light leading-relaxed">
-              Every Sakshi creation—from contemporary womenswear and distinguished mens silhouettes to festive kids couture and handcrafted jewellery—is certified for quality and tailored to perfection.
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 shrink-0 w-full sm:w-auto">
-            <Link
-              to="/shop?category=Women"
-              className="w-full sm:w-auto px-6 py-3.5 sm:py-4 bg-white/10 hover:bg-white/20 text-white rounded-2xl text-xs font-sans uppercase tracking-widest font-bold transition-all border border-white/25 flex items-center justify-center gap-2"
-            >
-              <Sparkles size={14} className="text-amber-300" />
-              <span>Women's Collection</span>
+              <h3 className="font-serif text-xs sm:text-sm font-medium text-[#1A1A1A] group-hover:text-[#4A1D3F] transition-colors line-clamp-1">
+                {cat.title}
+              </h3>
+              <p className="text-[10px] text-[#6B7280] truncate mt-0.5">
+                {cat.subtitle}
+              </p>
             </Link>
-            <Link
-              to="/shop"
-              className="w-full sm:w-auto px-7 py-3.5 sm:py-4 bg-amber-400 text-stone-950 hover:bg-white rounded-2xl text-xs font-sans uppercase tracking-widest font-bold transition-all shadow-xl inline-flex items-center justify-center gap-2"
-            >
-              <ShoppingBag size={14} />
-              <span>Explore The Atelier</span>
-            </Link>
-          </div>
+          ))}
         </div>
-      </motion.section>
+      </section>
 
-      {/* 8. FOUR PILLARS OF ARTISANSHIP (SCROLL REVEAL) */}
-      <motion.section 
-        id="pillars-section"
-        initial={{ opacity: 0, y: 70, scale: 0.98 }}
-        whileInView={{ opacity: 1, y: 0, scale: 1 }}
-        viewport={{ once: true, amount: 0.12, margin: "0px 0px -50px 0px" }}
-        transition={{ duration: 0.85, ease: [0.19, 1, 0.22, 1] }}
-        className="py-20 sm:py-28 bg-[#161412] text-[#f7f3ec] px-5 sm:px-8 relative overflow-hidden my-6 rounded-3xl"
-      >
-        <div className="max-w-7xl mx-auto">
-          <motion.div 
-            initial={{ opacity: 0, y: 25 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.1, ease: [0.19, 1, 0.22, 1] }}
-            className="text-center max-w-2xl mx-auto mb-12 sm:mb-16 space-y-3"
-          >
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400 block">
-              Heritage Archive
-            </span>
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-sans font-bold text-white leading-tight">
-              Four Pillars of Authentic Craft
-            </h2>
-            <p className="text-stone-400 text-xs sm:text-sm font-normal leading-relaxed">
-              How our generational karigars in Jaipur and Varanasi preserve India's most celebrated textile traditions.
-            </p>
-          </motion.div>
+      {/* ─── 4. TRENDING COLLECTION (TABBED: ALL / CLOTHING / JEWELLERY) ── */}
+      <section className="py-16 sm:py-24 bg-white border-y border-[#E8E5DF]">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8">
+          
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-8 sm:mb-12 gap-4">
+            <div>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#4A1D3F] block mb-1.5">
+                Trending Right Now
+              </span>
+              <h2 className="font-serif text-2xl sm:text-4xl text-[#1A1A1A] font-medium leading-tight">
+                Our Most Loved Creations
+              </h2>
+              <p className="text-xs sm:text-sm text-[#6B7280] mt-1">
+                Handpicked bestselling silhouettes and artificial jewellery suites.
+              </p>
+            </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-12">
-            {atelierSteps.map((step, idx) => (
+            {/* Filter Tabs */}
+            <div className="flex items-center gap-1.5 p-1 bg-[#FAF8F5] rounded-full border border-[#E8E5DF] self-start md:self-auto">
               <button
-                key={step.num}
-                onClick={() => setAtelierStep(idx)}
-                className={`p-4 sm:p-6 rounded-2xl text-left border transition-all duration-300 ${
-                  atelierStep === idx
-                    ? 'bg-[#221d18] border-amber-400 shadow-xl'
-                    : 'bg-[#1b1714]/60 border-white/10 hover:border-white/20'
+                onClick={() => setActiveTab('all')}
+                className={`px-4 py-2 min-h-[40px] text-xs font-semibold rounded-full transition-all ${
+                  activeTab === 'all'
+                    ? 'bg-[#4A1D3F] text-white shadow-xs'
+                    : 'text-[#6B7280] hover:text-[#1A1A1A]'
                 }`}
               >
-                <span className="text-xs font-bold text-amber-400 block mb-1">{step.num}</span>
-                <h4 className="text-sm sm:text-base font-sans font-bold text-white mb-1 line-clamp-1">{step.title}</h4>
-                <p className="text-xs text-stone-400 font-normal line-clamp-1">{step.subtitle}</p>
+                All Pieces
               </button>
+              <button
+                onClick={() => setActiveTab('clothing')}
+                className={`px-4 py-2 min-h-[40px] text-xs font-semibold rounded-full transition-all ${
+                  activeTab === 'clothing'
+                    ? 'bg-[#4A1D3F] text-white shadow-xs'
+                    : 'text-[#6B7280] hover:text-[#1A1A1A]'
+                }`}
+              >
+                Clothing
+              </button>
+              <button
+                onClick={() => setActiveTab('jewellery')}
+                className={`px-4 py-2 min-h-[40px] text-xs font-semibold rounded-full transition-all flex items-center gap-1 ${
+                  activeTab === 'jewellery'
+                    ? 'bg-[#C6A15B] text-white shadow-xs'
+                    : 'text-[#6B7280] hover:text-[#1A1A1A]'
+                }`}
+              >
+                <Sparkles className="w-3 h-3" />
+                <span>Imitation Jewellery</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Product Grid: 2 columns on mobile, 4 columns on desktop */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            {displayedProducts.slice(0, 8).map((product) => (
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
 
-          {/* Active Pillar Card wrapped in Watermelon GlowCard */}
-          <GlowCard className="p-6 sm:p-10 border-amber-400/30">
+          <div className="mt-12 text-center">
+            <Link to="/shop">
+              <Button 
+                variant="secondary" 
+                size="lg" 
+                className="font-semibold"
+                rightIcon={<ArrowRight className="w-4 h-4" />}
+              >
+                Explore All Products
+              </Button>
+            </Link>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ─── 5. DEDICATED IMITATION JEWELLERY SPOTLIGHT ─────────────────── */}
+      <section className="py-16 sm:py-24 bg-[#FAF8F5] border-b border-[#E8E5DF] overflow-hidden">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8">
+          
+          <div className="bg-gradient-to-br from-[#2D1627] via-[#3B1A34] to-[#4A1D3F] text-white rounded-3xl p-6 sm:p-12 border border-[#C6A15B]/30 shadow-xl relative">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              <div className="lg:col-span-7 space-y-4">
-                <span className="text-xs font-semibold uppercase tracking-wider text-amber-400">
-                  Craft Standards · Pillar {atelierSteps[atelierStep].num}
-                </span>
-                <h3 className="text-xl sm:text-3xl font-sans font-bold text-white">
-                  {atelierSteps[atelierStep].title}
-                </h3>
-                <p className="text-xs sm:text-sm text-stone-300 font-light leading-relaxed">
-                  {atelierSteps[atelierStep].desc}
+              
+              {/* Copy & Assurance */}
+              <div className="lg:col-span-7 space-y-4 sm:space-y-6">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#C6A15B]/20 text-[#E0C78F] border border-[#C6A15B]/40 text-xs font-semibold uppercase tracking-wider">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>The Artificial Jewellery Collection</span>
+                </div>
+
+                <h2 className="font-serif text-2xl sm:text-4xl lg:text-5xl font-medium leading-tight text-white">
+                  Regal Aesthetics, <br />
+                  <span className="text-[#C6A15B] italic font-normal">Everyday Comfort.</span>
+                </h2>
+
+                <p className="text-[#E5E0D8] text-xs sm:text-sm md:text-base font-light leading-relaxed max-w-xl">
+                  Our curated imitation jewellery is designed for high-impact celebratory dressing without heavy weight or skin sensitivity. Crafted from hypoallergenic brass with premium micro-plating and radiant faux Kundan and Polki stones.
                 </p>
-                <div className="pt-2 flex items-center gap-4">
-                  <div className="bg-black/50 border border-amber-400/30 rounded-2xl p-4">
-                    <span className="text-2xl sm:text-3xl font-sans font-bold text-amber-400 block">
-                      {atelierSteps[atelierStep].stat}
-                    </span>
-                    <span className="text-[10px] font-sans text-stone-400 uppercase tracking-wider">
-                      {atelierSteps[atelierStep].statLabel}
-                    </span>
+
+                <div className="grid grid-cols-2 gap-3.5 pt-2">
+                  <div className="p-3.5 bg-black/25 rounded-2xl border border-white/10">
+                    <p className="text-xs font-bold text-[#C6A15B] uppercase tracking-wider">100% Skin-Friendly</p>
+                    <p className="text-[11px] text-white/70 mt-0.5">Nickel & lead free for sensitive skin</p>
+                  </div>
+                  <div className="p-3.5 bg-black/25 rounded-2xl border border-white/10">
+                    <p className="text-xs font-bold text-[#C6A15B] uppercase tracking-wider">Anti-Tarnish Plating</p>
+                    <p className="text-[11px] text-white/70 mt-0.5">High-grade finish with protective coat</p>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <Link to="/shop?category=Jewellery">
+                    <Button 
+                      variant="champagne" 
+                      size="lg" 
+                      className="font-semibold text-[#1A1A1A] shadow-md"
+                      rightIcon={<ArrowRight className="w-4 h-4" />}
+                    >
+                      Shop Imitation Jewellery
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Imagery Showcase */}
+              <div className="lg:col-span-5 relative">
+                <div className="relative aspect-[4/5] rounded-2xl overflow-hidden shadow-2xl border border-[#C6A15B]/30">
+                  <img
+                    src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=1200&auto=format&fit=crop"
+                    alt="Imitation Jewellery Suite"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md rounded-xl p-3 text-[#1A1A1A] flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] uppercase font-bold tracking-wider text-[#C6A15B]">Bestselling Suite</p>
+                      <p className="font-serif text-xs font-semibold truncate">Polki Jadau Choker & Earrings</p>
+                    </div>
+                    <span className="text-xs font-bold text-[#1A1A1A]">₹65,000</span>
                   </div>
                 </div>
               </div>
 
-              <div className="lg:col-span-5 rounded-2xl overflow-hidden aspect-[4/3] bg-stone-900 border border-white/10">
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ─── 6. SHOP THE LOOK (PAIRING CLOTHING + JEWELLERY) ──────────── */}
+      <section className="py-16 sm:py-24 max-w-7xl mx-auto px-5 sm:px-8">
+        <SectionHeading
+          eyebrow="Complete The Ensemble"
+          title="Shop The Look"
+          subtitle="Pair our handcrafted Indian drapes with matching imitation jewellery for the complete celebration edit."
+          align="center"
+        />
+
+        <div className="bg-white rounded-3xl border border-[#E8E5DF] p-6 sm:p-10 shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            
+            {/* The Outfit */}
+            <div className="space-y-3">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#4A1D3F] bg-[#F6EFF4] px-3 py-1 rounded-full">
+                Step 1: The Drape
+              </span>
+              <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-[#FAF8F5] border border-[#E8E5DF]">
                 <img
-                  src={atelierSteps[atelierStep].image}
-                  alt={atelierSteps[atelierStep].title}
+                  src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1000&auto=format&fit=crop"
+                  alt="Katan Silk Saree"
                   className="w-full h-full object-cover"
                 />
               </div>
+              <div className="flex items-center justify-between pt-1">
+                <div>
+                  <h4 className="font-serif text-sm sm:text-base font-medium text-[#1A1A1A]">The Maharani Kadwa Banarasi Saree</h4>
+                  <p className="text-xs font-bold text-[#1A1A1A]">₹48,500</p>
+                </div>
+                <Link to="/shop?category=Women&sub=Heritage Sarees">
+                  <Button variant="outline" size="sm">View Saree</Button>
+                </Link>
+              </div>
             </div>
-          </GlowCard>
+
+            {/* The Imitation Jewellery */}
+            <div className="space-y-3">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#C6A15B] bg-[#F4EEDF] px-3 py-1 rounded-full">
+                Step 2: The Imitation Accent
+              </span>
+              <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-[#FAF8F5] border border-[#E8E5DF]">
+                <img
+                  src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=1000&auto=format&fit=crop"
+                  alt="Imitation Choker Suite"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex items-center justify-between pt-1">
+                <div>
+                  <h4 className="font-serif text-sm sm:text-base font-medium text-[#1A1A1A]">Polki Jadau Choker & Earring Suite</h4>
+                  <p className="text-xs font-bold text-[#1A1A1A]">₹65,000</p>
+                </div>
+                <Link to="/shop?category=Jewellery">
+                  <Button variant="champagne" size="sm" className="text-[#1A1A1A]">View Jewellery</Button>
+                </Link>
+              </div>
+            </div>
+
+          </div>
         </div>
-      </motion.section>
+      </section>
 
-      {/* 9. REAL PATRON & CRITIC TESTIMONIALS (SCROLL REVEAL) */}
-      <motion.section 
-        id="testimonials-section"
-        initial={{ opacity: 0, y: 65, scale: 0.98 }}
-        whileInView={{ opacity: 1, y: 0, scale: 1 }}
-        viewport={{ once: true, amount: 0.15, margin: "0px 0px -50px 0px" }}
-        transition={{ duration: 0.85, ease: [0.19, 1, 0.22, 1] }}
-        className="py-20 sm:py-28 px-5 sm:px-8 max-w-7xl mx-auto"
-      >
-        <motion.div 
-          initial={{ opacity: 0, y: 25 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, delay: 0.1, ease: [0.19, 1, 0.22, 1] }}
-          className="text-center max-w-2xl mx-auto mb-10 sm:mb-14 space-y-3"
-        >
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-900 block">
-            Customer Reviews
-          </span>
-          <h2 className="text-2xl sm:text-4xl md:text-5xl font-sans font-bold text-stone-900 tracking-tight">
-            Words from our Valued Patrons
-          </h2>
-          <p className="text-stone-600 text-xs sm:text-sm font-normal">
-            Reflections from clients and bridal couples worldwide.
-          </p>
-        </motion.div>
+      {/* ─── 7. VERIFIED CUSTOMER REVIEWS ────────────────────────────── */}
+      <section className="py-16 sm:py-24 bg-white border-t border-[#E8E5DF]">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8">
+          <SectionHeading
+            eyebrow="Patron Reflections"
+            title="Loved Across India"
+            subtitle="Real reviews from customers who celebrated their special days in Sakshi creations."
+            align="center"
+          />
 
-        <div className="max-w-3xl mx-auto bg-white rounded-3xl p-6 sm:p-12 border border-stone-200/90 shadow-xl text-center space-y-6 relative">
-          <div className="flex justify-center gap-1 text-amber-500">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <Star key={i} size={16} fill="currentColor" />
-            ))}
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {testimonials.map((t) => (
+              <div 
+                key={t.name}
+                className="bg-[#FAF8F5] rounded-2xl p-6 border border-[#E8E5DF] flex flex-col justify-between space-y-4"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center gap-1 text-[#C6A15B]">
+                    {Array.from({ length: t.rating }).map((_, i) => (
+                      <Star key={i} size={15} fill="currentColor" />
+                    ))}
+                  </div>
+                  <p className="text-xs sm:text-sm text-[#4B5563] italic leading-relaxed">
+                    "{t.review}"
+                  </p>
+                </div>
 
-          <p className="text-base sm:text-xl font-sans font-medium text-stone-800 leading-relaxed">
-            "{testimonials[activeTestimonial].text}"
-          </p>
-
-          <div className="flex flex-col items-center gap-2 pt-2 border-t border-stone-100">
-            <img
-              src={testimonials[activeTestimonial].avatar}
-              alt={testimonials[activeTestimonial].name}
-              className="w-12 h-12 rounded-full object-cover border-2 border-amber-400"
-            />
-            <h4 className="font-sans font-bold text-stone-900 text-base">
-              {testimonials[activeTestimonial].name}
-            </h4>
-            <span className="text-[11px] font-sans text-stone-500">
-              {testimonials[activeTestimonial].location}
-            </span>
-            <span className="text-[10px] font-sans text-amber-800 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
-              {testimonials[activeTestimonial].item}
-            </span>
-          </div>
-
-          {/* Testimonial Nav dots */}
-          <div className="flex justify-center gap-2 pt-2">
-            {testimonials.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setActiveTestimonial(idx)}
-                className={`w-2.5 h-2.5 rounded-full transition-all ${
-                  activeTestimonial === idx ? 'bg-amber-600 w-6' : 'bg-stone-300'
-                }`}
-                aria-label={`Testimonial ${idx + 1}`}
-              />
+                <div className="pt-3 border-t border-[#E8E5DF]/60">
+                  <p className="font-semibold text-xs sm:text-sm text-[#1A1A1A]">{t.name}</p>
+                  <p className="text-[11px] text-[#6B7280]">{t.city} · Verified Purchase</p>
+                  <span className="text-[10px] text-[#4A1D3F] font-medium block mt-1">
+                    Purchased: {t.item}
+                  </span>
+                </div>
+              </div>
             ))}
           </div>
         </div>
-      </motion.section>
+      </section>
 
-      {/* Floating Scroll to Top Action Button */}
-      <FloatingActionDock />
     </div>
   );
 };
