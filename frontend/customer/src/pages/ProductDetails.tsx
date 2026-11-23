@@ -22,8 +22,10 @@ import {
   CheckCircle2,
   Banknote,
   Info,
-  X
+  X,
+  Share2
 } from 'lucide-react';
+import { nativeApp } from '../services/nativeService';
 import ProductCard from '../components/ProductCard';
 import ProductReviews from '../components/ProductReviews';
 import { useWishlist } from '../context/WishlistContext';
@@ -292,6 +294,24 @@ export const ProductDetails: React.FC = () => {
                   </span>
                 )}
               </div>
+
+              {/* Native Share Button */}
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  nativeApp.haptic('light');
+                  nativeApp.share({
+                    title: product.name,
+                    text: `Discover ${product.name} on Sakshi Clothing:`,
+                    url: window.location.href,
+                    dialogTitle: `Share ${product.name}`
+                  });
+                }}
+                className="absolute top-4 right-16 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full backdrop-blur-md transition-all z-20 bg-white/85 text-[#1A1A1A] hover:bg-white hover:text-[#4A1D3F] shadow-xs active:scale-95"
+                aria-label="Share product"
+              >
+                <Share2 className="w-4 h-4" />
+              </button>
 
               {/* Wishlist Heart Button */}
               <button

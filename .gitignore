@@ -12,6 +12,7 @@ build/
 **/.env
 **/.env.*
 !**/.env.example
+!**/.env.*.example
 
 # Database & local data
 .mongo_data/

@@ -54,6 +54,25 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    overscroll-behavior-y: none;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Prevent text selection on interactive mobile UI components */
+  button, nav, [role="button"], .no-select, a {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Keep text selectable on long-form content, terms, and inputs */
+  input, textarea, p, article, [contenteditable="true"] {
+    -webkit-user-select: text;
+    user-select: text;
   }
 
   /* Interactive Elements */

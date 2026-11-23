@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { ClerkProvider, AuthenticateWithRedirectCallback } from '@clerk/clerk-react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
@@ -16,6 +16,9 @@ import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
 import ProtectedRoute from './components/ProtectedRoute';
 import CookieConsent from './components/CookieConsent';
+import OfflineBanner from './components/OfflineBanner';
+import VersionUpdateModal from './components/VersionUpdateModal';
+import { nativeApp } from './services/nativeService';
 import { motion, AnimatePresence } from 'motion/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Analytics } from '@vercel/analytics/react';
@@ -134,10 +137,17 @@ export default function App() {
 
 const AppContent = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const isAuthPage = location.pathname.startsWith('/login') || location.pathname.startsWith('/signup');
+
+  useEffect(() => {
+    nativeApp.init(navigate);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen flex flex-col font-sans bg-[#FBF9F6] text-[#1A1A1A] overflow-x-hidden pb-20 lg:pb-0">
+      <OfflineBanner />
+      <VersionUpdateModal />
       {!isAuthPage && <Navbar />}
       <CartDrawer />
       <main className="flex-grow">

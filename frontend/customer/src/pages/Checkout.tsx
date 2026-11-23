@@ -1,7 +1,7 @@
 // Reading this as: Single-Flow Checkout Page for Sakshi Clothing, with verified backend order initiation, Razorpay test mode integration, and mobile touch ergonomics. Dials: VARIANCE [8] / MOTION [6] / DENSITY [4].
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
