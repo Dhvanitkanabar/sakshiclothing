@@ -86,8 +86,8 @@ export const Footer: React.FC = () => {
               <RotateCcw size={18} />
             </div>
             <div>
-              <p className="font-semibold text-white text-xs">{BUSINESS_CONFIG.policies.returnWindowDays}-Day Easy Returns</p>
-              <p className="text-[#A89FA9] text-[11px]">Hassle-free return & size exchange policy</p>
+              <p className="font-semibold text-white text-xs">No-Return Policy</p>
+              <p className="text-[#A89FA9] text-[11px]">48h transit damage guarantee with unboxing proof</p>
             </div>
           </div>
 
@@ -279,7 +279,7 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <Link to="/refund-policy" className="hover:text-white transition-colors">
-                  Returns & Exchanges
+                  Return & Damage Policy
                 </Link>
               </li>
               <li>

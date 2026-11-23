@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, ShoppingBag, Trash2, Minus, Plus, ArrowRight, ShieldCheck, Sparkles, Truck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useNavigate, Link } from 'react-router-dom';
+import { BUSINESS_CONFIG } from '../config/business';
 
-const FREE_SHIPPING_THRESHOLD = 999;
+const FREE_SHIPPING_THRESHOLD = BUSINESS_CONFIG.policies.freeShippingThreshold;
 
 export const CartDrawer: React.FC = () => {
   const { cart, isCartOpen, setIsCartOpen, removeFromCart, updateQuantity, totalPrice } = useCart();
@@ -258,7 +259,7 @@ export const CartDrawer: React.FC = () => {
                 
                 <div className="flex items-center justify-center gap-1.5 text-[10px] text-[#6B7280] text-center">
                   <ShieldCheck size={14} className="text-[#C6A15B]" />
-                  <span>Secure 256-Bit SSL Checkout · Cash on Delivery Available</span>
+                  <span>No Returns (Damage Guaranteed) · Cash on Delivery Available</span>
                 </div>
               </div>
             )}

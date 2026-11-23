@@ -7,8 +7,9 @@ import { Trash2, ShoppingBag, ArrowRight, Minus, Plus, Sparkles, Truck, ShieldCh
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '../components/ui/Button';
 import SEOHead from '../components/SEOHead';
+import { BUSINESS_CONFIG } from '../config/business';
 
-const FREE_SHIPPING_THRESHOLD = 999;
+const FREE_SHIPPING_THRESHOLD = BUSINESS_CONFIG.policies.freeShippingThreshold;
 
 export const Cart: React.FC = () => {
   const { cart, removeFromCart, updateQuantity, totalPrice } = useCart();
@@ -226,7 +227,7 @@ export const Cart: React.FC = () => {
                 </p>
                 <p className="flex items-center gap-2">
                   <RotateCcw size={14} className="text-[#7B1E2B] shrink-0" />
-                  <span>7-Day Hassle-Free Returns & Size Exchanges</span>
+                  <span>No returns (damaged or wrong items covered within 48h)</span>
                 </p>
                 <p className="flex items-center gap-2">
                   <Banknote size={14} className="text-[#7B1E2B] shrink-0" />

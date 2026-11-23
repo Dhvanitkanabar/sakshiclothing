@@ -10,6 +10,7 @@ import {
   ChevronRight, 
   Star, 
   ShieldCheck, 
+  ShieldAlert,
   Truck, 
   RotateCcw, 
   Heart, 
@@ -214,6 +215,13 @@ export const ProductDetails: React.FC = () => {
         '@type': 'Organization',
         name: BUSINESS_CONFIG.storeName,
       },
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'IN',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnNotPermitted',
+        merchantReturnDays: 0,
+        returnMethod: 'https://schema.org/ReturnNotPermitted',
+      },
     },
   };
 
@@ -397,7 +405,7 @@ export const ProductDetails: React.FC = () => {
                 )}
               </div>
               <p className="text-xs text-[#6B7280]">
-                Inclusive of all taxes · Free Express Delivery on ₹999+
+                Inclusive of all taxes · Free Express Delivery on ₹{BUSINESS_CONFIG.policies.freeShippingThreshold}+
               </p>
             </div>
 
@@ -498,6 +506,12 @@ export const ProductDetails: React.FC = () => {
                   {isSelectedOutOfStock ? 'Sold Out' : 'Add to Shopping Bag'}
                 </Button>
               </div>
+
+              {/* Policy Trust Notice */}
+              <div className="flex items-center gap-2 py-2 px-3 rounded-xl bg-[#FAF8F5] border border-[#E8E5DF] text-[11px] text-[#4B5563]">
+                <ShieldAlert size={14} className="text-[#7B1E2B] shrink-0" />
+                <span><strong>No returns</strong> (damaged or wrong items covered within 48h). <Link to="/refund-policy" className="text-[#7B1E2B] underline font-medium">Read policy</Link></span>
+              </div>
             </div>
 
             {/* PIN Code Delivery Checker */}
@@ -535,7 +549,7 @@ export const ProductDetails: React.FC = () => {
                       <span>•</span>
                       <span>Cash on Delivery: <strong className="text-[#15803D]">Eligible</strong></span>
                       <span>•</span>
-                      <span>Free shipping above ₹999</span>
+                      <span>Free shipping above ₹{BUSINESS_CONFIG.policies.freeShippingThreshold}</span>
                     </div>
                   )}
                 </div>
@@ -659,7 +673,7 @@ export const ProductDetails: React.FC = () => {
                       <strong>Cash on Delivery (COD):</strong> {BUSINESS_CONFIG.policies.codAvailable ? 'Available nationwide across 19,000+ PIN codes with zero extra fees.' : 'Prepaid only.'}
                     </p>
                     <p>
-                      <strong>{BUSINESS_CONFIG.policies.returnWindowDays}-Day Returns:</strong> {isJewellery ? BUSINESS_CONFIG.policies.jewelleryPolicy : BUSINESS_CONFIG.policies.clothingPolicy}
+                      <strong>Strict No-Return Policy:</strong> {isJewellery ? BUSINESS_CONFIG.policies.jewelleryPolicy : BUSINESS_CONFIG.policies.clothingPolicy}
                     </p>
                   </div>
                 )}

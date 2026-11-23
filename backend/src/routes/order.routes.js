@@ -14,7 +14,9 @@ import {
   updateOrderStatus,
   updateTracking,
   approveReturn,
-  updateOrderCoordinates
+  updateOrderCoordinates,
+  submitOrderClaim,
+  reviewOrderClaim
 } from '../controllers/order.controller.js';
 import { verifyJWT, authorizeRoles, optionalAuth } from '../middlewares/auth.middleware.js';
 import { validateRequest } from '../middlewares/validateRequest.js';
@@ -49,6 +51,7 @@ router.post('/buy-now', checkoutLimiter, verifyJWT, buyNow);
 router.get('/', verifyJWT, getUserOrders);
 router.get('/:id', verifyJWT, getOrderById);
 router.patch('/:id/cancel', verifyJWT, cancelOrder);
+router.post('/:id/claim', verifyJWT, submitOrderClaim);
 router.get('/:id/invoice', verifyJWT, getInvoice);
 
 // Admin Routes
@@ -58,6 +61,7 @@ router.post('/admin/:id/reject', verifyJWT, authorizeRoles('admin'), rejectOrder
 router.patch('/admin/:id/status', verifyJWT, authorizeRoles('admin'), updateOrderStatus);
 router.patch('/admin/:id/tracking', verifyJWT, authorizeRoles('admin'), updateTracking);
 router.patch('/admin/:id/coordinates', verifyJWT, authorizeRoles('admin'), updateOrderCoordinates);
+router.patch('/admin/:id/claim', verifyJWT, authorizeRoles('admin'), reviewOrderClaim);
 router.patch('/admin/:id/return', verifyJWT, authorizeRoles('admin'), approveReturn);
 
 export default router;

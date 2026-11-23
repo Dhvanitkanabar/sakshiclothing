@@ -248,7 +248,7 @@ export const ContactUs: React.FC = () => {
                     className="w-full px-4 py-2.5 rounded-xl border border-[#E8E5DF] text-xs focus:outline-none focus:border-[#7B1E2B] bg-white min-h-[44px]"
                   >
                     <option value="Order Inquiry">Order Inquiry & Status</option>
-                    <option value="Return / Exchange">Return, Exchange or Refund</option>
+                    <option value="Damage / Defect Claim">Report Damaged or Defective Item (48h)</option>
                     <option value="Bridal & Custom Styling">Bridal & Custom Styling Consultation</option>
                     <option value="Jewellery Care">Artificial Jewellery Care & Maintenance</option>
                     <option value="General Feedback">General Feedback & Other Inquiries</option>

@@ -152,11 +152,41 @@ const orderSchema = new Schema(
       invoiceNumber: String,
       url: String
     },
+    noReturnPolicyAcknowledged: {
+      type: Boolean,
+      default: false
+    },
+    claim: {
+      hasClaim: { type: Boolean, default: false },
+      reason: {
+        type: String,
+        enum: ['damaged_in_transit', 'defective_piece', 'incorrect_item_sent', 'missing_item', 'other'],
+        default: null
+      },
+      description: { type: String, default: '' },
+      photoUrls: [{ type: String }],
+      unboxingVideoUrl: { type: String, default: '' },
+      status: {
+        type: String,
+        enum: ['submitted', 'under_review', 'approved', 'rejected', 'resolved'],
+        default: 'submitted'
+      },
+      resolutionType: {
+        type: String,
+        enum: ['replacement', 'store_credit', 'refund_to_source', 'none'],
+        default: 'none'
+      },
+      adminNotes: { type: String, default: '' },
+      reportedAt: { type: Date },
+      resolvedAt: { type: Date }
+    },
     timeline: [timelineEventSchema],
     totals: {
       itemsTotal: { type: Number, required: true, default: 0 },
+      subtotalAfterDiscount: { type: Number, default: 0 },
       taxes: { type: Number, default: 0 },
       shippingCharges: { type: Number, default: 0 },
+      codCharges: { type: Number, default: 0 },
       discount: { type: Number, default: 0 },
       grandTotal: { type: Number, required: true, default: 0 }
     }

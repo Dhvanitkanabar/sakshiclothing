@@ -291,13 +291,14 @@ export const initiateOrderCheckout = async (
   items: any[],
   couponCode?: string,
   isFromCart: boolean = true,
-  clerkToken?: string | null
+  clerkToken?: string | null,
+  noReturnPolicyAcknowledged: boolean = true
 ) => {
   try {
     const res = await authedFetch(`${API_URL}/orders/initiate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ shippingAddressId, items, couponCode, isFromCart })
+      body: JSON.stringify({ shippingAddressId, items, couponCode, isFromCart, noReturnPolicyAcknowledged })
     }, clerkToken);
     return await res.json();
   } catch (e: any) {
@@ -313,18 +314,37 @@ export const placeOrder = async (
   items?: any[],
   paymentMethod: string = 'cod',
   payment?: any,
-  couponCode?: string
+  couponCode?: string,
+  noReturnPolicyAcknowledged: boolean = true
 ) => {
   try {
     const res = await authedFetch(`${API_URL}/orders/checkout`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ shippingAddressId, isFromCart, items, paymentMethod, payment, couponCode })
+      body: JSON.stringify({ shippingAddressId, isFromCart, items, paymentMethod, payment, couponCode, noReturnPolicyAcknowledged })
     }, clerkToken);
     return await res.json();
   } catch (e) {
     console.error(e);
     return { success: false };
+  }
+};
+
+export const submitOrderClaim = async (
+  orderId: string,
+  claimData: { reason: string; description?: string; photoUrls?: string[]; unboxingVideoUrl?: string },
+  clerkToken?: string | null
+) => {
+  try {
+    const res = await authedFetch(`${API_URL}/orders/${orderId}/claim`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(claimData)
+    }, clerkToken);
+    return await res.json();
+  } catch (e: any) {
+    console.error('Claim submission error:', e);
+    return { success: false, message: e.message || 'Failed to submit claim' };
   }
 };
 
@@ -377,4 +397,6 @@ export const cancelOrder = async (id: string, clerkToken?: string | null) => {
 
 export const getInvoiceUrl = (orderId: string) =>
   `${API_URL}/orders/${orderId}/invoice`;
+
+
 

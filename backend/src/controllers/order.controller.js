@@ -7,7 +7,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { generateInvoiceHTML } from '../utils/invoiceGenerator.js';
 
 export const initiateCheckout = asyncHandler(async (req, res) => {
-  const { shippingAddressId, items, isFromCart, couponCode } = req.body;
+  const { shippingAddressId, items, isFromCart, couponCode, noReturnPolicyAcknowledged } = req.body;
 
   let orderItems = items;
   if (isFromCart) {
@@ -24,12 +24,12 @@ export const initiateCheckout = asyncHandler(async (req, res) => {
     }
   }
 
-  const result = await orderService.initiateCheckout(req.user._id, orderItems, shippingAddressId, couponCode);
+  const result = await orderService.initiateCheckout(req.user._id, orderItems, shippingAddressId, couponCode, { noReturnPolicyAcknowledged });
   return res.status(201).json(new ApiResponse(201, result, 'Order initiated in pending_payment state'));
 });
 
 export const checkout = asyncHandler(async (req, res) => {
-  const { shippingAddressId, items, isFromCart, paymentMethod = 'cod', payment, couponCode } = req.body;
+  const { shippingAddressId, items, isFromCart, paymentMethod = 'cod', payment, couponCode, noReturnPolicyAcknowledged } = req.body;
 
   if (!shippingAddressId) {
     throw new ApiError(400, 'Shipping address is required');
@@ -110,7 +110,7 @@ export const checkout = asyncHandler(async (req, res) => {
     }
   }
 
-  const order = await orderService.createCheckoutOrder(req.user._id, orderItems, shippingAddressId, paymentInfo, couponCode);
+  const order = await orderService.createCheckoutOrder(req.user._id, orderItems, shippingAddressId, paymentInfo, couponCode, { noReturnPolicyAcknowledged });
 
   // If from cart and successful, clear cart
   if (isFromCart) {
@@ -271,4 +271,25 @@ export const updateOrderCoordinates = asyncHandler(async (req, res) => {
   }
   const order = await orderService.updateCoordinates(req.params.id, { lat, lng });
   return res.status(200).json(new ApiResponse(200, order, 'Delivery coordinates updated successfully'));
+});
+
+export const submitOrderClaim = asyncHandler(async (req, res) => {
+  const { reason, description, photoUrls, unboxingVideoUrl } = req.body;
+  const order = await orderService.submitOrderClaim(req.params.id, req.user._id, {
+    reason,
+    description,
+    photoUrls,
+    unboxingVideoUrl
+  });
+  return res.status(200).json(new ApiResponse(200, order, 'Transit damage/defect claim submitted successfully'));
+});
+
+export const reviewOrderClaim = asyncHandler(async (req, res) => {
+  const { status, resolutionType, adminNotes } = req.body;
+  const order = await orderService.reviewOrderClaim(req.params.id, {
+    status,
+    resolutionType,
+    adminNotes
+  }, req.user);
+  return res.status(200).json(new ApiResponse(200, order, 'Order claim reviewed successfully'));
 });

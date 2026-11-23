@@ -14,6 +14,7 @@ import MapPicker from '../components/MapPicker';
 import { fetchAddresses, addAddress, placeOrder, initiateOrderCheckout } from '../lib/api';
 import { Button } from '../components/ui/Button';
 import SEOHead from '../components/SEOHead';
+import { BUSINESS_CONFIG } from '../config/business';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
@@ -63,10 +64,16 @@ export const Checkout: React.FC = () => {
   // Exact Delivery GPS Coordinates State
   const [detectedCoords, setDetectedCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [detectingLocation, setDetectingLocation] = useState(false);
+  const [noReturnPolicyAcknowledged, setNoReturnPolicyAcknowledged] = useState(false);
 
   const baseTotal = totalPrice;
   const loyaltyDiscount = useLoyalty ? Math.min(loyaltyPoints, baseTotal - discount) : 0;
-  const finalTotal = Math.max(0, baseTotal - discount - loyaltyDiscount);
+  const subtotalAfterDiscount = Math.max(0, baseTotal - discount - loyaltyDiscount);
+  const freeThreshold = BUSINESS_CONFIG.policies.freeShippingThreshold || 300;
+  const isFreeShipping = subtotalAfterDiscount >= freeThreshold;
+  const shippingFee = isFreeShipping ? 0 : (BUSINESS_CONFIG.policies.standardShippingFee || 49);
+  const codFee = paymentGateway === 'cod' ? (BUSINESS_CONFIG.policies.codHandlingFee || 0) : 0;
+  const finalTotal = Math.max(0, subtotalAfterDiscount + shippingFee + codFee);
 
   useEffect(() => {
     // Load Razorpay checkout script
@@ -182,6 +189,11 @@ export const Checkout: React.FC = () => {
       return;
     }
 
+    if (!noReturnPolicyAcknowledged) {
+      toast.error('Please accept the No Return Policy agreement before placing your order.');
+      return;
+    }
+
     setShowConfirmation(true);
   };
 
@@ -250,7 +262,8 @@ export const Checkout: React.FC = () => {
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature
             },
-            couponCode.trim() || undefined
+            couponCode.trim() || undefined,
+            true
           );
 
           toast.dismiss(toastId);
@@ -380,7 +393,8 @@ export const Checkout: React.FC = () => {
           })),
           couponCode.trim() || undefined,
           true,
-          activeToken
+          activeToken,
+          true
         );
         toast.dismiss();
 
@@ -398,7 +412,8 @@ export const Checkout: React.FC = () => {
           razorpayOrder,
           initiatedOrder,
           finalAddressId,
-          activeToken
+          activeToken,
+          true
         );
         return;
       }
@@ -444,7 +459,7 @@ export const Checkout: React.FC = () => {
             Secure Checkout
           </h1>
           <p className="text-[#6B7280] text-xs sm:text-sm">
-            Free Express Shipping on ₹999+ · Cash on Delivery & Online UPI/Cards · 7-Day Easy Returns & Exchanges.
+            Free Express Shipping on ₹{BUSINESS_CONFIG.policies.freeShippingThreshold}+ · Cash on Delivery & Online UPI/Cards · No Returns (Damaged/Defective covered within 48h).
           </p>
         </header>
 
@@ -662,6 +677,21 @@ export const Checkout: React.FC = () => {
                 </div>
               </section>
 
+              {/* Mandatory No-Return Policy Agreement Checkbox */}
+              <div className="p-4 rounded-2xl bg-[#FDF4F5] border border-[#7B1E2B]/20 space-y-2">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={noReturnPolicyAcknowledged}
+                    onChange={(e) => setNoReturnPolicyAcknowledged(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded border-[#E8E5DF] text-[#7B1E2B] focus:ring-[#7B1E2B] shrink-0"
+                  />
+                  <span className="text-xs text-[#1A1A1A] leading-relaxed">
+                    I understand and agree to the <strong>No Return / No Exchange Policy</strong>. All sales are final. Only damaged, defective, or incorrect items reported within 48 hours with an unboxing video are eligible for replacement or refund. <Link to="/refund-policy" target="_blank" className="text-[#7B1E2B] underline font-medium">Read Policy</Link>
+                  </span>
+                </label>
+              </div>
+
               {/* Mobile Place Order Button */}
               <div className="lg:hidden pt-2 space-y-2">
                 <button
@@ -675,7 +705,7 @@ export const Checkout: React.FC = () => {
                   By placing your order, you agree to our{' '}
                   <Link to="/terms" target="_blank" className="text-[#7B1E2B] underline font-medium">Terms</Link>,{' '}
                   <Link to="/privacy" target="_blank" className="text-[#7B1E2B] underline font-medium">Privacy Policy</Link>, and{' '}
-                  <Link to="/refund-policy" target="_blank" className="text-[#7B1E2B] underline font-medium">Refunds</Link>.
+                  <Link to="/refund-policy" target="_blank" className="text-[#7B1E2B] underline font-medium">Refund Policy</Link>.
                 </p>
               </div>
             </form>
@@ -719,8 +749,17 @@ export const Checkout: React.FC = () => {
                 </div>
                 <div className="flex justify-between text-[#6B7280]">
                   <span>Shipping</span>
-                  <span className="text-[#15803D] font-semibold">FREE</span>
+                  {isFreeShipping ? (
+                    <span className="text-[#15803D] font-semibold">FREE</span>
+                  ) : (
+                    <span className="font-semibold text-[#1A1A1A]">₹{shippingFee}</span>
+                  )}
                 </div>
+                {!isFreeShipping && (
+                  <p className="text-[11px] text-[#7B1E2B] bg-[#FDF4F5] p-2 rounded-lg border border-[#7B1E2B]/10">
+                    Add <strong className="font-bold">₹{(freeThreshold - subtotalAfterDiscount).toLocaleString('en-IN')}</strong> more for <span className="font-bold text-[#15803D]">FREE Delivery</span> (orders over ₹{freeThreshold}).
+                  </p>
+                )}
                 {discount > 0 && (
                   <div className="flex justify-between text-[#B43E2B] font-semibold">
                     <span>Coupon Discount</span>
@@ -795,7 +834,7 @@ export const Checkout: React.FC = () => {
 
               <div className="flex items-center justify-center gap-2 text-[11px] text-[#6B7280] pt-1">
                 <ShieldCheck size={14} className="text-[#C6A15B]" />
-                <span>7-Day Return Guarantee & Cash on Delivery Available</span>
+                <span>No Returns (Transit Breakage/Defects Guaranteed) · COD Available</span>
               </div>
             </div>
           </aside>

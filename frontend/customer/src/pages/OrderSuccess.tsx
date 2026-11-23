@@ -191,10 +191,10 @@ export const OrderSuccess: React.FC = () => {
             <div className="p-3.5 rounded-2xl bg-[#FAF8F5] border border-[#E8E5DF] space-y-1">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-[#1A1A1A]">
                 <RotateCcw size={14} className="text-[#7B1E2B]" />
-                <span>{BUSINESS_CONFIG.policies.returnWindowDays}-Day Return</span>
+                <span>Damage Guarantee</span>
               </div>
               <p className="text-[11px] text-[#6B7280] leading-relaxed">
-                Hassle-free return & size exchange policy on all purchases.
+                48-hour reporting window for transit breakage with unboxing video proof.
               </p>
             </div>
 

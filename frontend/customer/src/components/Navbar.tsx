@@ -171,7 +171,7 @@ export const Navbar: React.FC = () => {
   const announcements = [
     { text: `Free Pan-India Delivery on Orders Above ₹${BUSINESS_CONFIG.policies.freeShippingThreshold}`, icon: Truck },
     { text: "Cash on Delivery (COD) Available Across India", icon: Banknote },
-    { text: "7-Day Return & Exchange Policy on Clothing", icon: RotateCcw },
+    { text: "No Returns — 48h Transit Damage Guarantee with Unboxing Video", icon: RotateCcw },
     { text: "Imitation & Fashion Jewellery · Brass & Copper Alloy with Gold Finish", icon: Sparkles }
   ];
   const [tickerIndex, setTickerIndex] = useState(0);
