@@ -20,11 +20,11 @@ test.describe('Scroll-Driven Homepage & Interaction Suite', () => {
     // 1. Hero Section Verification
     const heroH1 = page.locator('#hero-banner h1');
     await expect(heroH1).toBeVisible();
-    await expect(heroH1).toContainText('Timeless Indian Drapes');
+    await expect(heroH1).toContainText(/Festive Drapes|Imitation Jewels/i);
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'scroll-01-hero-mobile.png') });
 
     // 2. Offer Marquee Strip
-    const marquee = page.locator('text=FREE Standard Delivery');
+    const marquee = page.locator('text=/FREE Pan-India Delivery/i');
     await expect(marquee.first()).toBeVisible();
 
     // 3. Category Strip Scroll-Snap
