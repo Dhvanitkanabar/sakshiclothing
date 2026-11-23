@@ -28,6 +28,14 @@ import { BUSINESS_CONFIG } from '../config/business';
 import SEOHead, { getOrganizationSchema } from '../components/SEOHead';
 import { useCart } from '../context/CartContext';
 import { toast } from 'sonner';
+import { 
+  Reveal, 
+  StaggerGroup, 
+  StaggerItem, 
+  SectionTransition, 
+  CurtainSection,
+  MOTION_CONFIG 
+} from '../lib/motion';
 
 const AnimatedCounter: React.FC<{ value: number; prefix?: string; suffix?: string; colorClass?: string }> = ({ 
   value, 
@@ -101,7 +109,7 @@ export const Home: React.FC = () => {
   const heroParallaxY = useTransform(
     heroScrollProgress, 
     [0, 1], 
-    prefersReducedMotion ? [0, 0] : [0, 60]
+    prefersReducedMotion ? [0, 0] : [0, 50]
   );
 
   // Trending rail ref for drag / arrow scroll
@@ -287,13 +295,13 @@ export const Home: React.FC = () => {
         jsonLd={getOrganizationSchema()}
       />
 
-      {/* ─── 1. FULL-WIDTH CAMPAIGN HERO SLIDER (ART-DIRECTED CROPS) ──────── */}
+      {/* ─── 1. FULL-WIDTH CAMPAIGN HERO SLIDER (100dvh - header) ─────────── */}
       <section 
         ref={heroRef}
         id="hero-banner"
         onMouseEnter={() => setIsSlidePaused(true)}
         onMouseLeave={() => setIsSlidePaused(false)}
-        className="relative w-full h-[520px] sm:h-[600px] lg:h-[720px] bg-[#FAF8F5] flex items-end overflow-hidden border-b border-[#E8E5DF]"
+        className="relative w-full h-[calc(100dvh-5.5rem)] sm:h-[calc(100dvh-6.25rem)] min-h-[460px] max-h-[820px] bg-[#FAF8F5] flex items-end overflow-hidden border-b border-[#E8E5DF]"
       >
         {/* Parallax Background Canvas with Art-Directed Pictures */}
         <motion.div 
@@ -321,16 +329,16 @@ export const Home: React.FC = () => {
                 />
               </picture>
 
-              {/* Gentle Vignette Gradients for Legibility (No Heavy Dark Blocks) */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent pointer-events-none" />
-              <div className="absolute inset-0 bg-radial-at-c from-transparent via-transparent to-black/30 pointer-events-none" />
+              {/* Enhanced Soft Gradient Scrim: guarantees contrast > 4.5:1 on every slide */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-radial-at-c from-transparent via-black/15 to-black/40 pointer-events-none" />
             </motion.div>
           </AnimatePresence>
         </motion.div>
 
         {/* Ambient Top Subtle Badge */}
-        <div className="absolute top-6 left-5 sm:left-8 z-20">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-[#E8E5DF] text-[#7B1E2B] text-[11px] font-semibold uppercase tracking-wider shadow-sm">
+        <div className="absolute top-4 sm:top-6 left-4 sm:left-8 z-20">
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-[#E8E5DF] text-[#7B1E2B] text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider shadow-sm">
             <Sparkles className="w-3.5 h-3.5 text-[#C6A15B]" />
             <span>Surat Direct Fashion · Pan-India Dispatch</span>
           </div>
@@ -341,14 +349,14 @@ export const Home: React.FC = () => {
           <div className="hidden sm:flex absolute right-8 top-1/2 -translate-y-1/2 z-20 flex-col gap-2">
             <button
               onClick={() => setCurrentSlide((prev) => (prev - 1 + heroBanners.length) % heroBanners.length)}
-              className="w-11 h-11 rounded-full bg-white/90 backdrop-blur-md text-[#111111] hover:bg-[#7B1E2B] hover:text-white flex items-center justify-center transition-all shadow-md focus:outline-none"
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/90 backdrop-blur-md text-[#111111] hover:bg-[#7B1E2B] hover:text-white flex items-center justify-center transition-all shadow-md focus:outline-none"
               aria-label="Previous Campaign Banner"
             >
               <ChevronLeft size={18} />
             </button>
             <button
               onClick={() => setCurrentSlide((prev) => (prev + 1) % heroBanners.length)}
-              className="w-11 h-11 rounded-full bg-white/90 backdrop-blur-md text-[#111111] hover:bg-[#7B1E2B] hover:text-white flex items-center justify-center transition-all shadow-md focus:outline-none"
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/90 backdrop-blur-md text-[#111111] hover:bg-[#7B1E2B] hover:text-white flex items-center justify-center transition-all shadow-md focus:outline-none"
               aria-label="Next Campaign Banner"
             >
               <ChevronRight size={18} />
@@ -357,8 +365,9 @@ export const Home: React.FC = () => {
         )}
 
         {/* Minimal Hero Bottom Overlay & Clear Call to Action */}
-        <div className="relative z-20 max-w-7xl mx-auto px-5 sm:px-8 w-full pb-10 sm:pb-14">
-          <div className="max-w-2xl space-y-3.5 sm:space-y-4">
+        <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-8 w-full pb-6 sm:pb-10 md:pb-12">
+          {/* Soft Scrim container: guarantees > 4.5:1 text contrast on any bright image */}
+          <div className="max-w-2xl p-4 sm:p-6 rounded-3xl bg-black/35 sm:bg-black/25 backdrop-blur-xs border border-white/10 shadow-2xl space-y-3 sm:space-y-4">
             
             <AnimatePresence mode="wait">
               <motion.div
@@ -367,29 +376,29 @@ export const Home: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="space-y-2 sm:space-y-3"
+                className="space-y-1.5 sm:space-y-2.5"
               >
-                <span className="inline-block px-3 py-1 rounded-full bg-[#C6A15B] text-white text-[10px] font-bold uppercase tracking-wider shadow-xs">
+                <span className="inline-block px-2.5 py-0.5 rounded-full bg-[#C6A15B] text-white text-[9.5px] sm:text-[10px] font-bold uppercase tracking-wider shadow-xs">
                   {activeBanner.tag}
                 </span>
 
-                <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl text-white font-medium tracking-tight leading-[1.12] drop-shadow-sm">
+                <h1 className="font-serif text-2xl sm:text-4xl lg:text-5xl text-white font-medium tracking-tight leading-[1.15] drop-shadow-sm">
                   {activeBanner.title}
                 </h1>
 
-                <p className="text-white/90 text-xs sm:text-base font-normal max-w-xl leading-relaxed drop-shadow-xs line-clamp-2 sm:line-clamp-none">
+                <p className="text-white/95 text-xs sm:text-sm font-normal max-w-xl leading-relaxed drop-shadow-xs line-clamp-2">
                   {activeBanner.subtitle}
                 </p>
               </motion.div>
             </AnimatePresence>
 
             {/* Single Clear Primary CTA Button */}
-            <div className="pt-2 flex items-center gap-4">
+            <div className="pt-1 flex items-center gap-4">
               <Link to={activeBanner.ctaLink}>
                 <Button 
                   variant="primary" 
-                  size="lg" 
-                  className="font-semibold shadow-xl bg-[#7B1E2B] hover:bg-[#621721] text-white min-h-[48px] px-8"
+                  size="md" 
+                  className="font-semibold shadow-xl bg-[#7B1E2B] hover:bg-[#621721] text-white min-h-[44px] px-6 sm:px-8 text-xs sm:text-sm"
                   rightIcon={<ArrowRight className="w-4 h-4" />}
                 >
                   {activeBanner.ctaText}
@@ -399,13 +408,13 @@ export const Home: React.FC = () => {
 
             {/* Slide Indicators */}
             {heroBanners.length > 1 && (
-              <div className="flex items-center gap-2 pt-3">
+              <div className="flex items-center gap-1.5 pt-1">
                 {heroBanners.map((_, idx) => (
                   <button
                     key={idx}
                     onClick={() => setCurrentSlide(idx)}
-                    className={`h-1.5 rounded-full transition-all duration-300 min-h-[32px] flex items-center px-1 ${
-                      currentSlide === idx ? 'w-8 bg-[#C6A15B]' : 'w-2 bg-white/50'
+                    className={`h-1.5 rounded-full transition-all duration-300 min-h-[30px] flex items-center px-1 ${
+                      currentSlide === idx ? 'w-7 sm:w-8 bg-[#C6A15B]' : 'w-2 bg-white/50'
                     }`}
                     aria-label={`Go to slide ${idx + 1}`}
                   />
@@ -423,80 +432,83 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* ─── 2. OFFER MARQUEE STRIP (TRUTHFUL BUSINESS CONFIG VALUES) ─── */}
-      <section className="bg-white border-b border-[#E8E5DF] py-3.5 overflow-hidden select-none">
-        <div className="animate-marquee flex items-center gap-8 text-xs font-medium text-[#5C5855]">
-          <span className="flex items-center gap-2">
-            <Truck size={14} className="text-[#7B1E2B]" />
-            <span>FREE Pan-India Delivery on Orders Above ₹{BUSINESS_CONFIG.policies.freeShippingThreshold}</span>
-          </span>
-          <span className="text-[#C6A15B]">✦</span>
-          <span className="flex items-center gap-2">
-            <Banknote size={14} className="text-[#C6A15B]" />
-            <span>Cash on Delivery (COD) Available Across India</span>
-          </span>
-          <span className="text-[#C6A15B]">✦</span>
-          <span className="flex items-center gap-2">
-            <RotateCcw size={14} className="text-[#7B1E2B]" />
-            <span>No Returns — 48h Transit Damage Guarantee with Unboxing Video</span>
-          </span>
-          <span className="text-[#C6A15B]">✦</span>
-          <span className="flex items-center gap-2">
-            <ShieldCheck size={14} className="text-[#7B1E2B]" />
-            <span>18% GST Inclusive Pricing — Zero Hidden Checkout Fees</span>
-          </span>
-          <span className="text-[#C6A15B]">✦</span>
-          <span className="flex items-center gap-2">
-            <Sparkles size={14} className="text-[#C6A15B]" />
-            <span>Fashion & Imitation Jewellery — Brass Alloy with Gold Polish</span>
-          </span>
-          <span className="text-[#C6A15B]">✦</span>
-          <span className="flex items-center gap-2">
-            <span>Direct Dispatch from Surat Textile Warehouse</span>
-          </span>
-          <span className="text-[#C6A15B]">✦</span>
-
-          {/* Repeated for continuous loop */}
-          <span className="flex items-center gap-2">
-            <Truck size={14} className="text-[#7B1E2B]" />
-            <span>FREE Pan-India Delivery on Orders Above ₹{BUSINESS_CONFIG.policies.freeShippingThreshold}</span>
-          </span>
-          <span className="text-[#C6A15B]">✦</span>
-          <span className="flex items-center gap-2">
-            <Banknote size={14} className="text-[#C6A15B]" />
-            <span>Cash on Delivery (COD) Available Across India</span>
-          </span>
-          <span className="text-[#C6A15B]">✦</span>
-          <span className="flex items-center gap-2">
-            <RotateCcw size={14} className="text-[#7B1E2B]" />
-            <span>No Returns — 48h Transit Damage Guarantee with Unboxing Video</span>
-          </span>
-          <span className="text-[#C6A15B]">✦</span>
-        </div>
-      </section>
-
-      {/* ─── 3. CATEGORY TILES (SNAP ON MOBILE, GRID ON DESKTOP) ──────── */}
-      <section className="py-18 sm:py-28 max-w-7xl mx-auto px-5 sm:px-8">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 sm:mb-12 gap-4">
-          <div>
-            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7B1E2B] block mb-1.5">
-              Curated Collections
+      {/* ─── 2. SECTION 2 (EVEN): OFFER MARQUEE STRIP (SLIDE FROM RIGHT) ── */}
+      <Reveal variant="fromRight" className="w-full">
+        <section className="bg-white border-b border-[#E8E5DF] py-3.5 overflow-hidden select-none">
+          <div className="animate-marquee flex items-center gap-8 text-xs font-medium text-[#5C5855]">
+            <span className="flex items-center gap-2">
+              <Truck size={14} className="text-[#7B1E2B]" />
+              <span>FREE Pan-India Delivery on Orders Above ₹{BUSINESS_CONFIG.policies.freeShippingThreshold}</span>
             </span>
-            <h2 className="font-serif text-2xl sm:text-4xl text-[#111111] font-medium leading-tight">
-              Explore by Category
-            </h2>
-            <p className="text-xs sm:text-sm text-[#5C5855] mt-1 max-w-xl">
-              From everyday sarees and office kurtis to celebration imitation jewellery suites.
-            </p>
-          </div>
-          <Link to="/shop" className="text-xs font-bold text-[#7B1E2B] hover:underline flex items-center gap-1 shrink-0">
-            <span>View All Categories</span>
-            <ArrowRight size={14} />
-          </Link>
-        </div>
+            <span className="text-[#C6A15B]">✦</span>
+            <span className="flex items-center gap-2">
+              <Banknote size={14} className="text-[#C6A15B]" />
+              <span>Cash on Delivery (COD) Available Across India</span>
+            </span>
+            <span className="text-[#C6A15B]">✦</span>
+            <span className="flex items-center gap-2">
+              <RotateCcw size={14} className="text-[#7B1E2B]" />
+              <span>No Returns — 48h Transit Damage Guarantee with Unboxing Video</span>
+            </span>
+            <span className="text-[#C6A15B]">✦</span>
+            <span className="flex items-center gap-2">
+              <ShieldCheck size={14} className="text-[#7B1E2B]" />
+              <span>18% GST Inclusive Pricing — Zero Hidden Checkout Fees</span>
+            </span>
+            <span className="text-[#C6A15B]">✦</span>
+            <span className="flex items-center gap-2">
+              <Sparkles size={14} className="text-[#C6A15B]" />
+              <span>Fashion & Imitation Jewellery — Brass Alloy with Gold Polish</span>
+            </span>
+            <span className="text-[#C6A15B]">✦</span>
+            <span className="flex items-center gap-2">
+              <span>Direct Dispatch from Surat Textile Warehouse</span>
+            </span>
+            <span className="text-[#C6A15B]">✦</span>
 
-        {/* Responsive Layout: Mobile Snap Rail, Desktop 4-Col Grid */}
-        <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 overflow-x-auto sm:overflow-visible no-scrollbar pb-4 sm:pb-0 snap-x snap-mandatory">
+            {/* Loop duplicates */}
+            <span className="flex items-center gap-2">
+              <Truck size={14} className="text-[#7B1E2B]" />
+              <span>FREE Pan-India Delivery on Orders Above ₹{BUSINESS_CONFIG.policies.freeShippingThreshold}</span>
+            </span>
+            <span className="text-[#C6A15B]">✦</span>
+            <span className="flex items-center gap-2">
+              <Banknote size={14} className="text-[#C6A15B]" />
+              <span>Cash on Delivery (COD) Available Across India</span>
+            </span>
+            <span className="text-[#C6A15B]">✦</span>
+          </div>
+        </section>
+      </Reveal>
+
+      {/* Transition: Self-drawing thin gold line */}
+      <SectionTransition type="goldLine" />
+
+      {/* ─── 3. SECTION 3 (ODD): CATEGORY TILES (CONTENT FROM LEFT, CARDS FROM RIGHT) */}
+      <section className="py-14 sm:py-24 max-w-7xl mx-auto px-5 sm:px-8 overflow-x-clip">
+        {/* Header from Left */}
+        <Reveal variant="fromLeft">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 sm:mb-12 gap-4">
+            <div>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7B1E2B] block mb-1.5">
+                Curated Collections
+              </span>
+              <h2 className="font-serif text-2xl sm:text-4xl text-[#111111] font-medium leading-tight">
+                Explore by Category
+              </h2>
+              <p className="text-xs sm:text-sm text-[#5C5855] mt-1 max-w-xl">
+                From everyday sarees and office kurtis to celebration imitation jewellery suites.
+              </p>
+            </div>
+            <Link to="/shop" className="text-xs font-bold text-[#7B1E2B] hover:underline flex items-center gap-1 shrink-0">
+              <span>View All Categories</span>
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+        </Reveal>
+
+        {/* Responsive Category Cards Staggered from Right */}
+        <StaggerGroup stagger={0.08} className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 overflow-x-auto sm:overflow-visible no-scrollbar pb-4 sm:pb-0 snap-x snap-mandatory">
           {[
             {
               name: 'Women',
@@ -526,15 +538,8 @@ export const Home: React.FC = () => {
               link: '/shop?category=Kids',
               tag: 'Comfort First'
             }
-          ].map((cat, idx) => (
-            <motion.div
-              key={cat.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: idx * 0.08 }}
-              className="w-[240px] sm:w-auto shrink-0 snap-center"
-            >
+          ].map((cat) => (
+            <StaggerItem key={cat.name} variant="fromRight" className="w-[240px] sm:w-auto shrink-0 snap-center">
               <Link 
                 to={cat.link}
                 className="group flex flex-col bg-white rounded-3xl border border-[#E8E5DF] overflow-hidden p-3.5 transition-all duration-300 hover:border-[#7B1E2B]/40 hover:shadow-lg"
@@ -561,103 +566,108 @@ export const Home: React.FC = () => {
                   </p>
                 </div>
               </Link>
-            </motion.div>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerGroup>
       </section>
 
-      {/* ─── 4. TRENDING COLLECTION (STAGGERED REVEAL & RAIL) ──────────── */}
-      <section className="py-18 sm:py-28 bg-white border-y border-[#E8E5DF]">
+      {/* Transition: Gentle curve */}
+      <SectionTransition type="curve" fillFrom="#FAF8F5" fillTo="#FFFFFF" />
+
+      {/* ─── 4. SECTION 4 (EVEN): TRENDING COLLECTION (CONTENT FROM RIGHT, RAIL FROM LEFT) */}
+      <section className="py-14 sm:py-24 bg-white border-y border-[#E8E5DF] overflow-x-clip">
         <div className="max-w-7xl mx-auto px-5 sm:px-8">
           
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-8 sm:mb-12 gap-4">
-            <div>
-              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7B1E2B] block mb-1.5">
-                Popular in Surat
-              </span>
-              <h2 className="font-serif text-2xl sm:text-4xl text-[#111111] font-medium leading-tight">
-                Trending Right Now
-              </h2>
-              <p className="text-xs sm:text-sm text-[#5C5855] mt-1">
-                Frequently purchased daily wear clothing and artificial jewellery accents.
-              </p>
-            </div>
-
-            {/* Filter Tabs & Scroll Controls */}
-            <div className="flex items-center gap-3 self-start md:self-auto">
-              <div className="flex items-center gap-1.5 p-1 bg-[#FAF8F5] rounded-full border border-[#E8E5DF]">
-                <button
-                  onClick={() => setActiveTab('all')}
-                  className={`px-4 py-2 min-h-[40px] text-xs font-semibold rounded-full transition-all ${
-                    activeTab === 'all'
-                      ? 'bg-[#7B1E2B] text-white shadow-xs'
-                      : 'text-[#5C5855] hover:text-[#111111]'
-                  }`}
-                >
-                  All
-                </button>
-                <button
-                  onClick={() => setActiveTab('clothing')}
-                  className={`px-4 py-2 min-h-[40px] text-xs font-semibold rounded-full transition-all ${
-                    activeTab === 'clothing'
-                      ? 'bg-[#7B1E2B] text-white shadow-xs'
-                      : 'text-[#5C5855] hover:text-[#111111]'
-                  }`}
-                >
-                  Clothing
-                </button>
-                <button
-                  onClick={() => setActiveTab('jewellery')}
-                  className={`px-4 py-2 min-h-[40px] text-xs font-semibold rounded-full transition-all flex items-center gap-1 ${
-                    activeTab === 'jewellery'
-                      ? 'bg-[#C6A15B] text-white shadow-xs'
-                      : 'text-[#5C5855] hover:text-[#111111]'
-                  }`}
-                >
-                  <Sparkles size={12} />
-                  <span>Imitation Jewellery</span>
-                </button>
+          {/* Header from Right */}
+          <Reveal variant="fromRight">
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-8 sm:mb-12 gap-4">
+              <div>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7B1E2B] block mb-1.5">
+                  Popular in Surat
+                </span>
+                <h2 className="font-serif text-2xl sm:text-4xl text-[#111111] font-medium leading-tight">
+                  Trending Right Now
+                </h2>
+                <p className="text-xs sm:text-sm text-[#5C5855] mt-1">
+                  Frequently purchased daily wear clothing and artificial jewellery accents.
+                </p>
               </div>
 
-              {/* Arrow controls */}
-              <div className="hidden sm:flex items-center gap-1">
-                <button
-                  onClick={() => scrollTrending('left')}
-                  className="w-9 h-9 rounded-full border border-[#E8E5DF] hover:bg-[#FAF8F5] flex items-center justify-center text-[#111111] transition-colors"
-                  aria-label="Scroll left"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <button
-                  onClick={() => scrollTrending('right')}
-                  className="w-9 h-9 rounded-full border border-[#E8E5DF] hover:bg-[#FAF8F5] flex items-center justify-center text-[#111111] transition-colors"
-                  aria-label="Scroll right"
-                >
-                  <ChevronRight size={16} />
-                </button>
+              {/* Filter Tabs & Scroll Controls */}
+              <div className="flex items-center gap-3 self-start md:self-auto">
+                <div className="flex items-center gap-1.5 p-1 bg-[#FAF8F5] rounded-full border border-[#E8E5DF]">
+                  <button
+                    onClick={() => setActiveTab('all')}
+                    className={`px-4 py-2 min-h-[40px] text-xs font-semibold rounded-full transition-all ${
+                      activeTab === 'all'
+                        ? 'bg-[#7B1E2B] text-white shadow-xs'
+                        : 'text-[#5C5855] hover:text-[#111111]'
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('clothing')}
+                    className={`px-4 py-2 min-h-[40px] text-xs font-semibold rounded-full transition-all ${
+                      activeTab === 'clothing'
+                        ? 'bg-[#7B1E2B] text-white shadow-xs'
+                        : 'text-[#5C5855] hover:text-[#111111]'
+                    }`}
+                  >
+                    Clothing
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('jewellery')}
+                    className={`px-4 py-2 min-h-[40px] text-xs font-semibold rounded-full transition-all flex items-center gap-1 ${
+                      activeTab === 'jewellery'
+                        ? 'bg-[#C6A15B] text-white shadow-xs'
+                        : 'text-[#5C5855] hover:text-[#111111]'
+                    }`}
+                  >
+                    <Sparkles size={12} />
+                    <span>Imitation Jewellery</span>
+                  </button>
+                </div>
+
+                {/* Arrow controls */}
+                <div className="hidden sm:flex items-center gap-1">
+                  <button
+                    onClick={() => scrollTrending('left')}
+                    className="w-9 h-9 rounded-full border border-[#E8E5DF] hover:bg-[#FAF8F5] flex items-center justify-center text-[#111111] transition-colors"
+                    aria-label="Scroll left"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <button
+                    onClick={() => scrollTrending('right')}
+                    className="w-9 h-9 rounded-full border border-[#E8E5DF] hover:bg-[#FAF8F5] flex items-center justify-center text-[#111111] transition-colors"
+                    aria-label="Scroll right"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          </Reveal>
 
-          {/* Swipeable Product Rail */}
+          {/* Swipeable Product Rail: items staggered from Left */}
           {displayedProducts.length > 0 ? (
-            <div 
-              ref={trendingRailRef}
-              className="flex gap-4 sm:gap-6 overflow-x-auto no-scrollbar pb-6 snap-x snap-mandatory"
-            >
-              {displayedProducts.slice(0, 10).map((product, idx) => (
-                <motion.div
-                  key={product.id || idx}
-                  initial={{ opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.15 }}
-                  transition={{ duration: 0.5, delay: (idx % 4) * 0.08, ease: [0.16, 1, 0.3, 1] }}
-                  className="w-[220px] sm:w-[270px] shrink-0 snap-center"
-                >
-                  <ProductCard product={product} />
-                </motion.div>
-              ))}
-            </div>
+            <StaggerGroup stagger={0.06} className="flex gap-4 sm:gap-6 overflow-x-auto no-scrollbar pb-6 snap-x snap-mandatory">
+              <div 
+                ref={trendingRailRef}
+                className="flex gap-4 sm:gap-6 overflow-x-auto no-scrollbar pb-2 snap-x snap-mandatory w-full"
+              >
+                {displayedProducts.slice(0, 10).map((product, idx) => (
+                  <StaggerItem
+                    key={product.id || idx}
+                    variant="fromLeft"
+                    className="w-[220px] sm:w-[270px] shrink-0 snap-center"
+                  >
+                    <ProductCard product={product} />
+                  </StaggerItem>
+                ))}
+              </div>
+            </StaggerGroup>
           ) : (
             <div className="py-16 text-center bg-[#FAF8F5] rounded-3xl border border-[#E8E5DF] max-w-md mx-auto">
               <p className="text-xs text-[#5C5855] mb-4">No pieces found in this category.</p>
@@ -667,62 +677,70 @@ export const Home: React.FC = () => {
             </div>
           )}
 
-          <div className="mt-8 text-center">
-            <Link to="/shop">
-              <Button 
-                variant="secondary" 
-                size="lg" 
-                className="font-semibold text-xs uppercase tracking-wider min-h-[46px]"
-                rightIcon={<ArrowRight className="w-4 h-4" />}
-              >
-                Browse All {displayedProducts.length} Pieces
-              </Button>
-            </Link>
-          </div>
+          <Reveal variant="fromBottom" delay={0.15}>
+            <div className="mt-8 text-center">
+              <Link to="/shop">
+                <Button 
+                  variant="secondary" 
+                  size="lg" 
+                  className="font-semibold text-xs uppercase tracking-wider min-h-[46px]"
+                  rightIcon={<ArrowRight className="w-4 h-4" />}
+                >
+                  Browse All {displayedProducts.length} Pieces
+                </Button>
+              </Link>
+            </div>
+          </Reveal>
 
         </div>
       </section>
 
-      {/* ─── 5. "SHOP THE LOOK" (SCROLL-PINNED INTERACTIVE SECTION) ─────── */}
-      <section className="py-18 sm:py-32 max-w-7xl mx-auto px-5 sm:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#C6A15B] block mb-1.5">
-            Complete The Ensemble
-          </span>
-          <h2 className="font-serif text-2xl sm:text-4xl text-[#111111] font-medium leading-tight">
-            Shop The Look
-          </h2>
-          <p className="text-xs sm:text-sm text-[#5C5855] mt-1.5 leading-relaxed">
-            Pair Surat ethnic clothing with perfectly matched imitation jewellery accents. Tap the interactive pins to view pieces.
-          </p>
+      {/* Transition: Self-drawing thin gold line */}
+      <SectionTransition type="goldLine" />
 
-          {/* Look Selector Tabs */}
-          <div className="flex items-center justify-center gap-2 mt-6">
-            {curatedLooks.map((look, idx) => (
-              <button
-                key={look.title}
-                onClick={() => {
-                  setSelectedLookIndex(idx);
-                  setActiveHotspot(null);
-                }}
-                className={`px-4 py-2 rounded-full text-xs font-semibold transition-all min-h-[40px] ${
-                  selectedLookIndex === idx
-                    ? 'bg-[#7B1E2B] text-white shadow-xs'
-                    : 'bg-white text-[#5C5855] border border-[#E8E5DF] hover:text-[#111111]'
-                }`}
-              >
-                Look {idx + 1}
-              </button>
-            ))}
+      {/* ─── 5. SECTION 5 (ODD): SHOP THE LOOK (CONTENT FROM LEFT, CANVAS FROM RIGHT) */}
+      <section id="shop-the-look" className="py-14 sm:py-24 max-w-7xl mx-auto px-5 sm:px-8 overflow-x-clip">
+        {/* Header from Left */}
+        <Reveal variant="fromLeft">
+          <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#C6A15B] block mb-1.5">
+              Complete The Ensemble
+            </span>
+            <h2 className="font-serif text-2xl sm:text-4xl text-[#111111] font-medium leading-tight">
+              Shop The Look
+            </h2>
+            <p className="text-xs sm:text-sm text-[#5C5855] mt-1.5 leading-relaxed">
+              Pair Surat ethnic clothing with perfectly matched imitation jewellery accents. Tap the interactive pins to view pieces.
+            </p>
+
+            {/* Look Selector Tabs */}
+            <div className="flex items-center justify-center gap-2 mt-6">
+              {curatedLooks.map((look, idx) => (
+                <button
+                  key={look.title}
+                  onClick={() => {
+                    setSelectedLookIndex(idx);
+                    setActiveHotspot(null);
+                  }}
+                  className={`px-4 py-2 rounded-full text-xs font-semibold transition-all min-h-[40px] ${
+                    selectedLookIndex === idx
+                      ? 'bg-[#7B1E2B] text-white shadow-xs'
+                      : 'bg-white text-[#5C5855] border border-[#E8E5DF] hover:text-[#111111]'
+                  }`}
+                >
+                  Look {idx + 1}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        </Reveal>
 
         {/* Pinned Showcase Container */}
         <div className="bg-white rounded-3xl sm:rounded-[2.5rem] border border-[#E8E5DF] p-6 sm:p-12 shadow-sm">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             
-            {/* Visual Canvas with Hotspots */}
-            <div className="lg:col-span-7 relative">
+            {/* Visual Canvas with Hotspots from Right */}
+            <Reveal variant="maskReveal" className="lg:col-span-7 relative">
               <div className="relative aspect-[4/5] rounded-3xl overflow-hidden bg-[#FAF8F5] border border-[#E8E5DF] shadow-md">
                 <img
                   src={currentLook.image}
@@ -764,10 +782,10 @@ export const Home: React.FC = () => {
                   </button>
                 </div>
               </div>
-            </div>
+            </Reveal>
 
-            {/* Look Details & Paired Products */}
-            <div className="lg:col-span-5 space-y-6">
+            {/* Look Details & Paired Products from Left */}
+            <Reveal variant="fromLeft" delay={0.1} className="lg:col-span-5 space-y-6">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-widest text-[#7B1E2B] bg-[#FDF4F5] px-3 py-1 rounded-full">
                   Curated Ensemble #{selectedLookIndex + 1}
@@ -864,96 +882,101 @@ export const Home: React.FC = () => {
                 </Link>
               </div>
 
-            </div>
+            </Reveal>
 
           </div>
         </div>
       </section>
 
-      {/* ─── 6. DEDICATED IMITATION JEWELLERY SPOTLIGHT (DEEP MAROON) ──── */}
-      <section className="py-18 sm:py-32 bg-[#7B1E2B] text-white relative overflow-hidden">
-        {/* Subtle Ambient Light */}
-        <div className="absolute top-0 right-0 w-[450px] h-[450px] bg-[#C6A15B]/15 rounded-full blur-3xl pointer-events-none" />
+      {/* ─── 6. SECTION 6 (EVEN): JEWELLERY SPOTLIGHT (CURTAIN EFFECT OVER SECTION 5) */}
+      <CurtainSection id="jewellery-spotlight">
+        <section className="py-16 sm:py-28 bg-[#7B1E2B] text-white relative overflow-hidden">
+          {/* Subtle Ambient Light */}
+          <div className="absolute top-0 right-0 w-[450px] h-[450px] bg-[#C6A15B]/15 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
-            
-            {/* Copy & Assurance */}
-            <div className="lg:col-span-6 space-y-6">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#C6A15B]/20 text-[#E0C78F] border border-[#C6A15B]/40 text-xs font-semibold uppercase tracking-wider">
-                <Sparkles className="w-3.5 h-3.5 text-[#C6A15B]" />
-                <span>The Imitation Jewellery Collection</span>
-              </div>
-
-              <h2 className="font-serif text-3xl sm:text-5xl font-medium leading-tight text-white">
-                Regal Radiance, <br />
-                <span className="text-[#C6A15B] italic font-normal">Everyday Comfort.</span>
-              </h2>
-
-              <p className="text-[#E5E0D8] text-xs sm:text-sm md:text-base font-light leading-relaxed max-w-xl">
-                Elevate celebratory dressing with our lightweight artificial jewellery suites. Crafted using brass alloy bases, synthetic Kundan/glass stones, and durable micro-gold finishes that look resplendent without skin sensitivity.
-              </p>
-
-              {/* Honest Fact Boxes */}
-              <div className="grid grid-cols-2 gap-3.5 pt-2">
-                <div className="p-4 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xs">
-                  <p className="text-xs font-bold text-[#C6A15B] uppercase tracking-wider">Brass Alloy Base</p>
-                  <p className="text-[11px] text-white/70 mt-0.5">Comfortable weight & skin-friendly finish</p>
+          <div className="max-w-7xl mx-auto px-5 sm:px-8 relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+              
+              {/* Copy & Assurance from Right */}
+              <Reveal variant="fromRight" className="lg:col-span-6 space-y-6">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#C6A15B]/20 text-[#E0C78F] border border-[#C6A15B]/40 text-xs font-semibold uppercase tracking-wider">
+                  <Sparkles className="w-3.5 h-3.5 text-[#C6A15B]" />
+                  <span>The Imitation Jewellery Collection</span>
                 </div>
-                <div className="p-4 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xs">
-                  <p className="text-xs font-bold text-[#C6A15B] uppercase tracking-wider">Electroplated Polish</p>
-                  <p className="text-[11px] text-white/70 mt-0.5">High-shine micro gold and antique plating</p>
-                </div>
-              </div>
 
-              <div className="pt-2">
-                <Link to="/shop?category=Jewellery">
-                  <Button 
-                    variant="champagne" 
-                    size="lg" 
-                    className="font-semibold text-white shadow-lg bg-[#C6A15B] hover:bg-[#B38F48] min-h-[48px]"
-                    rightIcon={<ArrowRight className="w-4 h-4" />}
-                  >
-                    Shop Imitation Jewellery
-                  </Button>
-                </Link>
-              </div>
-            </div>
+                <h2 className="font-serif text-3xl sm:text-5xl font-medium leading-tight text-white">
+                  Regal Radiance, <br />
+                  <span className="text-[#C6A15B] italic font-normal">Everyday Comfort.</span>
+                </h2>
 
-            {/* Macro Showcase Frame with Arched Mask */}
-            <div className="lg:col-span-6">
-              <div className="relative mx-auto max-w-md lg:max-w-none">
-                <div className="relative aspect-[4/5] rounded-t-[5rem] rounded-b-3xl overflow-hidden border-2 border-[#C6A15B]/40 shadow-2xl bg-[#621721]">
-                  <img
-                    src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=900&q=80"
-                    alt="Imitation Jewellery Macro Detail"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
-                  
-                  <div className="absolute bottom-5 left-5 right-5 bg-black/60 backdrop-blur-md rounded-2xl p-4 border border-white/15 text-white flex items-center justify-between">
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#C6A15B]">Featured Accent</p>
-                      <p className="font-serif text-sm font-semibold truncate">Kundan Choker & Drop Earrings</p>
-                    </div>
-                    <span className="text-xs font-bold text-white bg-[#C6A15B] px-3 py-1 rounded-full">
-                      ₹999
-                    </span>
+                <p className="text-[#E5E0D8] text-xs sm:text-sm md:text-base font-light leading-relaxed max-w-xl">
+                  Elevate celebratory dressing with our lightweight artificial jewellery suites. Crafted using brass alloy bases, synthetic Kundan/glass stones, and durable micro-gold finishes that look resplendent without skin sensitivity.
+                </p>
+
+                {/* Honest Fact Boxes */}
+                <div className="grid grid-cols-2 gap-3.5 pt-2">
+                  <div className="p-4 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xs">
+                    <p className="text-xs font-bold text-[#C6A15B] uppercase tracking-wider">Brass Alloy Base</p>
+                    <p className="text-[11px] text-white/70 mt-0.5">Comfortable weight & skin-friendly finish</p>
+                  </div>
+                  <div className="p-4 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xs">
+                    <p className="text-xs font-bold text-[#C6A15B] uppercase tracking-wider">Electroplated Polish</p>
+                    <p className="text-[11px] text-white/70 mt-0.5">High-shine micro gold and antique plating</p>
                   </div>
                 </div>
-              </div>
+
+                <div className="pt-2">
+                  <Link to="/shop?category=Jewellery">
+                    <Button 
+                      variant="champagne" 
+                      size="lg" 
+                      className="font-semibold text-white shadow-lg bg-[#C6A15B] hover:bg-[#B38F48] min-h-[48px]"
+                      rightIcon={<ArrowRight className="w-4 h-4" />}
+                    >
+                      Shop Imitation Jewellery
+                    </Button>
+                  </Link>
+                </div>
+              </Reveal>
+
+              {/* Macro Showcase Frame with Arched Mask from Left */}
+              <Reveal variant="maskReveal" delay={0.1} className="lg:col-span-6">
+                <div className="relative mx-auto max-w-md lg:max-w-none">
+                  <div className="relative aspect-[4/5] rounded-t-[5rem] rounded-b-3xl overflow-hidden border-2 border-[#C6A15B]/40 shadow-2xl bg-[#621721]">
+                    <img
+                      src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=900&q=80"
+                      alt="Imitation Jewellery Macro Detail"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
+                    
+                    <div className="absolute bottom-5 left-5 right-5 bg-black/60 backdrop-blur-md rounded-2xl p-4 border border-white/15 text-white flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#C6A15B]">Featured Accent</p>
+                        <p className="font-serif text-sm font-semibold truncate">Kundan Choker & Drop Earrings</p>
+                      </div>
+                      <span className="text-xs font-bold text-white bg-[#C6A15B] px-3 py-1 rounded-full">
+                        ₹999
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </Reveal>
+
             </div>
-
           </div>
-        </div>
-      </section>
+        </section>
+      </CurtainSection>
 
-      {/* ─── 7. BRAND STORY & SURAT TEXTILE HUB (PARALLAX & HONEST FACTS) ─ */}
-      <section className="py-18 sm:py-32 max-w-7xl mx-auto px-5 sm:px-8">
+      {/* Transition: Scalloped edge returning to Ivory */}
+      <SectionTransition type="scallop" fillFrom="#7B1E2B" fillTo="#FAF8F5" />
+
+      {/* ─── 7. SECTION 7 (ODD): BRAND STORY & SURAT TEXTILE HUB ───────── */}
+      <section className="py-14 sm:py-24 max-w-7xl mx-auto px-5 sm:px-8 overflow-x-clip">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
           
-          {/* Visual Card */}
-          <div className="lg:col-span-6 relative">
+          {/* Visual Card from Left */}
+          <Reveal variant="fromLeft" className="lg:col-span-6 relative">
             <div className="relative aspect-[4/5] rounded-3xl overflow-hidden bg-[#FAF8F5] border border-[#E8E5DF] shadow-md">
               <img
                 src="https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=900&q=80"
@@ -964,10 +987,10 @@ export const Home: React.FC = () => {
                 📍 Surat, Gujarat
               </div>
             </div>
-          </div>
+          </Reveal>
 
-          {/* Honest Narrative */}
-          <div className="lg:col-span-6 space-y-6">
+          {/* Narrative & Stats from Right */}
+          <Reveal variant="fromRight" delay={0.1} className="lg:col-span-6 space-y-6">
             <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7B1E2B] block mb-1">
               The Surat Connection
             </span>
@@ -997,68 +1020,85 @@ export const Home: React.FC = () => {
                 <p className="text-[11px] text-[#5C5855] font-medium mt-0.5">Free Shipping Cap</p>
               </div>
             </div>
-          </div>
+          </Reveal>
 
         </div>
       </section>
 
-      {/* ─── 8. REVIEWS MARQUEE (HIDES CLEANLY IF NO REVIEWS) ─────────── */}
+      {/* Transition: Animated Marquee Strip Divider */}
+      <SectionTransition 
+        type="marqueeRibbon" 
+        marqueeText="SURAT WEAVING HERITAGE · ART SILK & COTTON KURTIS · HYPOALLERGENIC JEWELS" 
+      />
+
+      {/* ─── 8. SECTION 8 (EVEN): REVIEWS MARQUEE ───────────────────────── */}
       {reviews.length > 0 && (
-        <section className="py-18 sm:py-28 bg-white border-y border-[#E8E5DF] overflow-hidden">
-          <div className="max-w-7xl mx-auto px-5 sm:px-8 mb-8 text-center">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#C6A15B] block mb-1">
-              Patron Reflections
-            </span>
-            <h2 className="font-serif text-2xl sm:text-4xl text-[#111111] font-medium">
-              Loved Across India
-            </h2>
-          </div>
+        <section className="py-14 sm:py-24 bg-white border-b border-[#E8E5DF] overflow-x-clip">
+          <Reveal variant="fromRight">
+            <div className="max-w-7xl mx-auto px-5 sm:px-8 mb-8 text-center">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#C6A15B] block mb-1">
+                Patron Reflections
+              </span>
+              <h2 className="font-serif text-2xl sm:text-4xl text-[#111111] font-medium">
+                Loved Across India
+              </h2>
+            </div>
+          </Reveal>
 
-          <div className="animate-marquee flex gap-6">
-            {reviews.map((r: any, idx: number) => (
-              <div 
-                key={r._id || idx}
-                className="w-[300px] sm:w-[350px] shrink-0 bg-[#FAF8F5] rounded-3xl p-6 border border-[#E8E5DF] flex flex-col justify-between space-y-4"
-              >
-                <div className="space-y-2.5">
-                  <div className="flex items-center gap-1 text-[#C6A15B]">
-                    {Array.from({ length: r.rating || 5 }).map((_, i) => (
-                      <Star key={i} size={14} fill="currentColor" />
-                    ))}
+          {/* Testimonial rail from Left */}
+          <Reveal variant="fromLeft" delay={0.1}>
+            <div className="animate-marquee flex gap-6">
+              {reviews.map((r: any, idx: number) => (
+                <div 
+                  key={r._id || idx}
+                  className="w-[300px] sm:w-[350px] shrink-0 bg-[#FAF8F5] rounded-3xl p-6 border border-[#E8E5DF] flex flex-col justify-between space-y-4"
+                >
+                  <div className="space-y-2.5">
+                    <div className="flex items-center gap-1 text-[#C6A15B]">
+                      {Array.from({ length: r.rating || 5 }).map((_, i) => (
+                        <Star key={i} size={14} fill="currentColor" />
+                      ))}
+                    </div>
+                    <p className="text-xs sm:text-sm text-[#5C5855] italic leading-relaxed">
+                      "{r.comment}"
+                    </p>
                   </div>
-                  <p className="text-xs sm:text-sm text-[#5C5855] italic leading-relaxed">
-                    "{r.comment}"
-                  </p>
-                </div>
 
-                <div className="pt-3 border-t border-[#E8E5DF]/60">
-                  <p className="font-semibold text-xs text-[#111111]">{r.customer?.fullName || 'Verified Customer'}</p>
-                  <p className="text-[10px] text-[#5C5855]">Verified Purchase</p>
+                  <div className="pt-3 border-t border-[#E8E5DF]/60">
+                    <p className="font-semibold text-xs text-[#111111]">{r.customer?.fullName || 'Verified Customer'}</p>
+                    <p className="text-[10px] text-[#5C5855]">Verified Purchase</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </Reveal>
         </section>
       )}
 
-      {/* ─── 9. LOOKBOOK / EDITORIAL BENTO GRID ───────────────────────── */}
-      <section className="py-18 sm:py-32 max-w-7xl mx-auto px-5 sm:px-8">
-        <div className="text-center max-w-xl mx-auto mb-10 sm:mb-14">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7B1E2B] block mb-1.5">
-            Visual Diary
-          </span>
-          <h2 className="font-serif text-2xl sm:text-4xl text-[#111111] font-medium leading-tight">
-            The Sakshi Lookbook
-          </h2>
-          <p className="text-xs sm:text-sm text-[#5C5855] mt-1.5">
-            Real styling inspirations from daily office elegance to family celebratory functions.
-          </p>
-        </div>
+      {/* Transition: Diagonal SVG divider */}
+      <SectionTransition type="diagonal" fillFrom="#FFFFFF" fillTo="#FAF8F5" />
 
-        {/* Asymmetric Bento Grid (grid-auto-flow: dense) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 auto-rows-[220px] sm:auto-rows-[280px]">
+      {/* ─── 9. SECTION 9 (ODD): LOOKBOOK / EDITORIAL BENTO GRID ────────── */}
+      <section className="py-14 sm:py-24 max-w-7xl mx-auto px-5 sm:px-8 overflow-x-clip">
+        {/* Header from Left */}
+        <Reveal variant="fromLeft">
+          <div className="text-center max-w-xl mx-auto mb-10 sm:mb-14">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7B1E2B] block mb-1.5">
+              Visual Diary
+            </span>
+            <h2 className="font-serif text-2xl sm:text-4xl text-[#111111] font-medium leading-tight">
+              The Sakshi Lookbook
+            </h2>
+            <p className="text-xs sm:text-sm text-[#5C5855] mt-1.5">
+              Real styling inspirations from daily office elegance to family celebratory functions.
+            </p>
+          </div>
+        </Reveal>
+
+        {/* Asymmetric Bento Grid Staggered with scaleIn */}
+        <StaggerGroup stagger={0.08} className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 auto-rows-[220px] sm:auto-rows-[280px]">
           
-          <div className="col-span-2 row-span-2 relative rounded-3xl overflow-hidden group border border-[#E8E5DF] bg-[#FAF8F5]">
+          <StaggerItem variant="scaleIn" className="col-span-2 row-span-2 relative rounded-3xl overflow-hidden group border border-[#E8E5DF] bg-[#FAF8F5]">
             <img
               src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80"
               alt="Saree styling"
@@ -1068,9 +1108,9 @@ export const Home: React.FC = () => {
               <span className="text-xs uppercase font-bold text-[#C6A15B]">Ethnic Wear</span>
               <p className="font-serif text-lg font-semibold">Festive Art Silk Drapes</p>
             </div>
-          </div>
+          </StaggerItem>
 
-          <div className="col-span-1 row-span-1 relative rounded-3xl overflow-hidden group border border-[#E8E5DF] bg-[#FAF8F5]">
+          <StaggerItem variant="scaleIn" className="col-span-1 row-span-1 relative rounded-3xl overflow-hidden group border border-[#E8E5DF] bg-[#FAF8F5]">
             <img
               src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=600&q=80"
               alt="Kundan necklace"
@@ -1079,9 +1119,9 @@ export const Home: React.FC = () => {
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-4 flex flex-col justify-end text-white">
               <p className="font-serif text-xs font-semibold">Choker Suites</p>
             </div>
-          </div>
+          </StaggerItem>
 
-          <div className="col-span-1 row-span-2 relative rounded-3xl overflow-hidden group border border-[#E8E5DF] bg-[#FAF8F5]">
+          <StaggerItem variant="scaleIn" className="col-span-1 row-span-2 relative rounded-3xl overflow-hidden group border border-[#E8E5DF] bg-[#FAF8F5]">
             <img
               src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=600&q=80"
               alt="Cotton kurti"
@@ -1091,9 +1131,9 @@ export const Home: React.FC = () => {
               <span className="text-[10px] uppercase font-bold text-[#C6A15B]">Daily Comfort</span>
               <p className="font-serif text-sm font-semibold">Straight Cotton Sets</p>
             </div>
-          </div>
+          </StaggerItem>
 
-          <div className="col-span-1 row-span-1 relative rounded-3xl overflow-hidden group border border-[#E8E5DF] bg-[#FAF8F5]">
+          <StaggerItem variant="scaleIn" className="col-span-1 row-span-1 relative rounded-3xl overflow-hidden group border border-[#E8E5DF] bg-[#FAF8F5]">
             <img
               src="https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&w=600&q=80"
               alt="Chandbali earrings"
@@ -1102,42 +1142,75 @@ export const Home: React.FC = () => {
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-4 flex flex-col justify-end text-white">
               <p className="font-serif text-xs font-semibold">Floral Chandbalis</p>
             </div>
-          </div>
+          </StaggerItem>
 
-        </div>
+        </StaggerGroup>
       </section>
 
-      {/* ─── 10. NEWSLETTER CALLOUT ───────────────────────────────────── */}
-      <section className="py-16 sm:py-24 bg-[#FAF8F5] border-t border-[#E8E5DF]">
-        <div className="max-w-2xl mx-auto px-5 sm:px-8 text-center space-y-4">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7B1E2B] block">
-            Direct from Surat
-          </span>
-          <h2 className="font-serif text-2xl sm:text-3xl font-medium text-[#111111]">
-            Stay in Touch with Festive Launches
-          </h2>
-          <p className="text-xs sm:text-sm text-[#5C5855]">
-            Receive early previews of new fabric arrivals and imitation jewellery sets. No spam, ever.
-          </p>
+      {/* Transition: Self-drawing thin gold line */}
+      <SectionTransition type="goldLine" />
 
-          <form onSubmit={handleNewsletterSubmit} className="pt-2 flex flex-col sm:flex-row gap-2.5 max-w-md mx-auto">
-            <input
-              type="email"
-              value={newsletterEmail}
-              onChange={(e) => setNewsletterEmail(e.target.value)}
-              placeholder="Enter your email address"
-              className="flex-1 px-4 py-3 bg-white border border-[#E8E5DF] rounded-full text-xs text-[#111111] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#7B1E2B] transition-colors"
-              required
-            />
-            <Button 
-              type="submit" 
-              variant="primary" 
-              size="md" 
-              className="rounded-full text-xs font-bold uppercase tracking-wider min-h-[44px]"
-            >
-              Subscribe
-            </Button>
-          </form>
+      {/* ─── 10. SECTION 10 (EVEN): SURAT ASSURANCE BADGES (FROM RIGHT) ──── */}
+      <Reveal variant="fromRight" className="max-w-7xl mx-auto px-5 sm:px-8 py-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 rounded-3xl bg-white border border-[#E8E5DF] shadow-xs text-center">
+          <div className="flex flex-col items-center gap-1.5 p-2">
+            <Truck size={22} className="text-[#7B1E2B]" />
+            <p className="font-semibold text-xs text-[#111111]">Pan-India Delivery</p>
+            <p className="text-[11px] text-[#5C5855]">Free above ₹{BUSINESS_CONFIG.policies.freeShippingThreshold}</p>
+          </div>
+          <div className="flex flex-col items-center gap-1.5 p-2">
+            <Banknote size={22} className="text-[#C6A15B]" />
+            <p className="font-semibold text-xs text-[#111111]">Cash on Delivery</p>
+            <p className="text-[11px] text-[#5C5855]">Available across India</p>
+          </div>
+          <div className="flex flex-col items-center gap-1.5 p-2">
+            <RotateCcw size={22} className="text-[#7B1E2B]" />
+            <p className="font-semibold text-xs text-[#111111]">48h Transit Guarantee</p>
+            <p className="text-[11px] text-[#5C5855]">Prompt defect replacement</p>
+          </div>
+          <div className="flex flex-col items-center gap-1.5 p-2">
+            <ShieldCheck size={22} className="text-[#C6A15B]" />
+            <p className="font-semibold text-xs text-[#111111]">18% GST Inclusive</p>
+            <p className="text-[11px] text-[#5C5855]">Direct factory pricing</p>
+          </div>
+        </div>
+      </Reveal>
+
+      {/* ─── 11. SECTION 11 (ODD): NEWSLETTER CALLOUT (HEADER LEFT, FORM RIGHT) */}
+      <section className="py-14 sm:py-20 bg-[#FAF8F5] border-t border-[#E8E5DF] overflow-x-clip">
+        <div className="max-w-2xl mx-auto px-5 sm:px-8 text-center space-y-4">
+          <Reveal variant="fromLeft">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7B1E2B] block">
+              Direct from Surat
+            </span>
+            <h2 className="font-serif text-2xl sm:text-3xl font-medium text-[#111111] mt-1">
+              Stay in Touch with Festive Launches
+            </h2>
+            <p className="text-xs sm:text-sm text-[#5C5855] mt-1">
+              Receive early previews of new fabric arrivals and imitation jewellery sets. No spam, ever.
+            </p>
+          </Reveal>
+
+          <Reveal variant="fromRight" delay={0.1}>
+            <form onSubmit={handleNewsletterSubmit} className="pt-2 flex flex-col sm:flex-row gap-2.5 max-w-md mx-auto">
+              <input
+                type="email"
+                value={newsletterEmail}
+                onChange={(e) => setNewsletterEmail(e.target.value)}
+                placeholder="Enter your email address"
+                className="flex-1 px-4 py-3 bg-white border border-[#E8E5DF] rounded-full text-xs text-[#111111] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#7B1E2B] transition-colors"
+                required
+              />
+              <Button 
+                type="submit" 
+                variant="primary" 
+                size="md" 
+                className="rounded-full text-xs font-bold uppercase tracking-wider min-h-[44px]"
+              >
+                Subscribe
+              </Button>
+            </form>
+          </Reveal>
         </div>
       </section>
 

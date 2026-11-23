@@ -17,6 +17,7 @@ import {
   authedFetch, API_URL, submitOrderClaim
 } from '../lib/api';
 import { Button } from '../components/ui/Button';
+import { Reveal } from '../lib/motion';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type OrderStatus =
@@ -339,42 +340,44 @@ const Profile: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Mobile/Tablet User Profile Header Card */}
-        <div className="lg:hidden bg-white rounded-3xl p-5 sm:p-6 border border-[#E8E5DF] shadow-xs mb-6">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#FAF8F5] rounded-2xl flex items-center justify-center border border-[#E8E5DF] overflow-hidden shrink-0">
-              {displayAvatar ? (
-                <img src={displayAvatar} alt={displayName} className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-2xl font-serif font-bold text-[#7B1E2B]">{displayName.charAt(0).toUpperCase()}</span>
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 mb-0.5">
-                <h1 className="text-xl sm:text-2xl font-serif font-medium text-[#1A1A1A] truncate">{displayName}</h1>
-                <span className="px-2 py-0.5 bg-[#FAF8F5] text-[#7B1E2B] text-[9px] font-bold uppercase tracking-wider rounded-md border border-[#E8E5DF] shrink-0">
-                  {displayRole}
-                </span>
+        <Reveal variant="fromBottom" amount={0.1} className="lg:hidden mb-6">
+          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#E8E5DF] shadow-xs">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#FAF8F5] rounded-2xl flex items-center justify-center border border-[#E8E5DF] overflow-hidden shrink-0">
+                {displayAvatar ? (
+                  <img src={displayAvatar} alt={displayName} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-2xl font-serif font-bold text-[#7B1E2B]">{displayName.charAt(0).toUpperCase()}</span>
+                )}
               </div>
-              <p className="text-xs text-[#6B7280] truncate">{displayEmail}</p>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <h1 className="text-xl sm:text-2xl font-serif font-medium text-[#1A1A1A] truncate">{displayName}</h1>
+                  <span className="px-2 py-0.5 bg-[#FAF8F5] text-[#7B1E2B] text-[9px] font-bold uppercase tracking-wider rounded-md border border-[#E8E5DF] shrink-0">
+                    {displayRole}
+                  </span>
+                </div>
+                <p className="text-xs text-[#6B7280] truncate">{displayEmail}</p>
+              </div>
             </div>
-          </div>
 
-          {/* Quick Metrics Strip */}
-          <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-[#E8E5DF] text-center">
-            <div className="bg-[#FAF8F5] rounded-xl p-2.5">
-              <span className="text-base sm:text-lg font-bold text-[#1A1A1A] block">{orders.length}</span>
-              <span className="text-[9px] text-[#6B7280] uppercase tracking-wider">Orders</span>
-            </div>
-            <div className="bg-[#FAF8F5] rounded-xl p-2.5">
-              <span className="text-base sm:text-lg font-bold text-[#C6A15B] block">{loyaltyData.points}</span>
-              <span className="text-[9px] text-[#6B7280] uppercase tracking-wider">Points</span>
-            </div>
-            <div className="bg-[#FAF8F5] rounded-xl p-2.5">
-              <span className="text-base sm:text-lg font-bold text-[#1A1A1A] block">{addresses.length}</span>
-              <span className="text-[9px] text-[#6B7280] uppercase tracking-wider">Addresses</span>
+            {/* Quick Metrics Strip */}
+            <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-[#E8E5DF] text-center">
+              <div className="bg-[#FAF8F5] rounded-xl p-2.5">
+                <span className="text-base sm:text-lg font-bold text-[#1A1A1A] block">{orders.length}</span>
+                <span className="text-[9px] text-[#6B7280] uppercase tracking-wider">Orders</span>
+              </div>
+              <div className="bg-[#FAF8F5] rounded-xl p-2.5">
+                <span className="text-base sm:text-lg font-bold text-[#C6A15B] block">{loyaltyData.points}</span>
+                <span className="text-[9px] text-[#6B7280] uppercase tracking-wider">Points</span>
+              </div>
+              <div className="bg-[#FAF8F5] rounded-xl p-2.5">
+                <span className="text-base sm:text-lg font-bold text-[#1A1A1A] block">{addresses.length}</span>
+                <span className="text-[9px] text-[#6B7280] uppercase tracking-wider">Addresses</span>
+              </div>
             </div>
           </div>
-        </div>
+        </Reveal>
 
         {/* Mobile / Tablet Horizontal Tab Navigation Bar */}
         <div className="lg:hidden flex items-center gap-2 overflow-x-auto no-scrollbar pb-3 mb-6">
@@ -413,7 +416,7 @@ const Profile: React.FC = () => {
         {/* Desktop Responsive Layout */}
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
           {/* Desktop Left Sidebar */}
-          <aside className="hidden lg:block w-72 xl:w-80 shrink-0 sticky top-24 space-y-6">
+          <Reveal variant="fromLeft" className="hidden lg:block w-72 xl:w-80 shrink-0 sticky top-24 space-y-6">
             <div className="bg-white rounded-3xl p-6 border border-[#E8E5DF] shadow-xs space-y-4">
               <div className="w-20 h-20 bg-[#FAF8F5] rounded-2xl flex items-center justify-center border border-[#E8E5DF] overflow-hidden mx-auto">
                 {displayAvatar ? (
@@ -481,10 +484,10 @@ const Profile: React.FC = () => {
                 <span>Logout</span>
               </button>
             </nav>
-          </aside>
+          </Reveal>
 
           {/* Main Content Area */}
-          <main className="flex-1 min-w-0 space-y-6 sm:space-y-8">
+          <Reveal variant="fromRight" className="flex-1 min-w-0 space-y-6 sm:space-y-8">
             <header className="hidden lg:block space-y-1 pb-4 border-b border-[#E8E5DF]">
               <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#C6A15B]">
                 Patron Sanctuary
@@ -955,7 +958,7 @@ const Profile: React.FC = () => {
                 </motion.div>
               )}
             </AnimatePresence>
-          </main>
+          </Reveal>
         </div>
       </div>
 

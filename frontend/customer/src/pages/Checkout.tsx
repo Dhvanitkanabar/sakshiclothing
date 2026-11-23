@@ -16,6 +16,7 @@ import { Button } from '../components/ui/Button';
 import SEOHead from '../components/SEOHead';
 import { BUSINESS_CONFIG } from '../config/business';
 import { formatPrice } from '../utils/format';
+import { Reveal } from '../lib/motion';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
@@ -530,19 +531,21 @@ export const Checkout: React.FC = () => {
           </button>
         </div>
 
-        <header className="mb-8 sm:mb-12">
-          <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-medium tracking-tight text-[#1A1A1A] mb-2">
-            Secure Checkout
-          </h1>
-          <p className="text-[#6B7280] text-xs sm:text-sm">
-            Free Express Shipping on ₹{BUSINESS_CONFIG.policies.freeShippingThreshold}+ · Cash on Delivery & Online UPI/Cards · No Returns (Damaged/Defective covered within 48h).
-          </p>
-        </header>
+        <Reveal variant="fromLeft" amount={0.1}>
+          <header className="mb-8 sm:mb-12">
+            <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-medium tracking-tight text-[#1A1A1A] mb-2">
+              Secure Checkout
+            </h1>
+            <p className="text-[#6B7280] text-xs sm:text-sm">
+              Free Express Shipping on ₹{BUSINESS_CONFIG.policies.freeShippingThreshold}+ · Cash on Delivery & Online UPI/Cards · No Returns (Damaged/Defective covered within 48h).
+            </p>
+          </header>
+        </Reveal>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           
           {/* Left Column: Shipping & Payment */}
-          <div className="lg:col-span-7 space-y-8">
+          <Reveal variant="fromLeft" className="lg:col-span-7 space-y-8">
             <form onSubmit={handlePaymentRequest} className="space-y-8">
               
               {/* 1. Shipping Section */}
@@ -790,10 +793,10 @@ export const Checkout: React.FC = () => {
                 </p>
               </div>
             </form>
-          </div>
+          </Reveal>
 
           {/* Right Column: Order Summary & Coupon */}
-          <aside className="lg:col-span-5">
+          <Reveal variant="fromRight" className="lg:col-span-5">
             <div className="bg-white rounded-3xl shadow-xs border border-[#E8E5DF] p-6 sm:p-8 sticky top-20 space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="font-serif text-xl font-medium text-[#1A1A1A]">Order Summary</h2>
@@ -944,7 +947,7 @@ export const Checkout: React.FC = () => {
                 <span>No Returns (Transit Breakage/Defects Guaranteed) · COD Available</span>
               </div>
             </div>
-          </aside>
+          </Reveal>
 
         </div>
       </div>

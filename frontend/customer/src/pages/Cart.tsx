@@ -9,6 +9,7 @@ import { Button } from '../components/ui/Button';
 import SEOHead from '../components/SEOHead';
 import { BUSINESS_CONFIG } from '../config/business';
 import { formatPrice } from '../utils/format';
+import { Reveal } from '../lib/motion';
 
 export const Cart: React.FC = () => {
   const { cart, cartQuote, removeFromCart, updateQuantity, totalPrice } = useCart();
@@ -59,44 +60,48 @@ export const Cart: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
-        <header className="mb-8 space-y-1.5">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7B1E2B]">
-            Your Bag
-          </span>
-          <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1A1A] font-medium tracking-tight">
-            Shopping Bag ({totalItems} {totalItems === 1 ? 'Item' : 'Items'})
-          </h1>
-        </header>
+        <Reveal variant="fromLeft" amount={0.1}>
+          <header className="mb-8 space-y-1.5">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7B1E2B]">
+              Your Bag
+            </span>
+            <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1A1A] font-medium tracking-tight">
+              Shopping Bag ({totalItems} {totalItems === 1 ? 'Item' : 'Items'})
+            </h1>
+          </header>
+        </Reveal>
 
         {/* Free Shipping Progress Indicator */}
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#E8E5DF] mb-8 shadow-xs">
-          <div className="flex items-center justify-between text-xs sm:text-sm mb-2">
-            <span className="flex items-center gap-2 text-[#1A1A1A] font-medium">
-              <Truck size={16} className="text-[#7B1E2B]" />
-              {remainingForFreeShipping > 0 ? (
-                <span>
-                  Add <strong className="text-[#7B1E2B]">₹{remainingForFreeShipping.toLocaleString('en-IN')}</strong> more for <strong className="text-[#15803D]">FREE Delivery</strong>
-                </span>
-              ) : (
-                <span className="text-[#15803D] font-bold">
-                  🎉 You have unlocked FREE Delivery across India!
-                </span>
-              )}
-            </span>
-            <span className="text-xs font-bold text-[#6B7280]">{progressPercent}%</span>
+        <Reveal variant="fromRight" amount={0.1}>
+          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#E8E5DF] mb-8 shadow-xs">
+            <div className="flex items-center justify-between text-xs sm:text-sm mb-2">
+              <span className="flex items-center gap-2 text-[#1A1A1A] font-medium">
+                <Truck size={16} className="text-[#7B1E2B]" />
+                {remainingForFreeShipping > 0 ? (
+                  <span>
+                    Add <strong className="text-[#7B1E2B]">₹{remainingForFreeShipping.toLocaleString('en-IN')}</strong> more for <strong className="text-[#15803D]">FREE Delivery</strong>
+                  </span>
+                ) : (
+                  <span className="text-[#15803D] font-bold">
+                    🎉 You have unlocked FREE Delivery across India!
+                  </span>
+                )}
+              </span>
+              <span className="text-xs font-bold text-[#6B7280]">{progressPercent}%</span>
+            </div>
+            <div className="w-full h-2 bg-[#E8E5DF] rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-[#7B1E2B] transition-all duration-300 rounded-full"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
           </div>
-          <div className="w-full h-2 bg-[#E8E5DF] rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-[#7B1E2B] transition-all duration-300 rounded-full"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-        </div>
+        </Reveal>
 
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
           
           {/* Cart Item Cards List */}
-          <div className="flex-1 w-full space-y-4">
+          <Reveal variant="fromLeft" className="flex-1 w-full space-y-4">
             <AnimatePresence mode="popLayout">
               {cart.map((item) => {
                 const isJewel = (item.category || '').toLowerCase().includes('jewel');
@@ -193,10 +198,10 @@ export const Cart: React.FC = () => {
                 );
               })}
             </AnimatePresence>
-          </div>
+          </Reveal>
 
           {/* Right Column: Order Summary */}
-          <div className="w-full lg:w-[380px] shrink-0">
+          <Reveal variant="fromRight" className="w-full lg:w-[380px] shrink-0">
             <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#E8E5DF] shadow-xs space-y-6 sticky top-20">
               <h2 className="font-serif text-xl font-medium text-[#1A1A1A]">
                 Order Summary
@@ -249,7 +254,7 @@ export const Cart: React.FC = () => {
                 </p>
               </div>
             </div>
-          </div>
+          </Reveal>
 
         </div>
 

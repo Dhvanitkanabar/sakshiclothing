@@ -38,6 +38,7 @@ import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
 import SEOHead from '../components/SEOHead';
+import { Reveal, StaggerGroup, StaggerItem } from '../lib/motion';
 
 export const ProductDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -277,7 +278,7 @@ export const ProductDetails: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
           
           {/* Left Column: Image Gallery */}
-          <div className="lg:col-span-7 space-y-4">
+          <Reveal variant="fromLeft" className="lg:col-span-7 space-y-4">
             <div className="w-full aspect-[3/4] max-h-[640px] rounded-3xl overflow-hidden bg-[#F4EFEA] border border-[#E8E5DF] shadow-sm relative group">
               <img 
                 src={mainImage || allImages[0] || product.image} 
@@ -365,10 +366,10 @@ export const ProductDetails: React.FC = () => {
                 ))}
               </div>
             )}
-          </div>
+          </Reveal>
 
           {/* Right Column: Details & Actions */}
-          <div className="lg:col-span-5 space-y-6">
+          <Reveal variant="fromRight" className="lg:col-span-5 space-y-6">
             
             {/* Header / Titles / Price */}
             <div className="space-y-3">
@@ -680,12 +681,12 @@ export const ProductDetails: React.FC = () => {
               </div>
             </div>
 
-          </div>
+          </Reveal>
         </div>
 
         {/* Complete the Look Section */}
         {relatedProducts.length > 0 && (
-          <div className="mt-16 sm:mt-24 pt-12 border-t border-[#E8E5DF]">
+          <Reveal variant="fromBottom" className="mt-16 sm:mt-24 pt-12 border-t border-[#E8E5DF]">
             <div className="mb-8">
               <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7B1E2B] block mb-1">
                 Curated Pairings
@@ -694,18 +695,20 @@ export const ProductDetails: React.FC = () => {
                 Complete The Look
               </h2>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+            <StaggerGroup stagger={0.05} className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
               {relatedProducts.map((p) => (
-                <ProductCard key={p.id} product={p} />
+                <StaggerItem key={p.id} variant="fromBottom">
+                  <ProductCard product={p} />
+                </StaggerItem>
               ))}
-            </div>
-          </div>
+            </StaggerGroup>
+          </Reveal>
         )}
 
         {/* Reviews Section */}
-        <div className="mt-16 sm:mt-24">
+        <Reveal variant="fromBottom" className="mt-16 sm:mt-24">
           <ProductReviews productId={product.id} />
-        </div>
+        </Reveal>
       </div>
 
       {/* Size Chart Modal */}

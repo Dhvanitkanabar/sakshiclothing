@@ -251,7 +251,18 @@ export const Navbar: React.FC = () => {
   };
 
   // Nav categories matching exact spec: Women, Men, Kids, Imitation Jewellery, New In, Sale
-  const navCategories = [
+  interface NavCategoryItem {
+    name: string;
+    path: string;
+    isJewellery: boolean;
+    badge?: string;
+    sections?: {
+      title: string;
+      items: { label: string; path: string }[];
+    }[];
+  }
+
+  const navCategories: NavCategoryItem[] = [
     {
       name: "Women",
       path: "/shop?category=Women",
@@ -341,7 +352,6 @@ export const Navbar: React.FC = () => {
       name: "Imitation Jewellery",
       path: "/shop?category=Jewellery",
       isJewellery: true,
-      badge: "Jewellery",
       sections: [
         {
           title: "Neckpieces & Chokers",
@@ -378,7 +388,6 @@ export const Navbar: React.FC = () => {
       name: "Sale",
       path: "/shop?sort=discount",
       isJewellery: false,
-      badge: "Offers",
     }
   ];
 
