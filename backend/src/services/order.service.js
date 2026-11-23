@@ -10,6 +10,7 @@ import pushNotificationService from './pushNotification.service.js';
 import { ApiError } from '../utils/ApiError.js';
 import { ORDER_STATUS, PAYMENT_STATUS } from '../constants/index.js';
 import { sendOrderConfirmationEmail, sendOrderRejectionEmail } from '../utils/emailService.js';
+import BUSINESS_CONFIG from '../config/business.config.js';
 import mongoose from 'mongoose';
 
 class OrderService {
@@ -17,7 +18,7 @@ class OrderService {
    * Authoritative server-side calculation of order items, stock, discounts and totals.
    * Client amounts are completely ignored.
    */
-  async calculateOrderTotals(items, couponCode = null) {
+  async calculateOrderTotals(items, couponCode = null, paymentMethod = 'razorpay') {
     if (!items || !items.length) {
       throw new ApiError(400, 'Order items cannot be empty');
     }
@@ -91,7 +92,6 @@ class OrderService {
       });
     }
 
-    const shippingCharges = itemsTotal >= 2000 ? 0 : 0; // standard complimentary delivery
     let discount = 0;
     let appliedCoupon = null;
 
@@ -130,14 +130,24 @@ class OrderService {
       appliedCoupon = coupon;
     }
 
-    const grandTotal = Math.max(0, itemsTotal + shippingCharges - discount);
+    // Explicit Rule: Free delivery when subtotal after discount and before shipping is >= freeShippingThreshold (₹300)
+    const subtotalAfterDiscount = Math.max(0, itemsTotal - discount);
+    const threshold = Number(BUSINESS_CONFIG.shipping?.freeShippingThreshold) || 300;
+    const defaultFee = Number(BUSINESS_CONFIG.shipping?.defaultShippingCharge) || 49;
+    const codHandlingFee = Number(BUSINESS_CONFIG.shipping?.codHandlingFee) || 0;
+
+    const shippingCharges = subtotalAfterDiscount >= threshold ? 0 : defaultFee;
+    const codCharges = paymentMethod === 'cod' ? codHandlingFee : 0;
+    const grandTotal = Math.max(0, subtotalAfterDiscount + shippingCharges + codCharges);
 
     return {
       orderItems: validatedItems,
       bulkProductUpdates,
       totals: {
         itemsTotal,
+        subtotalAfterDiscount,
         shippingCharges,
+        codCharges,
         discount,
         grandTotal
       },
@@ -145,7 +155,7 @@ class OrderService {
     };
   }
 
-  async createCheckoutOrder(userId, items, shippingAddressId, paymentInfo = {}, couponCode = null) {
+  async createCheckoutOrder(userId, items, shippingAddressId, paymentInfo = {}, couponCode = null, metadata = {}) {
     if (!items || items.length === 0) {
       throw new ApiError(400, 'Order items cannot be empty');
     }
@@ -155,10 +165,10 @@ class OrderService {
       throw new ApiError(404, 'Invalid shipping address');
     }
 
-    // Authoritative calculation from Product collection
-    const calculation = await this.calculateOrderTotals(items, couponCode);
+    // Authoritative calculation from Product collection with payment method
+    const calculation = await this.calculateOrderTotals(items, couponCode, paymentInfo.method || 'cod');
     const { orderItems, bulkProductUpdates, totals, coupon } = calculation;
-    const { itemsTotal, shippingCharges, discount, grandTotal } = totals;
+    const { itemsTotal, subtotalAfterDiscount, shippingCharges, codCharges, discount, grandTotal } = totals;
 
     // Strict validation if paid via online gateway
     if (paymentInfo.method === 'razorpay') {
@@ -186,6 +196,7 @@ class OrderService {
         gatewayResponse: paymentInfo.gatewayResponse || null
       },
       coupon: coupon ? coupon._id : null,
+      noReturnPolicyAcknowledged: Boolean(metadata?.noReturnPolicyAcknowledged),
       authenticity: {
         isGenuine: true,
         riskScore: isPaid ? 'Low Risk (Payment Verified)' : (isCod ? 'Low Risk (Cash On Delivery)' : 'Unverified (Payment Pending)'),
@@ -223,7 +234,9 @@ class OrderService {
       },
       totals: {
         itemsTotal,
+        subtotalAfterDiscount,
         shippingCharges,
+        codCharges,
         discount,
         grandTotal
       }
@@ -268,7 +281,7 @@ class OrderService {
     return newOrder;
   }
 
-  async initiateCheckout(userId, items, shippingAddressId, couponCode = null) {
+  async initiateCheckout(userId, items, shippingAddressId, couponCode = null, metadata = {}) {
     if (!items || !items.length) {
       throw new ApiError(400, 'Order items cannot be empty');
     }
@@ -278,9 +291,9 @@ class OrderService {
       throw new ApiError(404, 'Invalid shipping address');
     }
 
-    const calculation = await this.calculateOrderTotals(items, couponCode);
+    const calculation = await this.calculateOrderTotals(items, couponCode, 'razorpay');
     const { orderItems, totals, coupon } = calculation;
-    const { itemsTotal, shippingCharges, discount, grandTotal } = totals;
+    const { itemsTotal, subtotalAfterDiscount, shippingCharges, codCharges, discount, grandTotal } = totals;
 
     const orderNumber = await orderRepository.generateOrderNumber();
 
@@ -297,6 +310,7 @@ class OrderService {
         gatewayOrderId: null
       },
       coupon: coupon ? coupon._id : null,
+      noReturnPolicyAcknowledged: Boolean(metadata?.noReturnPolicyAcknowledged),
       authenticity: {
         isGenuine: true,
         riskScore: 'Unverified (Payment Pending)',
@@ -329,7 +343,9 @@ class OrderService {
       },
       totals: {
         itemsTotal,
+        subtotalAfterDiscount,
         shippingCharges,
+        codCharges,
         discount,
         grandTotal
       }
@@ -770,6 +786,92 @@ class OrderService {
       lat: Number(lat),
       lng: Number(lng)
     };
+
+    await order.save();
+    return order;
+  }
+
+  /**
+   * CHANGE B: No-Return Policy Claim Submission
+   * Customer reports damaged/defective/wrong item within 48 hours of delivery with unboxing video/photo proof
+   */
+  async submitOrderClaim(orderId, userId, { reason, description, photoUrls = [], unboxingVideoUrl = '' }) {
+    const order = await Order.findById(orderId).populate('customer', 'fullName email phone');
+    if (!order) throw new ApiError(404, 'Order not found');
+
+    const customerIdStr = (order.customer?._id || order.customer)?.toString();
+    if (customerIdStr !== userId.toString()) {
+      throw new ApiError(403, 'Unauthorized to file a claim for this order');
+    }
+
+    if (order.claim?.hasClaim && order.claim?.status !== 'rejected') {
+      throw new ApiError(400, 'A claim is already submitted or under review for this order.');
+    }
+
+    if (!reason) {
+      throw new ApiError(400, 'Claim reason is required (e.g., damaged_in_transit, defective_piece, incorrect_item_sent).');
+    }
+
+    const cleanPhotos = Array.isArray(photoUrls) ? photoUrls.filter(Boolean) : (photoUrls ? [photoUrls] : []);
+    if (!unboxingVideoUrl && cleanPhotos.length === 0) {
+      throw new ApiError(400, 'Unboxing video URL or photo proof is required pursuant to the transit damage policy.');
+    }
+
+    order.claim = {
+      hasClaim: true,
+      reason,
+      description: description || '',
+      photoUrls: cleanPhotos,
+      unboxingVideoUrl: unboxingVideoUrl || '',
+      status: 'submitted',
+      resolutionType: 'none',
+      adminNotes: '',
+      reportedAt: new Date()
+    };
+
+    order.timeline.push({
+      status: 'claim_submitted',
+      note: `Transit damage/defect claim submitted by customer. Reason: ${reason}`,
+      date: new Date()
+    });
+
+    await order.save();
+    return order;
+  }
+
+  /**
+   * CHANGE B: Admin Claim Review & Resolution
+   */
+  async reviewOrderClaim(orderId, { status, resolutionType = 'none', adminNotes = '' }, adminUser) {
+    const order = await Order.findById(orderId).populate('customer', 'fullName email phone');
+    if (!order) throw new ApiError(404, 'Order not found');
+
+    if (!order.claim || !order.claim.hasClaim) {
+      throw new ApiError(400, 'No active claim exists for this order.');
+    }
+
+    const validStatuses = ['submitted', 'under_review', 'approved', 'rejected', 'resolved'];
+    if (status && !validStatuses.includes(status)) {
+      throw new ApiError(400, `Invalid claim status: ${status}`);
+    }
+
+    if (status) order.claim.status = status;
+    if (resolutionType) order.claim.resolutionType = resolutionType;
+    if (adminNotes) order.claim.adminNotes = adminNotes;
+
+    if (status === 'resolved' || status === 'approved') {
+      order.claim.resolvedAt = new Date();
+      if (resolutionType === 'refund_to_source') {
+        order.orderStatus = 'refunded';
+        order.paymentStatus = 'refunded';
+      }
+    }
+
+    order.timeline.push({
+      status: `claim_${status || 'updated'}`,
+      note: adminNotes || `Claim marked as ${status} (Resolution: ${resolutionType}) by ${adminUser?.fullName || 'Admin'}`,
+      date: new Date()
+    });
 
     await order.save();
     return order;

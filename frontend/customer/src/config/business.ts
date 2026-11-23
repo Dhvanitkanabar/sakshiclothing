@@ -24,8 +24,13 @@ export interface BusinessConfig {
   policies: {
     freeShippingThreshold: number;
     standardShippingFee: number;
-    returnWindowDays: number;
+    codHandlingFee: number;
+    returnWindowHours: number;
+    noReturnsPermitted: boolean;
+    damagedOrDefectiveCovered: boolean;
     codAvailable: boolean;
+    returnPolicySummary: string;
+    cancellationPolicy: string;
     jewelleryPolicy: string;
     clothingPolicy: string;
   };
@@ -69,12 +74,17 @@ export const BUSINESS_CONFIG: BusinessConfig = {
     fullFormatted: 'G-903 Sentosa Heights, Utran, Surat, Gujarat - 394105, India',
   },
   policies: {
-    freeShippingThreshold: Number(import.meta.env.VITE_FREE_SHIPPING_THRESHOLD) || 999,
-    standardShippingFee: 99,
-    returnWindowDays: 7,
+    freeShippingThreshold: Number(import.meta.env.VITE_FREE_SHIPPING_THRESHOLD) || 300,
+    standardShippingFee: 49,
+    codHandlingFee: 0,
+    returnWindowHours: 48,
+    noReturnsPermitted: true,
+    damagedOrDefectiveCovered: true,
     codAvailable: true,
-    jewelleryPolicy: 'Fashion & imitation jewellery collection. Made with brass/alloy base and micro-plated finish with synthetic stones. 7-day replacement for transit damage.',
-    clothingPolicy: 'Everyday Indian ethnic and daily wear clothing from Surat textile markets. 7-day return or exchange on unworn items with original tags intact.',
+    returnPolicySummary: 'No returns or exchanges for change of mind, fit, size, or color. Damaged, defective, or incorrect items covered upon reporting within 48 hours of delivery with unboxing video & photo proof.',
+    cancellationPolicy: 'Orders may be cancelled prior to dispatch with full refund to original source in 5–7 business days.',
+    jewelleryPolicy: 'Fashion & imitation jewellery collection crafted with brass/copper alloy and micro-plated finish. Strict No Return Policy. 48-hour reporting window for verified transit damage or defect with unboxing proof.',
+    clothingPolicy: 'Authentic Indian ethnic and daily wear clothing from Surat textile markets. Strict No Return Policy for size or fit preference. Damaged or wrong items replaced or refunded upon 48-hour unboxing verification.',
   },
   grievanceOfficer: {
     name: 'Grievance Redressal Officer',
@@ -97,5 +107,37 @@ export const BUSINESS_CONFIG: BusinessConfig = {
     youtube: import.meta.env.VITE_YOUTUBE_URL || '',
   },
 };
+
+/**
+ * Fetch authoritative business configuration from backend API to ensure
+ * single source of truth for shipping thresholds and policies without hardcoding.
+ */
+export async function fetchBusinessConfig(): Promise<BusinessConfig> {
+  try {
+    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+    const res = await fetch(`${apiBase}/cms/business-config`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.data) {
+        const remote = data.data;
+        if (remote.shipping?.freeShippingThreshold !== undefined) {
+          BUSINESS_CONFIG.policies.freeShippingThreshold = Number(remote.shipping.freeShippingThreshold);
+        }
+        if (remote.shipping?.defaultShippingCharge !== undefined) {
+          BUSINESS_CONFIG.policies.standardShippingFee = Number(remote.shipping.defaultShippingCharge);
+        }
+        if (remote.shipping?.codHandlingFee !== undefined) {
+          BUSINESS_CONFIG.policies.codHandlingFee = Number(remote.shipping.codHandlingFee);
+        }
+        if (remote.policies?.returnPolicy) {
+          BUSINESS_CONFIG.policies.returnPolicySummary = remote.policies.returnPolicy;
+        }
+      }
+    }
+  } catch (err) {
+    console.debug('Using local BUSINESS_CONFIG fallback:', err);
+  }
+  return BUSINESS_CONFIG;
+}
 
 export default BUSINESS_CONFIG;

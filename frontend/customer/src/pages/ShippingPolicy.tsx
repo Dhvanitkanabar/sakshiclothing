@@ -11,7 +11,7 @@ export const ShippingPolicy: React.FC = () => {
     <div className="min-h-screen bg-[#FBF9F6] text-[#1A1A1A] py-12 sm:py-20 px-4 sm:px-6 lg:px-8">
       <SEOHead
         title="Shipping & Delivery Policy | Sakshi Clothing"
-        description="Express 2-5 business day delivery across India from our Surat atelier with free shipping above ₹999."
+        description={`Express 2-5 business day delivery across India from our Surat atelier with free shipping above ₹${BUSINESS_CONFIG.policies.freeShippingThreshold}.`}
       />
       <div className="max-w-4xl mx-auto space-y-10">
         
