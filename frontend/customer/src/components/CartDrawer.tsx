@@ -87,11 +87,11 @@ export const CartDrawer: React.FC = () => {
                     <Truck size={14} className="text-[#4A1D3F]" />
                     {remainingForFreeShipping > 0 ? (
                       <span>
-                        Add <strong className="text-[#4A1D3F]">₹{remainingForFreeShipping.toLocaleString('en-IN')}</strong> more for <span className="text-[#15803D] font-bold">FREE Express Delivery</span>
+                        Add <strong className="text-[#4A1D3F]">₹{remainingForFreeShipping.toLocaleString('en-IN')}</strong> more for <span className="text-[#15803D] font-bold">FREE Delivery</span>
                       </span>
                     ) : (
                       <span className="text-[#15803D] font-bold">
-                        🎉 You've unlocked FREE Express Shipping!
+                        🎉 You've unlocked FREE Delivery across India!
                       </span>
                     )}
                   </span>

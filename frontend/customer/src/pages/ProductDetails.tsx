@@ -410,8 +410,8 @@ export const ProductDetails: React.FC = () => {
                   {product.productFacts?.hypoallergenicClaim 
                     ? product.productFacts.hypoallergenicClaim 
                     : (product.productFacts?.material 
-                        ? `Crafted with ${product.productFacts.material}${product.productFacts.plating ? ` and finished in ${product.productFacts.plating}` : ''}. Designed for skin-friendly celebratory comfort.`
-                        : "Premium imitation fashion jewellery. High-grade brass/alloy base with anti-tarnish protective polish. Safe for sensitive skin.")}
+                        ? `Crafted with ${product.productFacts.material}${product.productFacts.plating ? ` and finished in ${product.productFacts.plating}` : ''}. Designed for comfortable festive wear.`
+                        : "Fashion imitation jewellery crafted with brass/alloy base metal and electroplated finish. Synthetic stones and faux beads.")}
                 </p>
               </div>
             ) : (
@@ -575,7 +575,7 @@ export const ProductDetails: React.FC = () => {
                         {product.productFacts.isHypoallergenic && (
                           <li className="flex items-start gap-2 text-emerald-700">
                             <span className="text-emerald-600">✓</span>
-                            <span><strong>Skin Safety:</strong> {product.productFacts.hypoallergenicClaim || '100% Lead-free & Nickel-free skin-safe assurance'}</span>
+                            <span><strong>Skin Safety:</strong> {product.productFacts.hypoallergenicClaim || 'Lead-safe and nickel-safe for normal wear [CONFIRM]'}</span>
                           </li>
                         )}
                       </ul>

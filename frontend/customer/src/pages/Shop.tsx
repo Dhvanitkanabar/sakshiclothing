@@ -12,28 +12,28 @@ import SEOHead from '../components/SEOHead';
 
 const CATEGORY_META: Record<string, { badge: string; title: string; description: string; subcategories: string[] }> = {
   women: {
-    badge: "SAKSHI COUTURE · WOMEN",
+    badge: "SAKSHI CLOTHING · WOMEN",
     title: "Women's Collection",
-    description: "Handcrafted heritage sarees, festive bridal lehengas, artisanal anarkalis, and breathable everyday kurti sets.",
-    subcategories: ['All', 'Heritage Sarees', 'Bridal Lehengas', 'Artisanal Sets', 'Modern Kurtas', 'Couture Anarkalis']
+    description: "Everyday sarees, printed kurti sets, comfortable daily wear, and celebration lehengas from Surat.",
+    subcategories: ['All', 'Sarees', 'Kurti Sets', 'Lehengas', 'Everyday Kurtis']
   },
   men: {
-    badge: "SAKSHI COUTURE · MEN",
+    badge: "SAKSHI CLOTHING · MEN",
     title: "Men's Collection",
-    description: "Royal brocade sherwanis, structured silk bandhgalas, and festive kurta sets tailored for weddings and celebrations.",
-    subcategories: ['All', 'Heritage Sherwanis', 'Suits & Jackets', 'Modern Kurtas']
+    description: "Breathable cotton kurtas, festive Nehru waistcoats, and casual short kurtas designed for daily comfort.",
+    subcategories: ['All', 'Kurtas', 'Kurta Sets', 'Jackets']
   },
   kids: {
-    badge: "SAKSHI COUTURE · KIDS",
+    badge: "SAKSHI CLOTHING · KIDS",
     title: "Kids Collection",
-    description: "Joyful celebratory festive wear and comfortable artisanal sets designed for boys and girls.",
-    subcategories: ['All', 'Boys', 'Girls', 'Festive Kids Sets']
+    description: "Comfortable festive dhoti sets and ready-to-wear lehengas for boys and girls.",
+    subcategories: ['All', 'Boys Ethnic', 'Girls Ethnic', 'Festive Sets']
   },
   jewellery: {
-    badge: "CURATED ARTIFICIAL JEWELLERY",
+    badge: "IMITATION JEWELLERY",
     title: "Imitation Jewellery Suite",
-    description: "Hypoallergenic, skin-friendly brass choker sets, radiant jhumkas, and kada bangles with anti-tarnish micro-plating.",
-    subcategories: ['All', 'Heritage Jewels', 'Necklaces & Sets', 'Earrings & Jhumkas', 'Bangles & Kadas']
+    description: "Skin-friendly brass alloy choker sets, radiant jhumkas, and kada bangles with micro-gold polish.",
+    subcategories: ['All', 'Necklaces', 'Earrings', 'Bangles', 'Rings', 'Jewellery Sets']
   }
 };
 
@@ -51,7 +51,7 @@ export const Shop: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(categoryParam || 'All');
   const [selectedSubCategory, setSelectedSubCategory] = useState(subParam || 'All');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 160000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
   const [sortBy, setSortBy] = useState('featured');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -315,15 +315,15 @@ export const Shop: React.FC = () => {
                   <input 
                     type="range" 
                     min={0} 
-                    max={160000} 
-                    step={2000}
+                    max={10000} 
+                    step={250}
                     value={priceRange[1]}
                     onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
                     className="w-full accent-[#4A1D3F] h-2 bg-[#E8E5DF] rounded-lg cursor-pointer"
                   />
                   <div className="flex justify-between text-[11px] text-[#6B7280]">
                     <span>₹0</span>
-                    <span>₹1,60,000+</span>
+                    <span>₹10,000+</span>
                   </div>
                 </div>
 
@@ -334,7 +334,7 @@ export const Shop: React.FC = () => {
                   </label>
                   <div className="grid grid-cols-1 gap-2">
                     {[
-                      { id: 'featured', label: '✦ Atelier Curated' },
+                      { id: 'featured', label: '✦ Featured' },
                       { id: 'low-high', label: 'Price: Low to High' },
                       { id: 'high-low', label: 'Price: High to Low' },
                       { id: 'newest', label: 'Newest Arrivals' }
@@ -360,7 +360,7 @@ export const Shop: React.FC = () => {
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setPriceRange([0, 160000]);
+                    setPriceRange([0, 10000]);
                     setSortBy('featured');
                   }}
                   className="flex-1"
@@ -388,12 +388,12 @@ export const Shop: React.FC = () => {
           <span>
             Showing <strong className="text-[#1A1A1A]">{filteredProducts.length}</strong> {filteredProducts.length === 1 ? 'creation' : 'creations'}
           </span>
-          {(selectedCategory !== 'All' || selectedSubCategory !== 'All' || priceRange[1] < 160000) && (
+          {(selectedCategory !== 'All' || selectedSubCategory !== 'All' || priceRange[1] < 10000) && (
             <button
               onClick={() => {
                 setSelectedCategory('All');
                 setSelectedSubCategory('All');
-                setPriceRange([0, 160000]);
+                setPriceRange([0, 10000]);
                 navigate('/shop');
               }}
               className="text-[#4A1D3F] hover:underline flex items-center gap-1 font-medium min-h-[44px] py-1"
@@ -427,7 +427,7 @@ export const Shop: React.FC = () => {
                 onClick={() => {
                   setSelectedCategory('All');
                   setSelectedSubCategory('All');
-                  setPriceRange([0, 160000]);
+                  setPriceRange([0, 10000]);
                   setSortBy('featured');
                   navigate('/shop');
                 }}

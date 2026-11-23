@@ -15,7 +15,7 @@ export const Category: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 160000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
   const [sortBy, setSortBy] = useState('featured');
   const [showFilters, setShowFilters] = useState(false);
 
@@ -51,52 +51,36 @@ export const Category: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#FBF9F6] pb-24 lg:pb-16 text-[#1A1A1A]">
       
-      {/* Category Hero Banner */}
-      <div className="relative min-h-[38vh] sm:min-h-[46vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#2D1627] via-[#3B1A34] to-[#1A1A1A] text-white">
-        {firstProductImage && (
-          <motion.div
-            initial={{ opacity: 0, scale: 1.05 }}
-            animate={{ opacity: 0.35, scale: 1 }}
-            transition={{ duration: 1 }}
-            className="absolute inset-0"
-          >
-            <img
-              src={firstProductImage}
-              alt={main}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#FBF9F6] via-black/40 to-black/60" />
-          </motion.div>
-        )}
-
-        <div className="relative z-10 text-center px-5 max-w-3xl mx-auto pt-16 pb-12 sm:pt-20 sm:pb-16">
-          <nav aria-label="Breadcrumb" className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[10px] text-white uppercase tracking-wider mb-4 font-semibold">
-            <Link to="/" className="hover:text-[#C6A15B] transition-colors">Home</Link>
+      {/* Category Hero Banner (Light Ivory Editorial) */}
+      <div className="relative border-b border-[#E8E5DF] bg-[#FBF9F6] py-12 sm:py-16 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 text-center space-y-3">
+          <nav aria-label="Breadcrumb" className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-[#E8E5DF] text-[10px] text-[#4A4A4A] uppercase tracking-wider mb-2 font-semibold shadow-xs">
+            <Link to="/" className="hover:text-[#4A1D3F] transition-colors">Home</Link>
             <ChevronRight size={12} />
-            <Link to={`/category/${main}`} className="hover:text-[#C6A15B] transition-colors capitalize">{main}</Link>
+            <Link to={`/category/${main}`} className="hover:text-[#4A1D3F] transition-colors capitalize">{main}</Link>
             {sub && (
               <>
                 <ChevronRight size={12} />
-                <span className="text-[#C6A15B] capitalize">{sub}</span>
+                <span className="text-[#4A1D3F] capitalize">{sub}</span>
               </>
             )}
           </nav>
 
-          <h1 className="font-serif text-3xl sm:text-5xl text-white font-medium capitalize tracking-tight mb-2.5">
+          <h1 className="font-serif text-3xl sm:text-5xl text-[#1A1A1A] font-medium capitalize tracking-tight">
             {sub ? sub : (isJewellery ? 'Imitation Jewellery' : main)}
           </h1>
 
-          <p className="text-white/85 text-xs sm:text-sm font-light max-w-lg mx-auto leading-relaxed">
+          <p className="text-[#6B7280] text-xs sm:text-sm font-normal max-w-lg mx-auto leading-relaxed">
             {isJewellery 
-              ? 'Hypoallergenic, skin-safe brass choker sets, earrings, and bangles with anti-tarnish finish.' 
-              : 'Authentic Indian ethnic wear handcrafted with premium textiles and generational embroidery.'
+              ? 'Skin-friendly brass alloy choker sets, earrings, and bangles with micro-gold polish.' 
+              : 'Everyday sarees, kurti sets, and celebration outfits dispatched directly from Surat.'
             }
           </p>
 
           {isJewellery && (
-            <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#C6A15B]/20 text-[#E0C78F] border border-[#C6A15B]/30 text-xs font-semibold">
+            <div className="pt-2 inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#F4EEDF] text-[#A4813D] border border-[#C6A15B]/30 text-xs font-semibold">
               <Sparkles size={13} />
-              <span>100% Artificial / Imitation Jewellery · Nickel & Lead Free</span>
+              <span>Fashion & Imitation Jewellery · Brass Base with Synthetic Stones</span>
             </div>
           )}
         </div>
