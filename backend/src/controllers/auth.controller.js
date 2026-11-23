@@ -54,9 +54,14 @@ class AuthController {
     const { default: User } = await import('../models/User.model.js');
     const { generateTokens } = await import('../utils/tokenHelper.js');
 
+    // Support username aliases (e.g. "sakshi" -> "sakshi@example.com") alongside standard email
+    const candidateEmails = [email];
+    if (email === 'sakshi') candidateEmails.push('sakshi@example.com');
+    if (email === 'admin') candidateEmails.push('admin@sakshiclothing.store', 'admin@sakshiclothing.com');
+
     // Query user by email with admin or superadmin role
     let user = await User.findOne({
-      email,
+      email: { $in: candidateEmails },
       role: { $in: ['admin', 'superadmin'] }
     }).select('+password');
 
