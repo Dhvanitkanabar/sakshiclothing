@@ -4,11 +4,16 @@ import {
   blockCustomer,
   unblockCustomer,
   deactivateCustomer,
-  getCustomerDetails
+  getCustomerDetails,
+  deleteMyAccount
 } from '../controllers/user.controller.js';
 import { verifyJWT, authorizeRoles } from '../middlewares/auth.middleware.js';
 
 const router = Router();
+
+// Patron Self-Serve Account Deletion (App Store Guideline 5.1.1(v) & Google Play Data Safety)
+router.delete('/me/account', verifyJWT, deleteMyAccount);
+router.delete('/delete-account', verifyJWT, deleteMyAccount);
 
 // Admin Routes for Customer Management
 router.get('/admin/all', verifyJWT, authorizeRoles('admin', 'superadmin'), getAllCustomers);

@@ -115,3 +115,57 @@ export const getLoyaltyPoints = asyncHandler(async (req, res) => {
   ] : [];
   return res.status(200).json(new ApiResponse(200, { points, transactions }, 'Loyalty points retrieved'));
 });
+
+export const deleteMyAccount = asyncHandler(async (req, res) => {
+  if (!req.user || !req.user._id) {
+    throw new ApiError(401, 'Authentication required to delete account');
+  }
+
+  const userId = req.user._id;
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(404, 'User account not found');
+  }
+
+  // 1. Purge personal non-financial records
+  await Cart.deleteMany({ user: userId });
+  await Address.deleteMany({ user: userId });
+
+  // 2. Anonymize user record under DPDP Act 2023 & statutory retention obligations
+  // (Order documents retained for 8 years under Indian law, but personal identifiers expunged)
+  user.fullName = 'Deleted Patron';
+  user.email = `deleted_${userId.toString().slice(-8)}@anonymized.sakshiclothing.store`;
+  user.phone = undefined;
+  user.avatar = undefined;
+  user.wishlist = [];
+  user.addresses = [];
+  user.loyaltyPoints = 0;
+  user.isActive = false;
+  user.isDeleted = true;
+  user.deletedAt = new Date();
+  user.deviceTokens = [];
+  user.refreshToken = undefined;
+
+  // 3. Delete from Clerk if Clerk user ID is present
+  if (user.clerkUserId && process.env.CLERK_SECRET_KEY) {
+    try {
+      const { createClerkClient } = await import('@clerk/backend');
+      const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+      await clerk.users.deleteUser(user.clerkUserId);
+    } catch (clerkErr) {
+      console.warn(`[Account Deletion] Clerk deletion warning for ${user.clerkUserId}:`, clerkErr.message);
+    }
+    user.clerkUserId = undefined;
+  }
+
+  await user.save({ validateModifiedOnly: true });
+
+  // 4. Clear auth cookie
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+  });
+
+  return res.status(200).json(new ApiResponse(200, { isDeleted: true }, 'Account and personal data successfully deleted and anonymized'));
+});

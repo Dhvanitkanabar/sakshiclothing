@@ -105,6 +105,9 @@ const Profile: React.FC = () => {
   const [activeTab, setActiveTab] = useState('orders');
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [loyaltyData, setLoyaltyData] = useState<{ points: number, transactions: any[] }>({ points: 0, transactions: [] });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   const loadLoyalty = useCallback(async () => {
     if (!user) return;
@@ -229,6 +232,35 @@ const Profile: React.FC = () => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText.trim().toUpperCase() !== 'DELETE') {
+      toast.error('Please type DELETE to confirm account deletion.');
+      return;
+    }
+
+    setIsDeletingAccount(true);
+    try {
+      const res = await authedFetch(`${API_URL}/users/me/account`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to delete account');
+      }
+
+      toast.success('Your account and personal data have been permanently anonymized.');
+      setShowDeleteModal(false);
+      await logout();
+      navigate('/');
+    } catch (err: any) {
+      toast.error(err.message || 'An error occurred while deleting your account.');
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  };
+
   if (authLoading) return null;
   if (!isSignedIn) return <Navigate to="/login" />;
 
@@ -236,6 +268,7 @@ const Profile: React.FC = () => {
     { id: 'orders', label: 'Order History', icon: Package },
     { id: 'addresses', label: 'Saved Addresses', icon: MapPin },
     { id: 'loyalty', label: 'Privilege Points', icon: Award },
+    { id: 'privacy', label: 'Privacy & Data', icon: Settings },
   ];
 
   return (
@@ -732,10 +765,122 @@ const Profile: React.FC = () => {
                   </div>
                 </motion.div>
               )}
+
+              {/* Privacy & Account Deletion Tab (Mandatory for App Store & Google Play) */}
+              {activeTab === 'privacy' && (
+                <motion.div
+                  key="privacy"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  className="space-y-6"
+                >
+                  {/* Data Protection Overview Card */}
+                  <div className="bg-white border border-[#E8E5DF] rounded-3xl p-6 sm:p-8 shadow-xs space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-[#4A1D3F]/10 text-[#4A1D3F] flex items-center justify-center">
+                        <Settings size={20} />
+                      </div>
+                      <div>
+                        <h3 className="font-serif text-lg font-medium text-[#1A1A1A]">Data Protection & Privacy</h3>
+                        <p className="text-xs text-[#6B7280]">In compliance with India's Digital Personal Data Protection (DPDP) Act 2023</p>
+                      </div>
+                    </div>
+                    <p className="text-xs sm:text-sm text-[#4A4A4A] leading-relaxed">
+                      Sakshi Clothing processes your personal information strictly to fulfill orders, deliver artisanal garments, and provide personalized concierge support. You retain full control over your digital identity and stored information.
+                    </p>
+                    <div className="pt-2 flex flex-wrap gap-3">
+                      <Link
+                        to="/privacy"
+                        className="text-xs text-[#4A1D3F] hover:underline font-semibold flex items-center gap-1"
+                      >
+                        Read Privacy Policy <ChevronRight size={12} />
+                      </Link>
+                      <Link
+                        to="/terms"
+                        className="text-xs text-[#4A1D3F] hover:underline font-semibold flex items-center gap-1"
+                      >
+                        Terms of Service <ChevronRight size={12} />
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Danger Zone: Account Deletion */}
+                  <div className="bg-white border border-rose-200 rounded-3xl p-6 sm:p-8 shadow-xs space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-rose-50 text-[#B43E2B] flex items-center justify-center">
+                        <XCircle size={20} />
+                      </div>
+                      <div>
+                        <h3 className="font-serif text-lg font-medium text-[#B43E2B]">Self-Serve Account Deletion</h3>
+                        <p className="text-xs text-[#6B7280]">Irreversible removal of account credentials and personal records</p>
+                      </div>
+                    </div>
+
+                    <p className="text-xs sm:text-sm text-[#4A4A4A] leading-relaxed">
+                      Permanently expunges your profile credentials, saved addresses, cart items, wishlist, and device push notification tokens. As required by Section 128 of the Indian Companies Act 2013 and GST statutory compliance, completed purchase tax invoices are anonymized and retained for the mandated 8-year accounting period.
+                    </p>
+
+                    <div className="pt-2">
+                      <button
+                        onClick={() => {
+                          setDeleteConfirmText('');
+                          setShowDeleteModal(true);
+                        }}
+                        className="px-5 py-3 bg-rose-50 hover:bg-rose-100 text-[#B43E2B] border border-rose-300 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors min-h-[44px]"
+                      >
+                        Delete My Account & Personal Data
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
             </AnimatePresence>
           </main>
         </div>
       </div>
+
+      {/* Account Deletion Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white border border-[#E8E5DF] rounded-3xl max-w-md w-full p-6 sm:p-8 text-center shadow-2xl space-y-4">
+            <div className="w-14 h-14 mx-auto rounded-full bg-rose-50 text-[#B43E2B] flex items-center justify-center border border-rose-200">
+              <XCircle size={28} />
+            </div>
+
+            <h3 className="font-serif text-xl font-bold text-[#1A1A1A]">Confirm Account Deletion</h3>
+
+            <p className="text-xs sm:text-sm text-[#6B7280] leading-relaxed text-left">
+              This action is permanent and cannot be undone. To verify your intent, please type <strong className="text-[#1A1A1A]">DELETE</strong> in the box below:
+            </p>
+
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder="Type DELETE to confirm"
+              className="w-full px-4 py-3 border border-[#E8E5DF] rounded-xl text-sm focus:outline-none focus:border-[#B43E2B] transition-colors"
+            />
+
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                disabled={isDeletingAccount}
+                className="flex-1 py-3 px-4 bg-[#FAF8F5] hover:bg-[#F2EFEA] text-[#1A1A1A] font-semibold text-xs uppercase tracking-wider rounded-xl border border-[#E8E5DF] transition-colors min-h-[44px]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={isDeletingAccount || deleteConfirmText.trim().toUpperCase() !== 'DELETE'}
+                className="flex-1 py-3 px-4 bg-[#B43E2B] hover:bg-[#962F1F] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-xs uppercase tracking-wider rounded-xl transition-colors shadow-sm min-h-[44px]"
+              >
+                {isDeletingAccount ? 'Deleting...' : 'Permanently Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
