@@ -53,7 +53,7 @@ export interface BusinessConfig {
 
 export const BUSINESS_CONFIG: BusinessConfig = {
   storeName: import.meta.env.VITE_STORE_NAME || 'Sakshi Clothing',
-  tagline: 'Authentic Indian Couture & Hypoallergenic Imitation Jewellery',
+  tagline: 'Everyday Indian Fashion & Imitation Jewellery from Surat',
   supportEmail: import.meta.env.VITE_SUPPORT_EMAIL || 'sakshiclothing2025@gmail.com',
   supportPhone: import.meta.env.VITE_SUPPORT_PHONE || '+91 9316533660',
   helplineDisplay: '+91 9316533660',
@@ -73,8 +73,8 @@ export const BUSINESS_CONFIG: BusinessConfig = {
     standardShippingFee: 99,
     returnWindowDays: 7,
     codAvailable: true,
-    jewelleryPolicy: 'Handcrafted imitation & artificial jewellery. 100% skin-friendly brass base with protective anti-tarnish coating. 7-day hassle-free exchange for transit issues.',
-    clothingPolicy: 'Authentic Indian textiles, sarees, lehengas & suits tailored with generational craftsmanship. 7-day returns on unworn items with tags intact.',
+    jewelleryPolicy: 'Fashion & imitation jewellery collection. Made with brass/alloy base and micro-plated finish with synthetic stones. 7-day replacement for transit damage.',
+    clothingPolicy: 'Everyday Indian ethnic and daily wear clothing from Surat textile markets. 7-day return or exchange on unworn items with original tags intact.',
   },
   grievanceOfficer: {
     name: 'Grievance Redressal Officer',
@@ -89,7 +89,7 @@ export const BUSINESS_CONFIG: BusinessConfig = {
     jurisdiction: 'Surat, Gujarat, India',
     gstNumber: '24AABCS1429B1Z1',
     taxInclusiveNotice: 'All prices on Sakshi Clothing are denominated in Indian National Rupees (INR ₹) and are fully inclusive of all applicable statutory Goods & Services Tax (18% GST).',
-    imitationJewelleryDisclosure: 'NOTICE CONCERNING ARTIFICIAL JEWELLERY: All jewellery creations offered on this platform are imitation / artificial fashion jewellery. They are crafted utilizing hypoallergenic brass base, zinc alloys, synthetic Kundan, Polki glass, and electroplated micro-gold or rhodium finish. Products are NOT composed of 22K/24K solid precious gold, silver, or genuine diamonds.',
+    imitationJewelleryDisclosure: 'NOTICE CONCERNING ARTIFICIAL JEWELLERY: All jewellery items on this website are imitation / artificial fashion jewellery created from brass/alloy base metal, electroplated gold/silver tones, synthetic Kundan/glass stones, and artificial beads. These are not real gold, silver, or genuine gemstones.',
   },
   socialLinks: {
     instagram: import.meta.env.VITE_INSTAGRAM_URL || 'https://instagram.com/sakshiclothing',
