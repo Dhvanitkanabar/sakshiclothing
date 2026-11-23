@@ -45,10 +45,10 @@ export const BottomNav: React.FC = () => {
                 className="relative flex flex-col items-center justify-center gap-1 min-w-[50px] min-h-[44px] py-1 px-2 focus:outline-none"
                 aria-label="Open Shopping Bag"
               >
-                <div className="relative text-[#6B7280] hover:text-[#4A1D3F] transition-colors">
+                <div className="relative text-[#6B7280] hover:text-[#7B1E2B] transition-colors">
                   <Icon size={20} strokeWidth={2} />
                   {item.badge !== undefined && item.badge > 0 && (
-                    <span className="absolute -top-1 -right-2 bg-[#4A1D3F] text-white text-[9px] font-sans font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                    <span className="absolute -top-1 -right-2 bg-[#7B1E2B] text-white text-[9px] font-sans font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
                       {item.badge}
                     </span>
                   )}
@@ -69,20 +69,20 @@ export const BottomNav: React.FC = () => {
               <motion.div
                 whileTap={{ scale: 0.88 }}
                 className={`relative transition-colors duration-200 ${
-                  isActive ? 'text-[#4A1D3F]' : 'text-[#6B7280] hover:text-[#1A1A1A]'
+                  isActive ? 'text-[#7B1E2B]' : 'text-[#6B7280] hover:text-[#1A1A1A]'
                 }`}
               >
                 <Icon size={20} strokeWidth={isActive ? 2.4 : 1.8} />
               </motion.div>
               <span className={`text-[9px] font-sans font-semibold uppercase tracking-wider transition-colors duration-200 ${
-                isActive ? 'text-[#4A1D3F] font-bold' : 'text-[#6B7280]'
+                isActive ? 'text-[#7B1E2B] font-bold' : 'text-[#6B7280]'
               }`}>
                 {item.label}
               </span>
               {isActive && (
                 <motion.div 
                   layoutId="active-bottom-nav-dot"
-                  className="w-1.5 h-1.5 rounded-full bg-[#4A1D3F] absolute -bottom-0.5"
+                  className="w-1.5 h-1.5 rounded-full bg-[#7B1E2B] absolute -bottom-0.5"
                 />
               )}
             </Link>

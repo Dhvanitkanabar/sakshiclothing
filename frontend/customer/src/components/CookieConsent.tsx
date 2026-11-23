@@ -49,7 +49,7 @@ export const CookieConsent: React.FC = () => {
         <div className="bg-[#1C161D] text-[#E5E0D8] p-5 rounded-2xl border border-[#3E2B40] shadow-2xl space-y-3.5 backdrop-blur-md">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-[#4A1D3F] text-[#C6A15B] flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-full bg-[#7B1E2B] text-[#C6A15B] flex items-center justify-center shrink-0">
                 <Cookie size={16} />
               </div>
               <h3 className="font-serif text-sm font-medium text-white">
@@ -72,7 +72,7 @@ export const CookieConsent: React.FC = () => {
           <div className="flex items-center gap-2.5 pt-1">
             <button
               onClick={() => handleChoice('all')}
-              className="flex-1 py-2 px-3 bg-[#4A1D3F] hover:bg-[#3B1632] text-white rounded-full text-xs font-semibold uppercase tracking-wider transition-all min-h-[38px] flex items-center justify-center gap-1.5 shadow-xs"
+              className="flex-1 py-2 px-3 bg-[#7B1E2B] hover:bg-[#621721] text-white rounded-full text-xs font-semibold uppercase tracking-wider transition-all min-h-[38px] flex items-center justify-center gap-1.5 shadow-xs"
             >
               <Check size={13} />
               <span>Accept All</span>

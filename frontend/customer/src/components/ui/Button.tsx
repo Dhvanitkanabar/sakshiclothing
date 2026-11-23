@@ -34,17 +34,17 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variants = {
       primary:
-        'bg-[#4A1D3F] text-white hover:bg-[#3B1632] shadow-sm hover:shadow focus-visible:ring-[#4A1D3F]',
+        'bg-[#7B1E2B] text-white hover:bg-[#621721] shadow-xs hover:shadow focus-visible:ring-[#7B1E2B]',
       secondary:
-        'bg-transparent text-[#4A1D3F] border border-[#4A1D3F] hover:bg-[#F6EFF4] focus-visible:ring-[#4A1D3F]',
+        'bg-transparent text-[#7B1E2B] border border-[#7B1E2B] hover:bg-[#FDF4F5] focus-visible:ring-[#7B1E2B]',
       champagne:
-        'bg-[#C6A15B] text-white hover:bg-[#B38F48] shadow-sm hover:shadow focus-visible:ring-[#C6A15B]',
+        'bg-[#C6A15B] text-white hover:bg-[#A4813D] shadow-xs hover:shadow focus-visible:ring-[#C6A15B]',
       outline:
-        'bg-white text-[#1A1A1A] border border-[#E8E5DF] hover:border-[#1A1A1A] hover:bg-[#FAF8F5] focus-visible:ring-[#1A1A1A]',
+        'bg-white text-[#111111] border border-[#E8E5DF] hover:border-[#111111] hover:bg-[#FAF8F5] focus-visible:ring-[#111111]',
       ghost:
-        'bg-transparent text-[#1A1A1A] hover:text-[#4A1D3F] hover:bg-[#F6EFF4] focus-visible:ring-[#4A1D3F]',
+        'bg-transparent text-[#111111] hover:text-[#7B1E2B] hover:bg-[#FDF4F5] focus-visible:ring-[#7B1E2B]',
       sale:
-        'bg-[#B43E2B] text-white hover:bg-[#9B3222] shadow-sm focus-visible:ring-[#B43E2B]',
+        'bg-[#B43E2B] text-white hover:bg-[#9B3222] shadow-xs focus-visible:ring-[#B43E2B]',
     };
 
     const sizes = {

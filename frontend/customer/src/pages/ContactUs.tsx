@@ -73,14 +73,14 @@ export const ContactUs: React.FC = () => {
         
         {/* Breadcrumb Navigation */}
         <nav aria-label="Breadcrumb" className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FAF8F5] border border-[#E8E5DF] text-[11px] text-[#6B7280]">
-          <Link to="/" className="hover:text-[#4A1D3F] transition-colors">Home</Link>
+          <Link to="/" className="hover:text-[#7B1E2B] transition-colors">Home</Link>
           <ChevronRight size={12} />
           <span className="text-[#1A1A1A] font-semibold">Contact & Concierge</span>
         </nav>
 
         {/* Hero Header */}
         <header className="space-y-4 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F6EFF4] text-[#4A1D3F] text-xs font-semibold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FDF4F5] text-[#7B1E2B] text-xs font-semibold uppercase tracking-wider">
             <Sparkles size={14} className="text-[#C6A15B]" />
             <span>Surat Atelier Concierge</span>
           </div>
@@ -118,9 +118,9 @@ export const ContactUs: React.FC = () => {
           </div>
 
           {/* Card 2: Telephone Helpline */}
-          <div className="p-6 rounded-3xl bg-white border border-[#E8E5DF] shadow-xs space-y-4 hover:border-[#4A1D3F]/40 transition-all flex flex-col justify-between">
+          <div className="p-6 rounded-3xl bg-white border border-[#E8E5DF] shadow-xs space-y-4 hover:border-[#7B1E2B]/40 transition-all flex flex-col justify-between">
             <div className="space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-[#F6EFF4] text-[#4A1D3F] flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-[#FDF4F5] text-[#7B1E2B] flex items-center justify-center">
                 <Phone size={24} />
               </div>
               <h3 className="font-serif text-lg font-medium text-[#1A1A1A]">Direct Helpline</h3>
@@ -131,7 +131,7 @@ export const ContactUs: React.FC = () => {
             </div>
             <a
               href={`tel:${BUSINESS_CONFIG.supportPhone.replace(/\s+/g, '')}`}
-              className="inline-flex items-center justify-center gap-2 w-full py-3 px-4 bg-[#4A1D3F] hover:bg-[#3B1632] text-white rounded-full text-xs font-semibold uppercase tracking-wider transition-all min-h-[44px] shadow-xs"
+              className="inline-flex items-center justify-center gap-2 w-full py-3 px-4 bg-[#7B1E2B] hover:bg-[#621721] text-white rounded-full text-xs font-semibold uppercase tracking-wider transition-all min-h-[44px] shadow-xs"
             >
               <Phone size={15} />
               <span>Call Helpline</span>
@@ -201,7 +201,7 @@ export const ContactUs: React.FC = () => {
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       placeholder="e.g. Radhika Sharma"
-                      className="w-full px-4 py-2.5 rounded-xl border border-[#E8E5DF] text-xs focus:outline-none focus:border-[#4A1D3F] min-h-[44px]"
+                      className="w-full px-4 py-2.5 rounded-xl border border-[#E8E5DF] text-xs focus:outline-none focus:border-[#7B1E2B] min-h-[44px]"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -212,7 +212,7 @@ export const ContactUs: React.FC = () => {
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       placeholder="e.g. radhika@example.com"
-                      className="w-full px-4 py-2.5 rounded-xl border border-[#E8E5DF] text-xs focus:outline-none focus:border-[#4A1D3F] min-h-[44px]"
+                      className="w-full px-4 py-2.5 rounded-xl border border-[#E8E5DF] text-xs focus:outline-none focus:border-[#7B1E2B] min-h-[44px]"
                     />
                   </div>
                 </div>
@@ -225,7 +225,7 @@ export const ContactUs: React.FC = () => {
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       placeholder="+91 98765 43210"
-                      className="w-full px-4 py-2.5 rounded-xl border border-[#E8E5DF] text-xs focus:outline-none focus:border-[#4A1D3F] min-h-[44px]"
+                      className="w-full px-4 py-2.5 rounded-xl border border-[#E8E5DF] text-xs focus:outline-none focus:border-[#7B1E2B] min-h-[44px]"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -235,7 +235,7 @@ export const ContactUs: React.FC = () => {
                       value={formData.orderId}
                       onChange={(e) => setFormData({ ...formData, orderId: e.target.value })}
                       placeholder="e.g. ORD-12345"
-                      className="w-full px-4 py-2.5 rounded-xl border border-[#E8E5DF] text-xs focus:outline-none focus:border-[#4A1D3F] min-h-[44px]"
+                      className="w-full px-4 py-2.5 rounded-xl border border-[#E8E5DF] text-xs focus:outline-none focus:border-[#7B1E2B] min-h-[44px]"
                     />
                   </div>
                 </div>
@@ -245,7 +245,7 @@ export const ContactUs: React.FC = () => {
                   <select
                     value={formData.subject}
                     onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl border border-[#E8E5DF] text-xs focus:outline-none focus:border-[#4A1D3F] bg-white min-h-[44px]"
+                    className="w-full px-4 py-2.5 rounded-xl border border-[#E8E5DF] text-xs focus:outline-none focus:border-[#7B1E2B] bg-white min-h-[44px]"
                   >
                     <option value="Order Inquiry">Order Inquiry & Status</option>
                     <option value="Return / Exchange">Return, Exchange or Refund</option>
@@ -263,14 +263,14 @@ export const ContactUs: React.FC = () => {
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                     placeholder="Please describe how we can assist you..."
-                    className="w-full px-4 py-3 rounded-xl border border-[#E8E5DF] text-xs focus:outline-none focus:border-[#4A1D3F]"
+                    className="w-full px-4 py-3 rounded-xl border border-[#E8E5DF] text-xs focus:outline-none focus:border-[#7B1E2B]"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-3.5 px-6 bg-[#4A1D3F] hover:bg-[#3B1632] text-white rounded-full text-xs font-semibold uppercase tracking-wider transition-all min-h-[48px] shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full py-3.5 px-6 bg-[#7B1E2B] hover:bg-[#621721] text-white rounded-full text-xs font-semibold uppercase tracking-wider transition-all min-h-[48px] shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <span>Submitting...</span>
@@ -290,7 +290,7 @@ export const ContactUs: React.FC = () => {
             
             {/* Atelier Coordinates */}
             <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#E8E5DF] shadow-xs space-y-4">
-              <div className="flex items-center gap-2 text-[#4A1D3F]">
+              <div className="flex items-center gap-2 text-[#7B1E2B]">
                 <Building2 size={20} />
                 <h3 className="font-serif text-lg font-medium text-[#1A1A1A]">Surat Atelier Location</h3>
               </div>
@@ -311,8 +311,8 @@ export const ContactUs: React.FC = () => {
             </div>
 
             {/* Grievance Officer Card (Statutory E-Commerce Compliance) */}
-            <div className="bg-gradient-to-br from-white to-[#FAF8F5] p-6 sm:p-8 rounded-3xl border border-[#4A1D3F]/20 shadow-xs space-y-3.5">
-              <div className="flex items-center gap-2 text-[#4A1D3F]">
+            <div className="bg-gradient-to-br from-white to-[#FAF8F5] p-6 sm:p-8 rounded-3xl border border-[#7B1E2B]/20 shadow-xs space-y-3.5">
+              <div className="flex items-center gap-2 text-[#7B1E2B]">
                 <Scale size={18} />
                 <h3 className="font-serif text-lg font-medium">Grievance Redressal Officer</h3>
               </div>
@@ -322,7 +322,7 @@ export const ContactUs: React.FC = () => {
               <div className="p-4 rounded-xl bg-white border border-[#E8E5DF] space-y-1.5 text-xs text-[#1A1A1A]">
                 <p className="font-semibold">{BUSINESS_CONFIG.grievanceOfficer.name}</p>
                 <p className="text-[#6B7280]">{BUSINESS_CONFIG.grievanceOfficer.designation}</p>
-                <p>Email: <a href={`mailto:${BUSINESS_CONFIG.grievanceOfficer.email}`} className="text-[#4A1D3F] underline">{BUSINESS_CONFIG.grievanceOfficer.email}</a></p>
+                <p>Email: <a href={`mailto:${BUSINESS_CONFIG.grievanceOfficer.email}`} className="text-[#7B1E2B] underline">{BUSINESS_CONFIG.grievanceOfficer.email}</a></p>
                 <p>Phone: {BUSINESS_CONFIG.grievanceOfficer.phone}</p>
                 <p className="text-[11px] text-[#6B7280] pt-1">
                   <strong>Statutory SLA:</strong> {BUSINESS_CONFIG.grievanceOfficer.responseSla}

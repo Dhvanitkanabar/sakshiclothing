@@ -38,15 +38,15 @@ export const SectionHeading: React.FC<SectionHeadingProps> = ({
       <div className={isCentered ? 'max-w-2xl mx-auto' : 'max-w-2xl'}>
         {eyebrow && (
           <div className="flex items-center gap-2 mb-2 justify-start">
-            {isCentered && <span className={`h-px w-6 ${isJewellery ? 'bg-[#C6A15B]' : 'bg-[#4A1D3F]'}`} />}
+            {isCentered && <span className={`h-px w-6 ${isJewellery ? 'bg-[#C6A15B]' : 'bg-[#7B1E2B]'}`} />}
             <span
               className={`text-[11px] font-semibold uppercase tracking-[0.2em] ${
-                isJewellery ? 'text-[#C6A15B]' : 'text-[#4A1D3F]'
+                isJewellery ? 'text-[#C6A15B]' : 'text-[#7B1E2B]'
               }`}
             >
               {eyebrow}
             </span>
-            {isCentered && <span className={`h-px w-6 ${isJewellery ? 'bg-[#C6A15B]' : 'bg-[#4A1D3F]'}`} />}
+            {isCentered && <span className={`h-px w-6 ${isJewellery ? 'bg-[#C6A15B]' : 'bg-[#7B1E2B]'}`} />}
           </div>
         )}
         <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl text-[#1A1A1A] leading-tight tracking-tight">
@@ -65,7 +65,7 @@ export const SectionHeading: React.FC<SectionHeadingProps> = ({
             to={actionHref}
             className={`
               inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold tracking-wide transition-colors duration-200
-              ${isJewellery ? 'text-[#C6A15B] hover:text-[#A4813D]' : 'text-[#4A1D3F] hover:text-[#3B1632]'}
+              ${isJewellery ? 'text-[#C6A15B] hover:text-[#A4813D]' : 'text-[#7B1E2B] hover:text-[#621721]'}
               group min-h-[44px] py-2
             `}
           >

@@ -193,7 +193,7 @@ export const Shop: React.FC = () => {
       <header className="pt-10 sm:pt-14 pb-6 sm:pb-8 px-5 sm:px-8 max-w-7xl mx-auto">
         <div className="text-center max-w-2xl mx-auto space-y-2.5">
           <span className={`text-[11px] font-semibold uppercase tracking-[0.2em] block ${
-            isJewellerySelected ? 'text-[#C6A15B]' : 'text-[#4A1D3F]'
+            isJewellerySelected ? 'text-[#C6A15B]' : 'text-[#7B1E2B]'
           }`}>
             {query ? `Search Archive · "${query}"` : categoryMeta.badge}
           </span>
@@ -228,7 +228,7 @@ export const Shop: React.FC = () => {
                     isSelected
                       ? cat.toLowerCase() === 'jewellery'
                         ? 'bg-[#C6A15B] text-white shadow-xs'
-                        : 'bg-[#4A1D3F] text-white shadow-xs'
+                        : 'bg-[#7B1E2B] text-white shadow-xs'
                       : 'bg-white text-[#1A1A1A] hover:bg-[#FAF8F5] border border-[#E8E5DF]'
                   }`}
                 >
@@ -266,7 +266,7 @@ export const Shop: React.FC = () => {
             className="min-h-[44px] min-w-[44px] flex items-center justify-center gap-2 px-4 py-2 bg-white hover:bg-[#FAF8F5] text-[#1A1A1A] border border-[#E8E5DF] rounded-full text-xs font-semibold uppercase tracking-wider shrink-0 transition-colors shadow-xs active:scale-95"
             aria-label="Filter and Sort Options"
           >
-            <SlidersHorizontal size={14} className="text-[#4A1D3F]" />
+            <SlidersHorizontal size={14} className="text-[#7B1E2B]" />
             <span className="hidden sm:inline">Filter & Sort</span>
           </button>
         </div>
@@ -319,7 +319,7 @@ export const Shop: React.FC = () => {
                     step={250}
                     value={priceRange[1]}
                     onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-                    className="w-full accent-[#4A1D3F] h-2 bg-[#E8E5DF] rounded-lg cursor-pointer"
+                    className="w-full accent-[#7B1E2B] h-2 bg-[#E8E5DF] rounded-lg cursor-pointer"
                   />
                   <div className="flex justify-between text-[11px] text-[#6B7280]">
                     <span>₹0</span>
@@ -344,7 +344,7 @@ export const Shop: React.FC = () => {
                         onClick={() => setSortBy(sort.id)}
                         className={`text-left px-4 py-3 min-h-[44px] rounded-xl text-xs font-medium transition-all ${
                           sortBy === sort.id 
-                            ? 'bg-[#4A1D3F] text-white font-semibold shadow-xs' 
+                            ? 'bg-[#7B1E2B] text-white font-semibold shadow-xs' 
                             : 'bg-[#FAF8F5] text-[#1A1A1A] hover:bg-[#F2EFEA] border border-[#E8E5DF]'
                         }`}
                       >
@@ -396,7 +396,7 @@ export const Shop: React.FC = () => {
                 setPriceRange([0, 10000]);
                 navigate('/shop');
               }}
-              className="text-[#4A1D3F] hover:underline flex items-center gap-1 font-medium min-h-[44px] py-1"
+              className="text-[#7B1E2B] hover:underline flex items-center gap-1 font-medium min-h-[44px] py-1"
             >
               <RotateCcw size={12} />
               <span>Clear filters</span>

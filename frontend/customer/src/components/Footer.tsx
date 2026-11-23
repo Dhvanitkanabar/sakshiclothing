@@ -62,17 +62,17 @@ export const Footer: React.FC = () => {
         {/* 1. BRAND TRUST BADGES STRIP */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 py-6 px-4 bg-[#261C28] rounded-2xl border border-[#3E2B40] mb-12 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#4A1D3F] flex items-center justify-center shrink-0 text-[#C6A15B]">
+            <div className="w-10 h-10 rounded-full bg-[#7B1E2B] flex items-center justify-center shrink-0 text-[#C6A15B]">
               <Truck size={18} />
             </div>
             <div>
-              <p className="font-semibold text-white text-xs">Free Express Shipping</p>
+              <p className="font-semibold text-white text-xs">Free Pan-India Delivery</p>
               <p className="text-[#A89FA9] text-[11px]">On all prepaid & COD orders above ₹{BUSINESS_CONFIG.policies.freeShippingThreshold}</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#4A1D3F] flex items-center justify-center shrink-0 text-[#C6A15B]">
+            <div className="w-10 h-10 rounded-full bg-[#7B1E2B] flex items-center justify-center shrink-0 text-[#C6A15B]">
               <Banknote size={18} />
             </div>
             <div>
@@ -82,7 +82,7 @@ export const Footer: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#4A1D3F] flex items-center justify-center shrink-0 text-[#C6A15B]">
+            <div className="w-10 h-10 rounded-full bg-[#7B1E2B] flex items-center justify-center shrink-0 text-[#C6A15B]">
               <RotateCcw size={18} />
             </div>
             <div>
@@ -92,12 +92,12 @@ export const Footer: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#4A1D3F] flex items-center justify-center shrink-0 text-[#C6A15B]">
+            <div className="w-10 h-10 rounded-full bg-[#7B1E2B] flex items-center justify-center shrink-0 text-[#C6A15B]">
               <Sparkles size={18} />
             </div>
             <div>
-              <p className="font-semibold text-white text-xs">Skin-Friendly Imitation</p>
-              <p className="text-[#A89FA9] text-[11px]">Lead-free brass with anti-tarnish finish</p>
+              <p className="font-semibold text-white text-xs">Quality Imitation Jewels</p>
+              <p className="text-[#A89FA9] text-[11px]">Brass & copper alloy with gold tone finish</p>
             </div>
           </div>
         </div>
@@ -106,7 +106,7 @@ export const Footer: React.FC = () => {
         <div className="bg-[#261C28] border border-[#3E2B40] rounded-2xl p-6 sm:p-8 mb-12">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
             <div className="text-center lg:text-left space-y-1.5 max-w-lg">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#4A1D3F] text-[#C6A15B] text-[10px] uppercase tracking-wider font-semibold">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#7B1E2B] text-[#C6A15B] text-[10px] uppercase tracking-wider font-semibold">
                 <Sparkles size={12} />
                 <span>Sakshi Insiders Club</span>
               </span>
@@ -159,7 +159,7 @@ export const Footer: React.FC = () => {
               </span>
             </Link>
             <p className="text-[11px] text-[#A89FA9] leading-relaxed">
-              Curating authentic Indian clothing and hypoallergenic imitation artificial jewellery for the modern woman.
+              Everyday Indian fashion, kurtas, festive ensembles, and artificial jewellery from Surat, Gujarat.
             </p>
             <div className="space-y-2 text-[11px] text-[#DDD6DF] pt-1">
               <p className="flex items-start gap-2">

@@ -18,6 +18,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import CookieConsent from './components/CookieConsent';
 import OfflineBanner from './components/OfflineBanner';
 import VersionUpdateModal from './components/VersionUpdateModal';
+import FloatingWhatsApp from './components/FloatingWhatsApp';
 import { nativeApp } from './services/nativeService';
 import { motion, AnimatePresence } from 'motion/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
@@ -155,6 +156,7 @@ const AppContent = () => {
       </main>
       {!isAuthPage && <BottomNav />}
       {!isAuthPage && <Footer />}
+      <FloatingWhatsApp />
       <CookieConsent />
       <Toaster position="top-center" richColors />
       <SpeedInsights />

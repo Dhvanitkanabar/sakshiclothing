@@ -31,7 +31,7 @@ const Wishlist: React.FC = () => {
           className="max-w-md w-full space-y-6 bg-white p-8 sm:p-12 rounded-3xl border border-[#E8E5DF] shadow-xs"
         >
           <div className="relative inline-flex items-center justify-center">
-            <div className="w-20 h-20 bg-[#FAF8F5] rounded-full flex items-center justify-center text-[#4A1D3F] border border-[#E8E5DF]">
+            <div className="w-20 h-20 bg-[#FAF8F5] rounded-full flex items-center justify-center text-[#7B1E2B] border border-[#E8E5DF]">
               <Heart size={36} strokeWidth={1.5} />
             </div>
             <motion.div
@@ -99,7 +99,7 @@ const Wishlist: React.FC = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.4 }}
-                  className="bg-white rounded-2xl sm:rounded-3xl border border-[#E8E5DF] overflow-hidden flex flex-col justify-between shadow-xs hover:border-[#4A1D3F]/30 transition-all duration-300"
+                  className="bg-white rounded-2xl sm:rounded-3xl border border-[#E8E5DF] overflow-hidden flex flex-col justify-between shadow-xs hover:border-[#7B1E2B]/30 transition-all duration-300"
                 >
                   <div className="relative aspect-[3/4] bg-[#FAF8F5] overflow-hidden">
                     <img
@@ -118,7 +118,7 @@ const Wishlist: React.FC = () => {
 
                     {/* Category Pill */}
                     {isJewellery && (
-                      <div className="absolute top-3 left-3 bg-[#4A1D3F]/90 backdrop-blur-xs text-[#C6A15B] text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border border-[#C6A15B]/30">
+                      <div className="absolute top-3 left-3 bg-[#7B1E2B]/90 backdrop-blur-xs text-[#C6A15B] text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border border-[#C6A15B]/30">
                         Imitation Jewellery
                       </div>
                     )}
@@ -138,7 +138,7 @@ const Wishlist: React.FC = () => {
                   <div className="p-3.5 sm:p-4 flex flex-col flex-1 justify-between gap-3">
                     <div className="space-y-1">
                       <Link to={`/product/${product.id}`}>
-                        <h3 className="text-xs sm:text-sm font-semibold text-[#1A1A1A] line-clamp-1 hover:text-[#4A1D3F] transition-colors">
+                        <h3 className="text-xs sm:text-sm font-semibold text-[#1A1A1A] line-clamp-1 hover:text-[#7B1E2B] transition-colors">
                           {product.name}
                         </h3>
                       </Link>

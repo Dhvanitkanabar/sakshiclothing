@@ -55,13 +55,13 @@ export const Category: React.FC = () => {
       <div className="relative border-b border-[#E8E5DF] bg-[#FBF9F6] py-12 sm:py-16 overflow-hidden">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 text-center space-y-3">
           <nav aria-label="Breadcrumb" className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-[#E8E5DF] text-[10px] text-[#4A4A4A] uppercase tracking-wider mb-2 font-semibold shadow-xs">
-            <Link to="/" className="hover:text-[#4A1D3F] transition-colors">Home</Link>
+            <Link to="/" className="hover:text-[#7B1E2B] transition-colors">Home</Link>
             <ChevronRight size={12} />
-            <Link to={`/category/${main}`} className="hover:text-[#4A1D3F] transition-colors capitalize">{main}</Link>
+            <Link to={`/category/${main}`} className="hover:text-[#7B1E2B] transition-colors capitalize">{main}</Link>
             {sub && (
               <>
                 <ChevronRight size={12} />
-                <span className="text-[#4A1D3F] capitalize">{sub}</span>
+                <span className="text-[#7B1E2B] capitalize">{sub}</span>
               </>
             )}
           </nav>
@@ -102,7 +102,7 @@ export const Category: React.FC = () => {
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
               aria-label="Sort products"
-              className="bg-white border border-[#E8E5DF] rounded-xl text-xs font-medium text-[#1A1A1A] px-3 py-2 min-h-[44px] focus:outline-none focus:border-[#4A1D3F]"
+              className="bg-white border border-[#E8E5DF] rounded-xl text-xs font-medium text-[#1A1A1A] px-3 py-2 min-h-[44px] focus:outline-none focus:border-[#7B1E2B]"
             >
               <option value="featured">Featured First</option>
               <option value="low-high">Price: Low to High</option>

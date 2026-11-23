@@ -17,14 +17,14 @@ export const PrivacyPolicy: React.FC = () => {
         
         {/* Breadcrumb Navigation */}
         <nav aria-label="Breadcrumb" className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FAF8F5] border border-[#E8E5DF] text-[11px] text-[#6B7280]">
-          <Link to="/" className="hover:text-[#4A1D3F] transition-colors">Home</Link>
+          <Link to="/" className="hover:text-[#7B1E2B] transition-colors">Home</Link>
           <ChevronRight size={12} />
           <span className="text-[#1A1A1A] font-semibold">Privacy Policy</span>
         </nav>
 
         {/* Page Header */}
         <header className="space-y-3 border-b border-[#E8E5DF] pb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F6EFF4] text-[#4A1D3F] text-xs font-semibold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FDF4F5] text-[#7B1E2B] text-xs font-semibold uppercase tracking-wider">
             <Lock size={14} />
             <span>Data Protection & Privacy</span>
           </div>
@@ -96,15 +96,15 @@ export const PrivacyPolicy: React.FC = () => {
           </p>
           <ul className="space-y-3 text-xs sm:text-sm text-[#4B5563] leading-relaxed">
             <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#4A1D3F] mt-2 shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#7B1E2B] mt-2 shrink-0" />
               <span><strong>Clerk Inc.:</strong> Provides user session authentication, multi-factor verification, and OAuth delegation adhering to SOC 2 Type II standards.</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#4A1D3F] mt-2 shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#7B1E2B] mt-2 shrink-0" />
               <span><strong>Razorpay Software Private Limited:</strong> RBI-licensed payment aggregator facilitating PCI-DSS Level 1 encrypted transactions.</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#4A1D3F] mt-2 shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#7B1E2B] mt-2 shrink-0" />
               <span><strong>Logistics Partners (Bluedart, Delhivery, DTDC):</strong> Receive only recipient name, delivery address, and phone number for parcel handoff and OTP-verified delivery.</span>
             </li>
           </ul>
@@ -151,7 +151,7 @@ export const PrivacyPolicy: React.FC = () => {
 
         {/* Section 6: Grievance Officer & Contact */}
         <section className="bg-white p-6 sm:p-8 rounded-2xl border border-[#3E2B40]/20 space-y-4 shadow-sm bg-gradient-to-br from-white to-[#FAF8F5]">
-          <h2 className="font-serif text-xl sm:text-2xl font-medium text-[#4A1D3F]">
+          <h2 className="font-serif text-xl sm:text-2xl font-medium text-[#7B1E2B]">
             6. Grievance Redressal Officer
           </h2>
           <p className="text-xs sm:text-sm text-[#4B5563] leading-relaxed">
@@ -162,7 +162,7 @@ export const PrivacyPolicy: React.FC = () => {
             <p><strong>Role:</strong> {BUSINESS_CONFIG.grievanceOfficer.designation}</p>
             <p className="flex items-center gap-2">
               <Mail size={13} className="text-[#C6A15B]" />
-              <span><strong>Email:</strong> <a href={`mailto:${BUSINESS_CONFIG.grievanceOfficer.email}`} className="text-[#4A1D3F] underline">{BUSINESS_CONFIG.grievanceOfficer.email}</a></span>
+              <span><strong>Email:</strong> <a href={`mailto:${BUSINESS_CONFIG.grievanceOfficer.email}`} className="text-[#7B1E2B] underline">{BUSINESS_CONFIG.grievanceOfficer.email}</a></span>
             </p>
             <p className="flex items-center gap-2">
               <Phone size={13} className="text-[#C6A15B]" />

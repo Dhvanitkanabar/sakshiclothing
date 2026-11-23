@@ -8,20 +8,35 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   /* Brand Palette Tokens */
-  --color-brand-bg: #FBF9F6;
+  --color-brand-bg: #FFFFFF;
+  --color-brand-bg-warm: #FAF8F5;
   --color-brand-surface: #FFFFFF;
-  --color-brand-text: #1A1A1A;
-  --color-brand-muted: #6B7280;
+  --color-brand-text: #111111;
+  --color-brand-muted: #5C5855;
   
-  --color-brand-plum: #4A1D3F;
-  --color-brand-plum-hover: #3B1632;
-  --color-brand-plum-light: #6A2C5B;
-  --color-brand-plum-subtle: #F6EFF4;
+  /* Swappable One Brand Accent: Deep Maroon */
+  --color-brand-maroon: #7B1E2B;
+  --color-brand-maroon-hover: #621721;
+  --color-brand-maroon-light: #942534;
+  --color-brand-maroon-subtle: #FDF4F5;
 
+  /* Accent aliases for unified theme swapping */
+  --color-brand-accent: var(--color-brand-maroon);
+  --color-brand-accent-hover: var(--color-brand-maroon-hover);
+  --color-brand-accent-subtle: var(--color-brand-maroon-subtle);
+
+  /* Backward-compatible alias for existing plum classes */
+  --color-brand-plum: #7B1E2B;
+  --color-brand-plum-hover: #621721;
+  --color-brand-plum-light: #942534;
+  --color-brand-plum-subtle: #FDF4F5;
+
+  /* Jewellery Highlights Only */
   --color-brand-champagne: #C6A15B;
   --color-brand-champagne-light: #F4EEDF;
   --color-brand-champagne-dark: #A4813D;
 
+  /* One Sale Colour */
   --color-brand-sale: #B43E2B;
   --color-brand-sale-subtle: #FDF2F0;
 
@@ -30,11 +45,14 @@
 }
 
 :root {
-  --bg-primary: #FBF9F6;
+  --bg-primary: #FFFFFF;
+  --bg-warm: #FAF8F5;
   --bg-surface: #FFFFFF;
-  --text-primary: #1A1A1A;
-  --text-muted: #6B7280;
-  --accent-plum: #4A1D3F;
+  --text-primary: #111111;
+  --text-muted: #5C5855;
+  --accent-maroon: #7B1E2B;
+  --accent-accent: #7B1E2B;
+  --accent-plum: #7B1E2B;
   --accent-champagne: #C6A15B;
   --accent-sale: #B43E2B;
   --border-subtle: #E8E5DF;
@@ -176,10 +194,10 @@
 
 /* Glass and elevation styles */
 .glass-effect {
-  background: rgba(251, 249, 246, 0.85);
+  background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(232, 229, 223, 0.6);
+  border: 1px solid rgba(232, 229, 223, 0.7);
 }
 
 .card-hover-effect {
@@ -188,7 +206,23 @@
 
 .card-hover-effect:hover {
   transform: translateY(-4px);
-  box-shadow: 0 18px 36px -8px rgba(74, 29, 63, 0.1);
+  box-shadow: 0 18px 36px -8px rgba(123, 30, 43, 0.12);
+}
+
+/* Accessibility: Respect Reduced Motion Preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-marquee {
+    animation: none !important;
+    transform: none !important;
+  }
 }
 
 /* Accessible Reduced-Motion Override */

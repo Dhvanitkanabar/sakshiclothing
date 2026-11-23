@@ -272,7 +272,7 @@ export const AuthPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isLoading || !email}
-                  className="w-full py-3 px-4 bg-[#4A1D3F] hover:bg-[#3B1732] text-white border border-[#C6A15B]/30 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider transition-all duration-300 shadow-md flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.99] min-h-[44px]"
+                  className="w-full py-3 px-4 bg-[#7B1E2B] hover:bg-[#621721] text-white border border-[#C6A15B]/30 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider transition-all duration-300 shadow-md flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.99] min-h-[44px]"
                 >
                   {isLoading ? (
                     <Loader2 size={16} className="animate-spin" />
@@ -309,7 +309,7 @@ export const AuthPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading || otp.length !== 6}
-                className="w-full py-3 px-4 bg-[#4A1D3F] hover:bg-[#3B1732] text-white border border-[#C6A15B]/30 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider transition-all duration-300 shadow-md flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.99] min-h-[44px]"
+                className="w-full py-3 px-4 bg-[#7B1E2B] hover:bg-[#621721] text-white border border-[#C6A15B]/30 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider transition-all duration-300 shadow-md flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.99] min-h-[44px]"
               >
                 {isLoading ? (
                   <Loader2 size={16} className="animate-spin" />

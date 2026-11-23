@@ -56,7 +56,7 @@ const PaymentRetry: React.FC = () => {
             toast.success('Payment completed successfully.');
             navigate('/order-success', { state: { orderId, total: amount } });
           },
-          theme: { color: '#4A1D3F' }
+          theme: { color: '#7B1E2B' }
         };
         const rzp = new (window as any).Razorpay(options);
         rzp.on('payment.failed', function () {
@@ -101,7 +101,7 @@ const PaymentRetry: React.FC = () => {
 
         <div className="bg-[#FAF8F5] p-5 rounded-2xl border border-[#E8E5DF] space-y-1">
           <p className="text-[10px] uppercase tracking-widest text-[#6B7280] font-bold">Outstanding Amount</p>
-          <p className="text-3xl font-serif font-bold text-[#4A1D3F]">₹{amount?.toLocaleString('en-IN')}</p>
+          <p className="text-3xl font-serif font-bold text-[#7B1E2B]">₹{amount?.toLocaleString('en-IN')}</p>
         </div>
 
         <div className="space-y-3 pt-2">

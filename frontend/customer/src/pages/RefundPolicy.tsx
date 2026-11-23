@@ -17,14 +17,14 @@ export const RefundPolicy: React.FC = () => {
         
         {/* Breadcrumb Navigation */}
         <nav aria-label="Breadcrumb" className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FAF8F5] border border-[#E8E5DF] text-[11px] text-[#6B7280]">
-          <Link to="/" className="hover:text-[#4A1D3F] transition-colors">Home</Link>
+          <Link to="/" className="hover:text-[#7B1E2B] transition-colors">Home</Link>
           <ChevronRight size={12} />
           <span className="text-[#1A1A1A] font-semibold">Refund & Return Policy</span>
         </nav>
 
         {/* Page Header */}
         <header className="space-y-3 border-b border-[#E8E5DF] pb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F6EFF4] text-[#4A1D3F] text-xs font-semibold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FDF4F5] text-[#7B1E2B] text-xs font-semibold uppercase tracking-wider">
             <RotateCcw size={14} />
             <span>Customer Protection & Returns</span>
           </div>
@@ -53,7 +53,7 @@ export const RefundPolicy: React.FC = () => {
         {/* Section 1: Clothing Returns & Exchanges */}
         <section className="bg-white p-6 sm:p-8 rounded-2xl border border-[#E8E5DF] space-y-4 shadow-xs">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-[#F6EFF4] text-[#4A1D3F] flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-full bg-[#FDF4F5] text-[#7B1E2B] flex items-center justify-center shrink-0">
               <CheckCircle2 size={16} />
             </div>
             <h2 className="font-serif text-xl sm:text-2xl font-medium text-[#1A1A1A]">
@@ -104,7 +104,7 @@ export const RefundPolicy: React.FC = () => {
         {/* Section 3: Order Cancellation */}
         <section className="bg-white p-6 sm:p-8 rounded-2xl border border-[#E8E5DF] space-y-4 shadow-xs">
           <h2 className="font-serif text-xl sm:text-2xl font-medium text-[#1A1A1A] flex items-center gap-2">
-            <Clock size={20} className="text-[#4A1D3F]" />
+            <Clock size={20} className="text-[#7B1E2B]" />
             <span>3. Order Cancellation Policy</span>
           </h2>
           <div className="space-y-3 text-xs sm:text-sm text-[#4B5563] leading-relaxed">
@@ -139,7 +139,7 @@ export const RefundPolicy: React.FC = () => {
 
         {/* Section 5: Grievance & Escalation */}
         <section className="bg-white p-6 sm:p-8 rounded-2xl border border-[#3E2B40]/20 space-y-4 shadow-sm bg-gradient-to-br from-white to-[#FAF8F5]">
-          <h2 className="font-serif text-xl sm:text-2xl font-medium text-[#4A1D3F]">
+          <h2 className="font-serif text-xl sm:text-2xl font-medium text-[#7B1E2B]">
             5. Return Assistance & Grievance Redressal
           </h2>
           <p className="text-xs sm:text-sm text-[#4B5563] leading-relaxed">
@@ -147,7 +147,7 @@ export const RefundPolicy: React.FC = () => {
           </p>
           <div className="p-4 sm:p-5 rounded-xl bg-[#FAF8F5] border border-[#E8E5DF] space-y-2 text-xs text-[#1A1A1A]">
             <p><strong>Designation:</strong> {BUSINESS_CONFIG.grievanceOfficer.designation}</p>
-            <p><strong>Email:</strong> <a href={`mailto:${BUSINESS_CONFIG.grievanceOfficer.email}`} className="text-[#4A1D3F] underline">{BUSINESS_CONFIG.grievanceOfficer.email}</a></p>
+            <p><strong>Email:</strong> <a href={`mailto:${BUSINESS_CONFIG.grievanceOfficer.email}`} className="text-[#7B1E2B] underline">{BUSINESS_CONFIG.grievanceOfficer.email}</a></p>
             <p><strong>Direct Helpline:</strong> {BUSINESS_CONFIG.grievanceOfficer.phone}</p>
             <p><strong>SLA:</strong> {BUSINESS_CONFIG.grievanceOfficer.responseSla}</p>
           </div>

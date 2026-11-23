@@ -74,7 +74,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, dark = false 
       className="group relative flex flex-col w-full h-full"
     >
       {/* Visual Media Container */}
-      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-[#F4EFEA] border border-[#E8E5DF] transition-all duration-300 group-hover:border-[#4A1D3F]/30 group-hover:shadow-md">
+      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-[#F4EFEA] border border-[#E8E5DF] transition-all duration-300 group-hover:border-[#7B1E2B]/30 group-hover:shadow-md">
         <Link
           to={`/product/${product.id}`}
           className="block w-full h-full relative"
@@ -101,7 +101,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, dark = false 
               <span>Imitation Jewellery</span>
             </span>
           ) : (
-            <span className="bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-semibold tracking-wider uppercase text-[#4A1D3F] border border-[#4A1D3F]/20 shadow-xs">
+            <span className="bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-semibold tracking-wider uppercase text-[#7B1E2B] border border-[#7B1E2B]/20 shadow-xs">
               {product.category || 'Apparel'}
             </span>
           )}
@@ -122,8 +122,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, dark = false 
           }}
           className={`absolute top-2.5 right-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full backdrop-blur-md transition-all duration-200 z-20 ${
             isWishlisted
-              ? 'bg-[#4A1D3F] text-white shadow-md scale-105'
-              : 'bg-white/85 text-[#1A1A1A] hover:bg-white hover:text-[#4A1D3F] shadow-xs'
+              ? 'bg-[#7B1E2B] text-white shadow-md scale-105'
+              : 'bg-white/85 text-[#1A1A1A] hover:bg-white hover:text-[#7B1E2B] shadow-xs'
           }`}
           title={isWishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
           aria-label={isWishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
@@ -161,7 +161,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, dark = false 
                   }}
                   className={`text-[11px] font-medium px-1.5 py-0.5 rounded transition-colors ${
                     selectedSize === size
-                      ? 'bg-[#4A1D3F] text-white font-semibold'
+                      ? 'bg-[#7B1E2B] text-white font-semibold'
                       : 'text-[#1A1A1A] hover:bg-[#F2EFE9]'
                   }`}
                 >
@@ -196,7 +196,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, dark = false 
               window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
             }}
           >
-            <h3 className="font-serif text-sm sm:text-base text-[#1A1A1A] font-medium line-clamp-1 group-hover:text-[#4A1D3F] transition-colors leading-snug">
+            <h3 className="font-serif text-sm sm:text-base text-[#1A1A1A] font-medium line-clamp-1 group-hover:text-[#7B1E2B] transition-colors leading-snug">
               {product.name}
             </h3>
           </Link>
@@ -223,7 +223,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, dark = false 
                 ? 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed shadow-none'
                 : isJewellery
                 ? 'bg-[#C6A15B] hover:bg-[#B38F48] text-white active:scale-95'
-                : 'bg-[#4A1D3F] hover:bg-[#3B1632] text-white active:scale-95'
+                : 'bg-[#7B1E2B] hover:bg-[#621721] text-white active:scale-95'
             }`}
             title={isOutOfStock ? 'Sold out' : 'Add to shopping bag'}
             aria-label={`Add ${product.name} to bag`}

@@ -318,7 +318,7 @@ export const Checkout: React.FC = () => {
         selected_mode: selectedPaymentMode,
         orderNumber: initiatedOrder.orderNumber
       },
-      theme: { color: '#4A1D3F' }
+      theme: { color: '#7B1E2B' }
     };
 
     try {
@@ -414,7 +414,7 @@ export const Checkout: React.FC = () => {
   if (cartLoading) {
     return (
       <div className="min-h-screen bg-[#FBF9F6] flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-[#4A1D3F] border-t-transparent animate-spin"></div>
+        <div className="w-8 h-8 rounded-full border-2 border-[#7B1E2B] border-t-transparent animate-spin"></div>
       </div>
     );
   }
@@ -432,7 +432,7 @@ export const Checkout: React.FC = () => {
         <div className="mb-6 sm:mb-8">
           <button
             onClick={() => navigate('/cart')}
-            className="group flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#6B7280] hover:text-[#4A1D3F] transition-colors min-h-[44px]"
+            className="group flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#6B7280] hover:text-[#7B1E2B] transition-colors min-h-[44px]"
           >
             <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-1" />
             <span>Back to Shopping Bag</span>
@@ -457,7 +457,7 @@ export const Checkout: React.FC = () => {
               {/* 1. Shipping Section */}
               <section className="bg-white p-5 sm:p-8 rounded-3xl shadow-xs border border-[#E8E5DF]">
                 <div className="flex items-center gap-3.5 mb-6">
-                  <div className="w-8 h-8 rounded-full bg-[#4A1D3F] text-white flex items-center justify-center text-xs font-bold">1</div>
+                  <div className="w-8 h-8 rounded-full bg-[#7B1E2B] text-white flex items-center justify-center text-xs font-bold">1</div>
                   <h2 className="font-serif text-lg sm:text-xl font-medium text-[#1A1A1A]">Shipping Address</h2>
                 </div>
 
@@ -474,8 +474,8 @@ export const Checkout: React.FC = () => {
                           key={addr._id || addr.id} 
                           className={`flex items-start gap-3.5 p-4 rounded-2xl border cursor-pointer transition-all ${
                             selectedAddressId === (addr._id || addr.id) && !isAddingNew 
-                              ? 'border-[#4A1D3F] bg-[#F6EFF4]/60 shadow-xs' 
-                              : 'border-[#E8E5DF] hover:border-[#4A1D3F]'
+                              ? 'border-[#7B1E2B] bg-[#FDF4F5]/60 shadow-xs' 
+                              : 'border-[#E8E5DF] hover:border-[#7B1E2B]'
                           }`}
                         >
                           <input
@@ -483,7 +483,7 @@ export const Checkout: React.FC = () => {
                             name="addressSelection"
                             checked={selectedAddressId === (addr._id || addr.id) && !isAddingNew}
                             onChange={() => { setSelectedAddressId(addr._id || addr.id); setIsAddingNew(false); }}
-                            className="mt-1 accent-[#4A1D3F]"
+                            className="mt-1 accent-[#7B1E2B]"
                           />
                           <div className="flex-1 text-xs">
                             <p className="font-semibold text-sm text-[#1A1A1A]">{addr.fullName && addr.fullName !== 'User' ? addr.fullName : (user?.fullName || user?.name || 'Customer')}</p>
@@ -495,7 +495,7 @@ export const Checkout: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setIsAddingNew(true)}
-                      className="text-xs font-semibold uppercase tracking-wider text-[#4A1D3F] border-b border-[#4A1D3F] pb-0.5 hover:text-[#3B1632] transition-colors min-h-[44px] inline-flex items-center"
+                      className="text-xs font-semibold uppercase tracking-wider text-[#7B1E2B] border-b border-[#7B1E2B] pb-0.5 hover:text-[#621721] transition-colors min-h-[44px] inline-flex items-center"
                     >
                       + Add New Address
                     </button>
@@ -515,7 +515,7 @@ export const Checkout: React.FC = () => {
                         disabled={detectingLocation}
                         className="px-4 py-2.5 bg-white hover:bg-[#FAF8F5] border border-[#E8E5DF] text-[#1A1A1A] text-xs font-semibold rounded-xl flex items-center gap-2 transition-colors min-h-[44px]"
                       >
-                        <Navigation size={14} className={`text-[#4A1D3F] ${detectingLocation ? 'animate-spin' : ''}`} />
+                        <Navigation size={14} className={`text-[#7B1E2B] ${detectingLocation ? 'animate-spin' : ''}`} />
                         <span>{detectingLocation ? 'Locating…' : detectedCoords ? `GPS: ${detectedCoords.lat.toFixed(4)}, ${detectedCoords.lng.toFixed(4)}` : 'Use Device Location'}</span>
                       </button>
                     </div>
@@ -540,7 +540,7 @@ export const Checkout: React.FC = () => {
                           type="text"
                           value={formData.fullName}
                           onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                          className="w-full px-4 py-3 rounded-xl border border-[#E8E5DF] focus:border-[#4A1D3F] focus:ring-1 focus:ring-[#4A1D3F] outline-none text-base text-[#1A1A1A] bg-white font-sans"
+                          className="w-full px-4 py-3 rounded-xl border border-[#E8E5DF] focus:border-[#7B1E2B] focus:ring-1 focus:ring-[#7B1E2B] outline-none text-base text-[#1A1A1A] bg-white font-sans"
                           placeholder="John Doe"
                         />
                       </div>
@@ -551,7 +551,7 @@ export const Checkout: React.FC = () => {
                           type="text"
                           value={formData.address}
                           onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                          className="w-full px-4 py-3 rounded-xl border border-[#E8E5DF] focus:border-[#4A1D3F] focus:ring-1 focus:ring-[#4A1D3F] outline-none text-base text-[#1A1A1A] bg-white font-sans"
+                          className="w-full px-4 py-3 rounded-xl border border-[#E8E5DF] focus:border-[#7B1E2B] focus:ring-1 focus:ring-[#7B1E2B] outline-none text-base text-[#1A1A1A] bg-white font-sans"
                           placeholder="e.g. 123, Luxury Lane, Apartment 4B"
                         />
                       </div>
@@ -562,7 +562,7 @@ export const Checkout: React.FC = () => {
                           type="text"
                           value={formData.city}
                           onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                          className="w-full px-4 py-3 rounded-xl border border-[#E8E5DF] focus:border-[#4A1D3F] focus:ring-1 focus:ring-[#4A1D3F] outline-none text-base text-[#1A1A1A] bg-white font-sans"
+                          className="w-full px-4 py-3 rounded-xl border border-[#E8E5DF] focus:border-[#7B1E2B] focus:ring-1 focus:ring-[#7B1E2B] outline-none text-base text-[#1A1A1A] bg-white font-sans"
                           placeholder="Mumbai"
                         />
                       </div>
@@ -573,7 +573,7 @@ export const Checkout: React.FC = () => {
                           type="text"
                           value={formData.zip}
                           onChange={(e) => setFormData({ ...formData, zip: e.target.value })}
-                          className="w-full px-4 py-3 rounded-xl border border-[#E8E5DF] focus:border-[#4A1D3F] focus:ring-1 focus:ring-[#4A1D3F] outline-none text-base text-[#1A1A1A] bg-white font-sans"
+                          className="w-full px-4 py-3 rounded-xl border border-[#E8E5DF] focus:border-[#7B1E2B] focus:ring-1 focus:ring-[#7B1E2B] outline-none text-base text-[#1A1A1A] bg-white font-sans"
                           placeholder="400001"
                         />
                       </div>
@@ -584,7 +584,7 @@ export const Checkout: React.FC = () => {
                           type="tel"
                           value={formData.phone}
                           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                          className="w-full px-4 py-3 rounded-xl border border-[#E8E5DF] focus:border-[#4A1D3F] focus:ring-1 focus:ring-[#4A1D3F] outline-none text-base text-[#1A1A1A] bg-white font-sans"
+                          className="w-full px-4 py-3 rounded-xl border border-[#E8E5DF] focus:border-[#7B1E2B] focus:ring-1 focus:ring-[#7B1E2B] outline-none text-base text-[#1A1A1A] bg-white font-sans"
                           placeholder="+91 98765 43210"
                         />
                       </div>
@@ -596,7 +596,7 @@ export const Checkout: React.FC = () => {
               {/* 2. Payment Section */}
               <section className="bg-white p-5 sm:p-8 rounded-3xl shadow-xs border border-[#E8E5DF]">
                 <div className="flex items-center gap-3.5 mb-6">
-                  <div className="w-8 h-8 rounded-full bg-[#4A1D3F] text-white flex items-center justify-center text-xs font-bold">2</div>
+                  <div className="w-8 h-8 rounded-full bg-[#7B1E2B] text-white flex items-center justify-center text-xs font-bold">2</div>
                   <h2 className="font-serif text-lg sm:text-xl font-medium text-[#1A1A1A]">Payment Method</h2>
                 </div>
 
@@ -606,13 +606,13 @@ export const Checkout: React.FC = () => {
                     onClick={() => setSelectedPaymentMode('upi')}
                     className={`p-5 rounded-2xl border-2 transition-all cursor-pointer ${
                       selectedPaymentMode === 'upi' 
-                        ? 'border-[#4A1D3F] bg-[#F6EFF4]/60 shadow-xs' 
-                        : 'border-[#E8E5DF] bg-white hover:border-[#4A1D3F]/40'
+                        ? 'border-[#7B1E2B] bg-[#FDF4F5]/60 shadow-xs' 
+                        : 'border-[#E8E5DF] bg-white hover:border-[#7B1E2B]/40'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3.5">
-                        <div className="w-11 h-11 bg-[#4A1D3F] text-white rounded-xl flex items-center justify-center shadow-xs">
+                        <div className="w-11 h-11 bg-[#7B1E2B] text-white rounded-xl flex items-center justify-center shadow-xs">
                           <span className="font-bold text-xs uppercase tracking-wider">UPI</span>
                         </div>
                         <div>
@@ -621,9 +621,9 @@ export const Checkout: React.FC = () => {
                         </div>
                       </div>
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                        selectedPaymentMode === 'upi' ? 'border-[#4A1D3F]' : 'border-[#9CA3AF]'
+                        selectedPaymentMode === 'upi' ? 'border-[#7B1E2B]' : 'border-[#9CA3AF]'
                       }`}>
-                        {selectedPaymentMode === 'upi' && <div className="w-2.5 h-2.5 rounded-full bg-[#4A1D3F]" />}
+                        {selectedPaymentMode === 'upi' && <div className="w-2.5 h-2.5 rounded-full bg-[#7B1E2B]" />}
                       </div>
                     </div>
                   </div>
@@ -633,8 +633,8 @@ export const Checkout: React.FC = () => {
                     onClick={() => setSelectedPaymentMode('cards_all')}
                     className={`p-5 rounded-2xl border-2 transition-all cursor-pointer ${
                       selectedPaymentMode === 'cards_all' 
-                        ? 'border-[#4A1D3F] bg-[#F6EFF4]/60 shadow-xs' 
-                        : 'border-[#E8E5DF] bg-white hover:border-[#4A1D3F]/40'
+                        ? 'border-[#7B1E2B] bg-[#FDF4F5]/60 shadow-xs' 
+                        : 'border-[#E8E5DF] bg-white hover:border-[#7B1E2B]/40'
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -648,16 +648,16 @@ export const Checkout: React.FC = () => {
                         </div>
                       </div>
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                        selectedPaymentMode === 'cards_all' ? 'border-[#4A1D3F]' : 'border-[#9CA3AF]'
+                        selectedPaymentMode === 'cards_all' ? 'border-[#7B1E2B]' : 'border-[#9CA3AF]'
                       }`}>
-                        {selectedPaymentMode === 'cards_all' && <div className="w-2.5 h-2.5 rounded-full bg-[#4A1D3F]" />}
+                        {selectedPaymentMode === 'cards_all' && <div className="w-2.5 h-2.5 rounded-full bg-[#7B1E2B]" />}
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="mt-4 p-3.5 rounded-2xl bg-[#FAF8F5] border border-[#E8E5DF] text-xs text-[#6B7280] flex items-center gap-2">
-                  <Lock size={14} className="text-[#4A1D3F] shrink-0" />
+                  <Lock size={14} className="text-[#7B1E2B] shrink-0" />
                   <span>256-bit Encrypted SSL & PCI-DSS compliant checkout via Razorpay.</span>
                 </div>
               </section>
@@ -667,15 +667,15 @@ export const Checkout: React.FC = () => {
                 <button
                   disabled={loading}
                   type="submit"
-                  className="w-full min-h-[50px] bg-[#4A1D3F] hover:bg-[#3B1632] text-white py-4 rounded-full font-semibold uppercase tracking-wider text-xs shadow-md disabled:opacity-50 transition-all active:scale-98"
+                  className="w-full min-h-[50px] bg-[#7B1E2B] hover:bg-[#621721] text-white py-4 rounded-full font-semibold uppercase tracking-wider text-xs shadow-md disabled:opacity-50 transition-all active:scale-98"
                 >
                   {loading ? 'Processing...' : `Place Order — ₹${finalTotal.toLocaleString('en-IN')}`}
                 </button>
                 <p className="text-[11px] text-[#6B7280] text-center px-1 leading-relaxed">
                   By placing your order, you agree to our{' '}
-                  <Link to="/terms" target="_blank" className="text-[#4A1D3F] underline font-medium">Terms</Link>,{' '}
-                  <Link to="/privacy" target="_blank" className="text-[#4A1D3F] underline font-medium">Privacy Policy</Link>, and{' '}
-                  <Link to="/refund-policy" target="_blank" className="text-[#4A1D3F] underline font-medium">Refunds</Link>.
+                  <Link to="/terms" target="_blank" className="text-[#7B1E2B] underline font-medium">Terms</Link>,{' '}
+                  <Link to="/privacy" target="_blank" className="text-[#7B1E2B] underline font-medium">Privacy Policy</Link>, and{' '}
+                  <Link to="/refund-policy" target="_blank" className="text-[#7B1E2B] underline font-medium">Refunds</Link>.
                 </p>
               </div>
             </form>
@@ -739,7 +739,7 @@ export const Checkout: React.FC = () => {
               {/* Coupon Code Input */}
               <div className="pt-4 border-t border-[#E8E5DF] space-y-2">
                 <label className="flex items-center gap-1.5 text-xs font-semibold text-[#1A1A1A]">
-                  <Tag size={14} className="text-[#4A1D3F]" />
+                  <Tag size={14} className="text-[#7B1E2B]" />
                   <span>Apply Promotional Coupon</span>
                 </label>
                 <div className="flex gap-2">
@@ -748,7 +748,7 @@ export const Checkout: React.FC = () => {
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
                     placeholder="ENTER CODE (e.g. SAKSHI10)"
-                    className="flex-1 px-3.5 py-2.5 rounded-xl border border-[#E8E5DF] focus:border-[#4A1D3F] outline-none text-xs font-semibold uppercase tracking-wider min-h-[44px]"
+                    className="flex-1 px-3.5 py-2.5 rounded-xl border border-[#E8E5DF] focus:border-[#7B1E2B] outline-none text-xs font-semibold uppercase tracking-wider min-h-[44px]"
                   />
                   <Button
                     type="button"
@@ -781,15 +781,15 @@ export const Checkout: React.FC = () => {
                       }
                     }
                   }}
-                  className="w-full min-h-[50px] bg-[#4A1D3F] hover:bg-[#3B1632] text-white py-4 rounded-full font-semibold uppercase tracking-wider text-xs shadow-md disabled:opacity-50 transition-all active:scale-98 select-none"
+                  className="w-full min-h-[50px] bg-[#7B1E2B] hover:bg-[#621721] text-white py-4 rounded-full font-semibold uppercase tracking-wider text-xs shadow-md disabled:opacity-50 transition-all active:scale-98 select-none"
                 >
                   {loading ? 'Processing...' : `Place Order — ₹${finalTotal.toLocaleString('en-IN')}`}
                 </button>
                 <p className="text-[11px] text-[#6B7280] text-center px-1 leading-relaxed">
                   By placing your order, you agree to our{' '}
-                  <Link to="/terms" target="_blank" className="text-[#4A1D3F] underline font-medium">Terms of Service</Link>,{' '}
-                  <Link to="/privacy" target="_blank" className="text-[#4A1D3F] underline font-medium">Privacy Policy</Link>, and{' '}
-                  <Link to="/refund-policy" target="_blank" className="text-[#4A1D3F] underline font-medium">Refund Policy</Link>.
+                  <Link to="/terms" target="_blank" className="text-[#7B1E2B] underline font-medium">Terms of Service</Link>,{' '}
+                  <Link to="/privacy" target="_blank" className="text-[#7B1E2B] underline font-medium">Privacy Policy</Link>, and{' '}
+                  <Link to="/refund-policy" target="_blank" className="text-[#7B1E2B] underline font-medium">Refund Policy</Link>.
                 </p>
               </div>
 
@@ -839,12 +839,12 @@ export const Checkout: React.FC = () => {
                   <p className="font-medium text-[#1A1A1A] flex items-center gap-2">
                     {selectedPaymentMode === 'upi' ? (
                       <>
-                        <Smartphone size={15} className="text-[#4A1D3F]" />
+                        <Smartphone size={15} className="text-[#7B1E2B]" />
                         <span>UPI (Google Pay, PhonePe, Paytm, QR)</span>
                       </>
                     ) : (
                       <>
-                        <CreditCard size={15} className="text-[#4A1D3F]" />
+                        <CreditCard size={15} className="text-[#7B1E2B]" />
                         <span>Cards, Netbanking & Wallets</span>
                       </>
                     )}

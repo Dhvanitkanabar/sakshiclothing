@@ -54,7 +54,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               ${leftIcon ? 'pl-10' : 'pl-4'}
               ${rightIcon ? 'pr-10' : 'pr-4'}
               py-2.5
-              ${error ? 'border-[#B43E2B] focus:border-[#B43E2B] focus:ring-1 focus:ring-[#B43E2B]' : 'border-[#E8E5DF] focus:border-[#4A1D3F] focus:ring-1 focus:ring-[#4A1D3F]'}
+              ${error ? 'border-[#B43E2B] focus:border-[#B43E2B] focus:ring-1 focus:ring-[#B43E2B]' : 'border-[#E8E5DF] focus:border-[#7B1E2B] focus:ring-1 focus:ring-[#7B1E2B]'}
               focus:outline-none
               disabled:bg-[#F7F5F0] disabled:text-[#9CA3AF] disabled:cursor-not-allowed
               ${className}

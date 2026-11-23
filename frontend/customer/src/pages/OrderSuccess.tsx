@@ -145,7 +145,7 @@ export const OrderSuccess: React.FC = () => {
           </div>
 
           <div className="space-y-2">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#4A1D3F] block">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7B1E2B] block">
               {isConfirmed ? 'Order Confirmed' : 'Verifying Payment…'}
             </span>
             <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1A1A] font-medium tracking-tight">
@@ -168,7 +168,7 @@ export const OrderSuccess: React.FC = () => {
             </div>
             <button
               onClick={handleCopyOrderId}
-              className="min-h-[44px] min-w-[44px] flex items-center justify-center text-xs font-semibold text-[#4A1D3F] bg-white border border-[#E8E5DF] rounded-xl px-3 py-1.5 hover:bg-[#FAF8F5] transition-colors shadow-2xs gap-1.5"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center text-xs font-semibold text-[#7B1E2B] bg-white border border-[#E8E5DF] rounded-xl px-3 py-1.5 hover:bg-[#FAF8F5] transition-colors shadow-2xs gap-1.5"
               aria-label="Copy order reference"
             >
               {copied ? <Check size={14} className="text-[#15803D]" /> : <Copy size={14} />}
@@ -180,7 +180,7 @@ export const OrderSuccess: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 text-left border-t border-[#F0ECE4]">
             <div className="p-3.5 rounded-2xl bg-[#FAF8F5] border border-[#E8E5DF] space-y-1">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-[#1A1A1A]">
-                <Truck size={14} className="text-[#4A1D3F]" />
+                <Truck size={14} className="text-[#7B1E2B]" />
                 <span>Express Courier</span>
               </div>
               <p className="text-[11px] text-[#6B7280] leading-relaxed">
@@ -190,7 +190,7 @@ export const OrderSuccess: React.FC = () => {
 
             <div className="p-3.5 rounded-2xl bg-[#FAF8F5] border border-[#E8E5DF] space-y-1">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-[#1A1A1A]">
-                <RotateCcw size={14} className="text-[#4A1D3F]" />
+                <RotateCcw size={14} className="text-[#7B1E2B]" />
                 <span>{BUSINESS_CONFIG.policies.returnWindowDays}-Day Return</span>
               </div>
               <p className="text-[11px] text-[#6B7280] leading-relaxed">

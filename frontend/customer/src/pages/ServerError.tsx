@@ -28,7 +28,7 @@ export const ServerError: React.FC = () => {
             <span>Service Advisory</span>
           </div>
           
-          <h1 className="font-serif text-6xl sm:text-7xl font-bold tracking-tight text-[#4A1D3F]">
+          <h1 className="font-serif text-6xl sm:text-7xl font-bold tracking-tight text-[#7B1E2B]">
             500
           </h1>
           
@@ -45,7 +45,7 @@ export const ServerError: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2">
           <button
             onClick={() => window.location.reload()}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3.5 px-7 bg-[#4A1D3F] hover:bg-[#3B1632] text-white rounded-full text-xs font-semibold uppercase tracking-wider transition-all min-h-[44px] shadow-sm active:scale-98"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3.5 px-7 bg-[#7B1E2B] hover:bg-[#621721] text-white rounded-full text-xs font-semibold uppercase tracking-wider transition-all min-h-[44px] shadow-sm active:scale-98"
           >
             <RotateCcw size={14} />
             <span>Refresh Page</span>

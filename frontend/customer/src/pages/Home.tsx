@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
+import { motion, AnimatePresence, useScroll, useTransform, useReducedMotion } from 'motion/react';
 import { 
   ArrowRight, 
   ArrowLeft,
@@ -15,10 +15,10 @@ import {
   ChevronRight,
   ChevronLeft,
   Check,
-  Eye,
   ShoppingBag,
   Heart,
-  ChevronDown
+  ChevronDown,
+  MapPin
 } from 'lucide-react';
 import { Product } from '../types';
 import ProductCard from '../components/ProductCard';
@@ -32,6 +32,7 @@ import { toast } from 'sonner';
 export const Home: React.FC = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const prefersReducedMotion = useReducedMotion();
 
   // Instant initial render from cached products; background sync from API
   const [products, setProducts] = useState<Product[]>(getCachedProducts);
@@ -57,7 +58,11 @@ export const Home: React.FC = () => {
     target: heroRef,
     offset: ['start start', 'end start']
   });
-  const heroParallaxY = useTransform(heroScrollProgress, [0, 1], [0, 80]);
+  const heroParallaxY = useTransform(
+    heroScrollProgress, 
+    [0, 1], 
+    prefersReducedMotion ? [0, 0] : [0, 60]
+  );
 
   // Trending rail ref for drag / arrow scroll
   const trendingRailRef = useRef<HTMLDivElement>(null);
@@ -88,10 +93,53 @@ export const Home: React.FC = () => {
     return () => { isMounted = false; };
   }, []);
 
-  const heroBanners = homepageData?.heroBanners || [];
-  const spotlightBanners = homepageData?.spotlightBanners || [];
-  const lookbookBanners = homepageData?.lookbookBanners || [];
-  const categories = homepageData?.categories || [];
+  // Campaign Banners with separate mobile portrait and desktop wide crop
+  const defaultHeroBanners = [
+    {
+      id: 'banner-1',
+      title: 'The Festive Drapes of Surat',
+      subtitle: 'Art silk sarees, jacquard lehengas, and daily kurti sets crafted for celebrations.',
+      ctaText: 'Explore Women’s Collection',
+      ctaLink: '/shop?category=Women',
+      tag: 'New Festive Drop',
+      desktopImage: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1800&q=80',
+      mobileImage: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80'
+    },
+    {
+      id: 'banner-2',
+      title: 'Skin-Friendly Imitation Jewels',
+      subtitle: 'Brass & copper alloy choker suites, jhumkas, and bangles with lustrous gold plating.',
+      ctaText: 'Discover Jewellery',
+      ctaLink: '/shop?category=Jewellery',
+      tag: 'Festive Jewellery',
+      desktopImage: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=1800&q=80',
+      mobileImage: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=800&q=80'
+    },
+    {
+      id: 'banner-3',
+      title: 'Family Celebrations Edit',
+      subtitle: 'Festive kurta sets for men and joyful ethnic ensembles for kids.',
+      ctaText: 'Shop All Festive Pieces',
+      ctaLink: '/shop',
+      tag: 'Family Occasions',
+      desktopImage: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1800&q=80',
+      mobileImage: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80'
+    }
+  ];
+
+  const heroBanners = (homepageData?.heroBanners && homepageData.heroBanners.length > 0)
+    ? homepageData.heroBanners.map((b: any, i: number) => ({
+        id: b._id || `banner-${i}`,
+        title: b.title || defaultHeroBanners[i % defaultHeroBanners.length].title,
+        subtitle: b.subtitle || defaultHeroBanners[i % defaultHeroBanners.length].subtitle,
+        ctaText: b.buttonText || defaultHeroBanners[i % defaultHeroBanners.length].ctaText,
+        ctaLink: b.linkUrl || defaultHeroBanners[i % defaultHeroBanners.length].ctaLink,
+        tag: b.tag || 'Surat Direct',
+        desktopImage: b.image?.url || defaultHeroBanners[i % defaultHeroBanners.length].desktopImage,
+        mobileImage: b.mobileImage?.url || b.image?.url || defaultHeroBanners[i % defaultHeroBanners.length].mobileImage,
+      }))
+    : defaultHeroBanners;
+
   const reviews = homepageData?.reviews || [];
 
   const jewelleryProducts = homepageData?.jewelleryProducts?.length 
@@ -112,7 +160,7 @@ export const Home: React.FC = () => {
     if (heroBanners.length <= 1 || isSlidePaused) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroBanners.length);
-    }, 6000);
+    }, 6500);
     return () => clearInterval(timer);
   }, [heroBanners.length, isSlidePaused]);
 
@@ -134,7 +182,7 @@ export const Home: React.FC = () => {
   // Scroll controls for trending rail
   const scrollTrending = (direction: 'left' | 'right') => {
     if (trendingRailRef.current) {
-      const offset = direction === 'left' ? -360 : 360;
+      const offset = direction === 'left' ? -340 : 340;
       trendingRailRef.current.scrollBy({ left: offset, behavior: 'smooth' });
     }
   };
@@ -147,7 +195,7 @@ export const Home: React.FC = () => {
       drape: clothingProducts[0] || products[0] || null,
       jewel: jewelleryProducts[0] || products[1] || null,
       image: clothingProducts[0]?.image || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80",
-      clothingHotspot: { top: "45%", left: "48%" },
+      clothingHotspot: { top: "48%", left: "48%" },
       jewelHotspot: { top: "28%", left: "50%" }
     },
     {
@@ -183,261 +231,226 @@ export const Home: React.FC = () => {
     setNewsletterEmail('');
   };
 
+  const activeBanner = heroBanners[currentSlide] || heroBanners[0];
+
   return (
-    <div className="bg-[#FBF9F6] text-[#1A1A1A] min-h-screen selection:bg-[#4A1D3F] selection:text-white overflow-x-hidden">
+    <div className="bg-[#FAF8F5] text-[#111111] min-h-screen selection:bg-[#7B1E2B] selection:text-white overflow-x-hidden font-sans">
       <SEOHead
         title="Sakshi Clothing | Everyday Indian Fashion & Imitation Jewellery | Surat"
         description="Everyday sarees, kurti sets, and skin-friendly imitation jewellery dispatched directly from Surat. Free shipping above ₹999 with Cash on Delivery."
         jsonLd={getOrganizationSchema()}
       />
 
-      {/* ─── 1. HERO SECTION (LIGHT IVORY EDITORIAL, NO DARK OVERLAY) ─── */}
+      {/* ─── 1. FULL-WIDTH CAMPAIGN HERO SLIDER (ART-DIRECTED CROPS) ──────── */}
       <section 
         ref={heroRef}
         id="hero-banner"
         onMouseEnter={() => setIsSlidePaused(true)}
         onMouseLeave={() => setIsSlidePaused(false)}
-        className="relative w-full min-h-[580px] sm:min-h-[660px] lg:min-h-[760px] bg-[#FBF9F6] flex items-center overflow-hidden border-b border-[#E8E5DF]"
+        className="relative w-full h-[520px] sm:h-[600px] lg:h-[720px] bg-[#FAF8F5] flex items-end overflow-hidden border-b border-[#E8E5DF]"
       >
-        {/* Ambient Subtle Warmth */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-[#C6A15B]/10 via-[#F4EEDF]/40 to-transparent rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-[#4A1D3F]/5 to-transparent rounded-full blur-2xl pointer-events-none" />
+        {/* Parallax Background Canvas with Art-Directed Pictures */}
+        <motion.div 
+          style={{ y: heroParallaxY }}
+          className="absolute inset-0 w-full h-full"
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeBanner.id}
+              initial={{ opacity: 0, scale: 1.03 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              className="relative w-full h-full"
+            >
+              <picture className="w-full h-full block">
+                {/* Mobile Portrait Crop (max-width: 767px) */}
+                <source media="(max-width: 767px)" srcSet={activeBanner.mobileImage} />
+                {/* Desktop Cinematic Wide Crop */}
+                <img
+                  src={activeBanner.desktopImage}
+                  alt={activeBanner.title}
+                  fetchPriority="high"
+                  className="w-full h-full object-cover object-top sm:object-center"
+                />
+              </picture>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 w-full py-16 sm:py-24">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+              {/* Gentle Vignette Gradients for Legibility (No Heavy Dark Blocks) */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-radial-at-c from-transparent via-transparent to-black/30 pointer-events-none" />
+            </motion.div>
+          </AnimatePresence>
+        </motion.div>
+
+        {/* Ambient Top Subtle Badge */}
+        <div className="absolute top-6 left-5 sm:left-8 z-20">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-[#E8E5DF] text-[#7B1E2B] text-[11px] font-semibold uppercase tracking-wider shadow-sm">
+            <Sparkles className="w-3.5 h-3.5 text-[#C6A15B]" />
+            <span>Surat Direct Fashion · Pan-India Dispatch</span>
+          </div>
+        </div>
+
+        {/* Carousel Arrow Controls */}
+        {heroBanners.length > 1 && (
+          <div className="hidden sm:flex absolute right-8 top-1/2 -translate-y-1/2 z-20 flex-col gap-2">
+            <button
+              onClick={() => setCurrentSlide((prev) => (prev - 1 + heroBanners.length) % heroBanners.length)}
+              className="w-11 h-11 rounded-full bg-white/90 backdrop-blur-md text-[#111111] hover:bg-[#7B1E2B] hover:text-white flex items-center justify-center transition-all shadow-md focus:outline-none"
+              aria-label="Previous Campaign Banner"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              onClick={() => setCurrentSlide((prev) => (prev + 1) % heroBanners.length)}
+              className="w-11 h-11 rounded-full bg-white/90 backdrop-blur-md text-[#111111] hover:bg-[#7B1E2B] hover:text-white flex items-center justify-center transition-all shadow-md focus:outline-none"
+              aria-label="Next Campaign Banner"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        )}
+
+        {/* Minimal Hero Bottom Overlay & Clear Call to Action */}
+        <div className="relative z-20 max-w-7xl mx-auto px-5 sm:px-8 w-full pb-10 sm:pb-14">
+          <div className="max-w-2xl space-y-3.5 sm:space-y-4">
             
-            {/* Left Column: Typographic Editorial Focus */}
-            <div className="lg:col-span-7 space-y-6 sm:space-y-8">
-              
-              {/* Eyebrow Pill */}
+            <AnimatePresence mode="wait">
               <motion.div
-                initial={{ opacity: 0, y: 14 }}
+                key={activeBanner.id}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FAF8F5] border border-[#C6A15B]/40 text-[#4A1D3F] text-xs font-semibold uppercase tracking-wider shadow-xs"
+                className="space-y-2 sm:space-y-3"
               >
-                <Sparkles className="w-3.5 h-3.5 text-[#C6A15B]" />
-                <span>Everyday Indian Fashion & Imitation Jewels · Surat</span>
-              </motion.div>
-
-              {/* Display H1 with Staggered Word Reveal */}
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
-                className="font-serif text-3.5xl sm:text-5xl lg:text-6xl text-[#1A1A1A] font-medium tracking-tight leading-[1.12] max-w-2xl"
-              >
-                Timeless Indian Drapes, <br />
-                <span className="text-[#4A1D3F] italic font-normal">Modern Surat Charm.</span>
-              </motion.h1>
-
-              {/* Subtitle */}
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.65, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
-                className="text-[#4A4A4A] text-sm sm:text-base font-normal max-w-xl leading-relaxed"
-              >
-                Explore breathable everyday sarees, tailored kurti sets, and brass-base imitation jewellery dispatched directly from Surat's vibrant textile markets.
-              </motion.p>
-
-              {/* Dual Action CTAs */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.65, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
-                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 pt-2"
-              >
-                <Link to="/shop?category=Women">
-                  <Button 
-                    variant="primary" 
-                    size="lg" 
-                    fullWidth 
-                    className="font-semibold shadow-md bg-[#4A1D3F] hover:bg-[#3B1632] text-white"
-                    rightIcon={<ArrowRight className="w-4 h-4" />}
-                  >
-                    Explore Clothing
-                  </Button>
-                </Link>
-                <Link to="/shop?category=Jewellery">
-                  <Button 
-                    variant="outline" 
-                    size="lg" 
-                    fullWidth 
-                    className="bg-white hover:bg-[#FAF8F5] text-[#1A1A1A] border-[#E8E5DF] hover:border-[#4A1D3F] font-semibold"
-                    leftIcon={<Sparkles className="w-4 h-4 text-[#C6A15B]" />}
-                  >
-                    Imitation Jewellery
-                  </Button>
-                </Link>
-              </motion.div>
-
-              {/* Real Value Guarantees Strip */}
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.7, delay: 0.35 }}
-                className="pt-2 flex flex-wrap items-center gap-4 text-xs text-[#6B7280] font-medium"
-              >
-                <span className="flex items-center gap-1.5">
-                  <Truck className="w-4 h-4 text-[#4A1D3F]" />
-                  <span>Free Shipping Above ₹{BUSINESS_CONFIG.policies.freeShippingThreshold}</span>
+                <span className="inline-block px-3 py-1 rounded-full bg-[#C6A15B] text-white text-[10px] font-bold uppercase tracking-wider shadow-xs">
+                  {activeBanner.tag}
                 </span>
-                <span>·</span>
-                <span className="flex items-center gap-1.5">
-                  <Banknote className="w-4 h-4 text-[#C6A15B]" />
-                  <span>Cash on Delivery</span>
-                </span>
-                <span>·</span>
-                <span className="flex items-center gap-1.5">
-                  <RotateCcw className="w-4 h-4 text-[#4A1D3F]" />
-                  <span>{BUSINESS_CONFIG.policies.returnWindowDays}-Day Returns</span>
-                </span>
-              </motion.div>
 
+                <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl text-white font-medium tracking-tight leading-[1.12] drop-shadow-sm">
+                  {activeBanner.title}
+                </h1>
+
+                <p className="text-white/90 text-xs sm:text-base font-normal max-w-xl leading-relaxed drop-shadow-xs line-clamp-2 sm:line-clamp-none">
+                  {activeBanner.subtitle}
+                </p>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Single Clear Primary CTA Button */}
+            <div className="pt-2 flex items-center gap-4">
+              <Link to={activeBanner.ctaLink}>
+                <Button 
+                  variant="primary" 
+                  size="lg" 
+                  className="font-semibold shadow-xl bg-[#7B1E2B] hover:bg-[#621721] text-white min-h-[48px] px-8"
+                  rightIcon={<ArrowRight className="w-4 h-4" />}
+                >
+                  {activeBanner.ctaText}
+                </Button>
+              </Link>
             </div>
 
-            {/* Right Column: Hero Visual Showcase with Rounded Masks */}
-            <div className="lg:col-span-5 relative">
-              <motion.div 
-                style={{ y: heroParallaxY }}
-                className="relative mx-auto max-w-md lg:max-w-none"
-              >
-                {/* Decorative Geometric Outline */}
-                <div className="absolute -inset-3 rounded-t-[5rem] rounded-b-3xl border border-[#C6A15B]/30 -rotate-1 pointer-events-none" />
-
-                {/* Main Hero Media Container */}
-                <div className="relative aspect-[3/4] w-full rounded-t-[4.5rem] rounded-b-2xl overflow-hidden bg-[#FAF8F5] border border-[#E8E5DF] shadow-xl">
-                  {heroBanners.length > 0 && heroBanners[currentSlide]?.image?.url ? (
-                    <img
-                      src={heroBanners[currentSlide].image.url}
-                      alt={heroBanners[currentSlide].title || "Sakshi Clothing"}
-                      className="w-full h-full object-cover object-top transition-transform duration-700 ease-out"
-                      fetchPriority="high"
-                    />
-                  ) : (
-                    <img
-                      src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=900&q=80"
-                      alt="Sakshi Everyday Collection"
-                      className="w-full h-full object-cover object-top"
-                      fetchPriority="high"
-                    />
-                  )}
-
-                  {/* Floating Micro Badge */}
-                  <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md rounded-2xl p-3.5 border border-[#E8E5DF] shadow-md flex items-center justify-between">
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#C6A15B]">Surat Sourcing</p>
-                      <p className="text-xs font-serif font-bold text-[#1A1A1A]">Curated Silk & Everyday Wear</p>
-                    </div>
-                    <span className="text-xs font-bold text-[#4A1D3F] bg-[#F6EFF4] px-2.5 py-1 rounded-full">
-                      ₹899 onwards
-                    </span>
-                  </div>
-                </div>
-
-                {/* Carousel Indicator Pills */}
-                {heroBanners.length > 1 && (
-                  <div className="flex items-center justify-center gap-2 mt-4">
-                    {heroBanners.map((_, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setCurrentSlide(idx)}
-                        className={`h-1.5 rounded-full transition-all duration-300 min-h-[32px] flex items-center px-1 ${
-                          currentSlide === idx ? 'w-8 bg-[#4A1D3F]' : 'w-2 bg-[#D1C9BE]'
-                        }`}
-                        aria-label={`Slide ${idx + 1}`}
-                      />
-                    ))}
-                  </div>
-                )}
-              </motion.div>
-            </div>
+            {/* Slide Indicators */}
+            {heroBanners.length > 1 && (
+              <div className="flex items-center gap-2 pt-3">
+                {heroBanners.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentSlide(idx)}
+                    className={`h-1.5 rounded-full transition-all duration-300 min-h-[32px] flex items-center px-1 ${
+                      currentSlide === idx ? 'w-8 bg-[#C6A15B]' : 'w-2 bg-white/50'
+                    }`}
+                    aria-label={`Go to slide ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            )}
 
           </div>
         </div>
 
         {/* Scroll-Down Cue */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center gap-1 text-[10px] text-[#6B7280] uppercase tracking-widest pointer-events-none opacity-80 animate-bounce">
-          <span>Scroll</span>
-          <ChevronDown size={14} className="text-[#4A1D3F]" />
+        <div className="absolute bottom-2 right-8 hidden lg:flex items-center gap-1.5 text-[10px] text-white/80 uppercase tracking-widest pointer-events-none opacity-80">
+          <span>Scroll to explore</span>
+          <ChevronDown size={14} className="text-[#C6A15B] animate-bounce" />
         </div>
       </section>
 
       {/* ─── 2. OFFER MARQUEE STRIP (TRUTHFUL BUSINESS CONFIG VALUES) ─── */}
       <section className="bg-white border-b border-[#E8E5DF] py-3.5 overflow-hidden select-none">
-        <div className="animate-marquee flex items-center gap-8 text-xs font-medium text-[#4A4A4A]">
+        <div className="animate-marquee flex items-center gap-8 text-xs font-medium text-[#5C5855]">
           <span className="flex items-center gap-2">
-            <Truck size={14} className="text-[#4A1D3F]" />
-            <span>FREE Standard Delivery on Orders Above ₹{BUSINESS_CONFIG.policies.freeShippingThreshold}</span>
+            <Truck size={14} className="text-[#7B1E2B]" />
+            <span>FREE Pan-India Delivery on Orders Above ₹{BUSINESS_CONFIG.policies.freeShippingThreshold}</span>
           </span>
           <span className="text-[#C6A15B]">✦</span>
           <span className="flex items-center gap-2">
             <Banknote size={14} className="text-[#C6A15B]" />
-            <span>Cash on Delivery (COD) Available Nationwide</span>
+            <span>Cash on Delivery (COD) Available Across India</span>
           </span>
           <span className="text-[#C6A15B]">✦</span>
           <span className="flex items-center gap-2">
-            <RotateCcw size={14} className="text-[#4A1D3F]" />
-            <span>{BUSINESS_CONFIG.policies.returnWindowDays}-Day Hassle-Free Returns on Unworn Clothing</span>
+            <RotateCcw size={14} className="text-[#7B1E2B]" />
+            <span>{BUSINESS_CONFIG.policies.returnWindowDays}-Day Return & Exchange Window on Clothing</span>
           </span>
           <span className="text-[#C6A15B]">✦</span>
           <span className="flex items-center gap-2">
-            <ShieldCheck size={14} className="text-[#4A1D3F]" />
+            <ShieldCheck size={14} className="text-[#7B1E2B]" />
             <span>18% GST Inclusive Pricing — Zero Hidden Checkout Fees</span>
           </span>
           <span className="text-[#C6A15B]">✦</span>
           <span className="flex items-center gap-2">
             <Sparkles size={14} className="text-[#C6A15B]" />
-            <span>Fashion & Imitation Jewellery — Skin-Friendly Brass Base</span>
+            <span>Fashion & Imitation Jewellery — Brass Alloy with Gold Polish</span>
           </span>
           <span className="text-[#C6A15B]">✦</span>
           <span className="flex items-center gap-2">
-            <span>Direct Dispatch from Surat Textile Hub</span>
+            <span>Direct Dispatch from Surat Textile Warehouse</span>
           </span>
           <span className="text-[#C6A15B]">✦</span>
 
           {/* Repeated for continuous loop */}
           <span className="flex items-center gap-2">
-            <Truck size={14} className="text-[#4A1D3F]" />
-            <span>FREE Standard Delivery on Orders Above ₹{BUSINESS_CONFIG.policies.freeShippingThreshold}</span>
+            <Truck size={14} className="text-[#7B1E2B]" />
+            <span>FREE Pan-India Delivery on Orders Above ₹{BUSINESS_CONFIG.policies.freeShippingThreshold}</span>
           </span>
           <span className="text-[#C6A15B]">✦</span>
           <span className="flex items-center gap-2">
             <Banknote size={14} className="text-[#C6A15B]" />
-            <span>Cash on Delivery (COD) Available Nationwide</span>
+            <span>Cash on Delivery (COD) Available Across India</span>
           </span>
           <span className="text-[#C6A15B]">✦</span>
           <span className="flex items-center gap-2">
-            <RotateCcw size={14} className="text-[#4A1D3F]" />
-            <span>{BUSINESS_CONFIG.policies.returnWindowDays}-Day Hassle-Free Returns on Unworn Clothing</span>
+            <RotateCcw size={14} className="text-[#7B1E2B]" />
+            <span>{BUSINESS_CONFIG.policies.returnWindowDays}-Day Return & Exchange Window on Clothing</span>
           </span>
           <span className="text-[#C6A15B]">✦</span>
         </div>
       </section>
 
-      {/* ─── 3. CATEGORY STRIP (HORIZONTAL SCROLL-SNAP TILES) ─────────── */}
-      <section className="py-20 sm:py-28 max-w-7xl mx-auto px-5 sm:px-8">
+      {/* ─── 3. CATEGORY TILES (SNAP ON MOBILE, GRID ON DESKTOP) ──────── */}
+      <section className="py-18 sm:py-28 max-w-7xl mx-auto px-5 sm:px-8">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 sm:mb-12 gap-4">
           <div>
-            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#4A1D3F] block mb-1.5">
-              Curated Edits
+            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7B1E2B] block mb-1.5">
+              Curated Collections
             </span>
-            <h2 className="font-serif text-2xl sm:text-4xl text-[#1A1A1A] font-medium leading-tight">
+            <h2 className="font-serif text-2xl sm:text-4xl text-[#111111] font-medium leading-tight">
               Explore by Category
             </h2>
-            <p className="text-xs sm:text-sm text-[#6B7280] mt-1 max-w-xl">
+            <p className="text-xs sm:text-sm text-[#5C5855] mt-1 max-w-xl">
               From everyday sarees and office kurtis to celebration imitation jewellery suites.
             </p>
           </div>
-          <Link to="/shop" className="text-xs font-bold text-[#4A1D3F] hover:underline flex items-center gap-1 shrink-0">
+          <Link to="/shop" className="text-xs font-bold text-[#7B1E2B] hover:underline flex items-center gap-1 shrink-0">
             <span>View All Categories</span>
             <ArrowRight size={14} />
           </Link>
         </div>
 
-        {/* Scroll-Snap Rail */}
-        <div className="flex gap-4 sm:gap-6 overflow-x-auto no-scrollbar pb-4 snap-x snap-mandatory">
+        {/* Responsive Layout: Mobile Snap Rail, Desktop 4-Col Grid */}
+        <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 overflow-x-auto sm:overflow-visible no-scrollbar pb-4 sm:pb-0 snap-x snap-mandatory">
           {[
             {
               name: 'Women',
@@ -474,11 +487,11 @@ export const Home: React.FC = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: idx * 0.08 }}
-              className="w-[240px] sm:w-[280px] shrink-0 snap-center"
+              className="w-[240px] sm:w-auto shrink-0 snap-center"
             >
               <Link 
                 to={cat.link}
-                className="group flex flex-col bg-white rounded-3xl border border-[#E8E5DF] overflow-hidden p-3.5 transition-all duration-300 hover:border-[#4A1D3F]/40 hover:shadow-lg"
+                className="group flex flex-col bg-white rounded-3xl border border-[#E8E5DF] overflow-hidden p-3.5 transition-all duration-300 hover:border-[#7B1E2B]/40 hover:shadow-lg"
               >
                 {/* Arched Image Container */}
                 <div className="relative aspect-[3/4] w-full rounded-t-[3.5rem] rounded-b-2xl overflow-hidden bg-[#FAF8F5] mb-3">
@@ -488,16 +501,16 @@ export const Home: React.FC = () => {
                     loading="lazy"
                     className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                   />
-                  <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase text-[#4A1D3F] border border-[#E8E5DF] shadow-xs">
+                  <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase text-[#7B1E2B] border border-[#E8E5DF] shadow-xs">
                     {cat.tag}
                   </div>
                 </div>
 
                 <div className="px-1 py-1">
-                  <h3 className="font-serif text-base sm:text-lg font-semibold text-[#1A1A1A] group-hover:text-[#4A1D3F] transition-colors">
+                  <h3 className="font-serif text-base sm:text-lg font-semibold text-[#111111] group-hover:text-[#7B1E2B] transition-colors">
                     {cat.name}
                   </h3>
-                  <p className="text-xs text-[#6B7280] line-clamp-1 mt-0.5">
+                  <p className="text-xs text-[#5C5855] line-clamp-1 mt-0.5">
                     {cat.desc}
                   </p>
                 </div>
@@ -508,18 +521,18 @@ export const Home: React.FC = () => {
       </section>
 
       {/* ─── 4. TRENDING COLLECTION (STAGGERED REVEAL & RAIL) ──────────── */}
-      <section className="py-20 sm:py-28 bg-white border-y border-[#E8E5DF]">
+      <section className="py-18 sm:py-28 bg-white border-y border-[#E8E5DF]">
         <div className="max-w-7xl mx-auto px-5 sm:px-8">
           
           <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-8 sm:mb-12 gap-4">
             <div>
-              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#4A1D3F] block mb-1.5">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7B1E2B] block mb-1.5">
                 Popular in Surat
               </span>
-              <h2 className="font-serif text-2xl sm:text-4xl text-[#1A1A1A] font-medium leading-tight">
+              <h2 className="font-serif text-2xl sm:text-4xl text-[#111111] font-medium leading-tight">
                 Trending Right Now
               </h2>
-              <p className="text-xs sm:text-sm text-[#6B7280] mt-1">
+              <p className="text-xs sm:text-sm text-[#5C5855] mt-1">
                 Frequently purchased daily wear clothing and artificial jewellery accents.
               </p>
             </div>
@@ -531,8 +544,8 @@ export const Home: React.FC = () => {
                   onClick={() => setActiveTab('all')}
                   className={`px-4 py-2 min-h-[40px] text-xs font-semibold rounded-full transition-all ${
                     activeTab === 'all'
-                      ? 'bg-[#4A1D3F] text-white shadow-xs'
-                      : 'text-[#6B7280] hover:text-[#1A1A1A]'
+                      ? 'bg-[#7B1E2B] text-white shadow-xs'
+                      : 'text-[#5C5855] hover:text-[#111111]'
                   }`}
                 >
                   All
@@ -541,8 +554,8 @@ export const Home: React.FC = () => {
                   onClick={() => setActiveTab('clothing')}
                   className={`px-4 py-2 min-h-[40px] text-xs font-semibold rounded-full transition-all ${
                     activeTab === 'clothing'
-                      ? 'bg-[#4A1D3F] text-white shadow-xs'
-                      : 'text-[#6B7280] hover:text-[#1A1A1A]'
+                      ? 'bg-[#7B1E2B] text-white shadow-xs'
+                      : 'text-[#5C5855] hover:text-[#111111]'
                   }`}
                 >
                   Clothing
@@ -552,7 +565,7 @@ export const Home: React.FC = () => {
                   className={`px-4 py-2 min-h-[40px] text-xs font-semibold rounded-full transition-all flex items-center gap-1 ${
                     activeTab === 'jewellery'
                       ? 'bg-[#C6A15B] text-white shadow-xs'
-                      : 'text-[#6B7280] hover:text-[#1A1A1A]'
+                      : 'text-[#5C5855] hover:text-[#111111]'
                   }`}
                 >
                   <Sparkles size={12} />
@@ -564,14 +577,14 @@ export const Home: React.FC = () => {
               <div className="hidden sm:flex items-center gap-1">
                 <button
                   onClick={() => scrollTrending('left')}
-                  className="w-9 h-9 rounded-full border border-[#E8E5DF] hover:bg-[#FAF8F5] flex items-center justify-center text-[#1A1A1A] transition-colors"
+                  className="w-9 h-9 rounded-full border border-[#E8E5DF] hover:bg-[#FAF8F5] flex items-center justify-center text-[#111111] transition-colors"
                   aria-label="Scroll left"
                 >
                   <ChevronLeft size={16} />
                 </button>
                 <button
                   onClick={() => scrollTrending('right')}
-                  className="w-9 h-9 rounded-full border border-[#E8E5DF] hover:bg-[#FAF8F5] flex items-center justify-center text-[#1A1A1A] transition-colors"
+                  className="w-9 h-9 rounded-full border border-[#E8E5DF] hover:bg-[#FAF8F5] flex items-center justify-center text-[#111111] transition-colors"
                   aria-label="Scroll right"
                 >
                   <ChevronRight size={16} />
@@ -601,7 +614,7 @@ export const Home: React.FC = () => {
             </div>
           ) : (
             <div className="py-16 text-center bg-[#FAF8F5] rounded-3xl border border-[#E8E5DF] max-w-md mx-auto">
-              <p className="text-xs text-[#6B7280] mb-4">No pieces found in this category.</p>
+              <p className="text-xs text-[#5C5855] mb-4">No pieces found in this category.</p>
               <Link to="/shop">
                 <Button variant="outline" size="sm">Browse Full Store</Button>
               </Link>
@@ -625,15 +638,15 @@ export const Home: React.FC = () => {
       </section>
 
       {/* ─── 5. "SHOP THE LOOK" (SCROLL-PINNED INTERACTIVE SECTION) ─────── */}
-      <section className="py-20 sm:py-32 max-w-7xl mx-auto px-5 sm:px-8">
+      <section className="py-18 sm:py-32 max-w-7xl mx-auto px-5 sm:px-8">
         <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
           <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#C6A15B] block mb-1.5">
             Complete The Ensemble
           </span>
-          <h2 className="font-serif text-2xl sm:text-4xl text-[#1A1A1A] font-medium leading-tight">
+          <h2 className="font-serif text-2xl sm:text-4xl text-[#111111] font-medium leading-tight">
             Shop The Look
           </h2>
-          <p className="text-xs sm:text-sm text-[#6B7280] mt-1.5 leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#5C5855] mt-1.5 leading-relaxed">
             Pair Surat ethnic clothing with perfectly matched imitation jewellery accents. Tap the interactive pins to view pieces.
           </p>
 
@@ -648,8 +661,8 @@ export const Home: React.FC = () => {
                 }}
                 className={`px-4 py-2 rounded-full text-xs font-semibold transition-all min-h-[40px] ${
                   selectedLookIndex === idx
-                    ? 'bg-[#4A1D3F] text-white shadow-xs'
-                    : 'bg-white text-[#6B7280] border border-[#E8E5DF] hover:text-[#1A1A1A]'
+                    ? 'bg-[#7B1E2B] text-white shadow-xs'
+                    : 'bg-white text-[#5C5855] border border-[#E8E5DF] hover:text-[#111111]'
                 }`}
               >
                 Look {idx + 1}
@@ -681,8 +694,8 @@ export const Home: React.FC = () => {
                     className="relative group p-2 focus:outline-none"
                     aria-label="View Drape Details"
                   >
-                    <span className="absolute inset-0 rounded-full bg-[#4A1D3F]/40 animate-ping" />
-                    <span className="relative w-8 h-8 rounded-full bg-[#4A1D3F] text-white flex items-center justify-center font-bold text-xs shadow-lg border-2 border-white">
+                    <span className="absolute inset-0 rounded-full bg-[#7B1E2B]/40 animate-ping" />
+                    <span className="relative w-8 h-8 rounded-full bg-[#7B1E2B] text-white flex items-center justify-center font-bold text-xs shadow-lg border-2 border-white">
                       1
                     </span>
                   </button>
@@ -710,13 +723,13 @@ export const Home: React.FC = () => {
             {/* Look Details & Paired Products */}
             <div className="lg:col-span-5 space-y-6">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-[#4A1D3F] bg-[#F6EFF4] px-3 py-1 rounded-full">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#7B1E2B] bg-[#FDF4F5] px-3 py-1 rounded-full">
                   Curated Ensemble #{selectedLookIndex + 1}
                 </span>
-                <h3 className="font-serif text-2xl sm:text-3xl font-medium text-[#1A1A1A] mt-2">
+                <h3 className="font-serif text-2xl sm:text-3xl font-medium text-[#111111] mt-2">
                   {currentLook.title}
                 </h3>
-                <p className="text-xs sm:text-sm text-[#6B7280] mt-1 leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#5C5855] mt-1 leading-relaxed">
                   {currentLook.subtitle}
                 </p>
               </div>
@@ -725,7 +738,7 @@ export const Home: React.FC = () => {
               {currentLook.drape && (
                 <div className={`p-4 rounded-2xl border transition-all ${
                   activeHotspot === 'clothing' 
-                    ? 'border-[#4A1D3F] bg-[#F6EFF4]/30 shadow-sm' 
+                    ? 'border-[#7B1E2B] bg-[#FDF4F5]/40 shadow-sm' 
                     : 'border-[#E8E5DF] bg-[#FAF8F5]'
                 }`}>
                   <div className="flex items-center gap-3.5">
@@ -737,13 +750,13 @@ export const Home: React.FC = () => {
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className="text-[10px] font-bold text-[#4A1D3F] uppercase tracking-wider block">
+                      <span className="text-[10px] font-bold text-[#7B1E2B] uppercase tracking-wider block">
                         Step 1 · The Drape
                       </span>
-                      <h4 className="font-serif text-xs sm:text-sm font-semibold text-[#1A1A1A] truncate mt-0.5">
+                      <h4 className="font-serif text-xs sm:text-sm font-semibold text-[#111111] truncate mt-0.5">
                         {currentLook.drape.name}
                       </h4>
-                      <p className="text-xs font-bold text-[#1A1A1A] mt-1">
+                      <p className="text-xs font-bold text-[#111111] mt-1">
                         ₹{currentLook.drape.price.toLocaleString('en-IN')}
                       </p>
                     </div>
@@ -775,10 +788,10 @@ export const Home: React.FC = () => {
                       <span className="text-[10px] font-bold text-[#C6A15B] uppercase tracking-wider block">
                         Step 2 · Imitation Accent
                       </span>
-                      <h4 className="font-serif text-xs sm:text-sm font-semibold text-[#1A1A1A] truncate mt-0.5">
+                      <h4 className="font-serif text-xs sm:text-sm font-semibold text-[#111111] truncate mt-0.5">
                         {currentLook.jewel.name}
                       </h4>
-                      <p className="text-xs font-bold text-[#1A1A1A] mt-1">
+                      <p className="text-xs font-bold text-[#111111] mt-1">
                         ₹{currentLook.jewel.price.toLocaleString('en-IN')}
                       </p>
                     </div>
@@ -811,8 +824,8 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* ─── 6. DEDICATED IMITATION JEWELLERY SPOTLIGHT (DEEP PLUM CONTRAST) ── */}
-      <section className="py-20 sm:py-32 bg-[#4A1D3F] text-white relative overflow-hidden">
+      {/* ─── 6. DEDICATED IMITATION JEWELLERY SPOTLIGHT (DEEP MAROON) ──── */}
+      <section className="py-18 sm:py-32 bg-[#7B1E2B] text-white relative overflow-hidden">
         {/* Subtle Ambient Light */}
         <div className="absolute top-0 right-0 w-[450px] h-[450px] bg-[#C6A15B]/15 rounded-full blur-3xl pointer-events-none" />
 
@@ -864,7 +877,7 @@ export const Home: React.FC = () => {
             {/* Macro Showcase Frame with Arched Mask */}
             <div className="lg:col-span-6">
               <div className="relative mx-auto max-w-md lg:max-w-none">
-                <div className="relative aspect-[4/5] rounded-t-[5rem] rounded-b-3xl overflow-hidden border-2 border-[#C6A15B]/40 shadow-2xl bg-[#3B1632]">
+                <div className="relative aspect-[4/5] rounded-t-[5rem] rounded-b-3xl overflow-hidden border-2 border-[#C6A15B]/40 shadow-2xl bg-[#621721]">
                   <img
                     src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=900&q=80"
                     alt="Imitation Jewellery Macro Detail"
@@ -890,7 +903,7 @@ export const Home: React.FC = () => {
       </section>
 
       {/* ─── 7. BRAND STORY & SURAT TEXTILE HUB (PARALLAX & HONEST FACTS) ─ */}
-      <section className="py-20 sm:py-32 max-w-7xl mx-auto px-5 sm:px-8">
+      <section className="py-18 sm:py-32 max-w-7xl mx-auto px-5 sm:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
           
           {/* Visual Card */}
@@ -901,7 +914,7 @@ export const Home: React.FC = () => {
                 alt="Surat Textile Heritage"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-semibold text-[#4A1D3F] border border-[#E8E5DF]">
+              <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-semibold text-[#7B1E2B] border border-[#E8E5DF]">
                 📍 Surat, Gujarat
               </div>
             </div>
@@ -909,33 +922,33 @@ export const Home: React.FC = () => {
 
           {/* Honest Narrative */}
           <div className="lg:col-span-6 space-y-6">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#4A1D3F] block mb-1">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7B1E2B] block mb-1">
               The Surat Connection
             </span>
-            <h2 className="font-serif text-2xl sm:text-4xl text-[#1A1A1A] font-medium leading-tight">
+            <h2 className="font-serif text-2xl sm:text-4xl text-[#111111] font-medium leading-tight">
               Honest Everyday Fashion, Dispatched Directly from India’s Textile Hub.
             </h2>
-            <p className="text-xs sm:text-sm text-[#4A4A4A] leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#5C5855] leading-relaxed">
               Surat is world-renowned for textile production, weaving, and rapid fashion iteration. At Sakshi Clothing, we curate everyday ethnic apparel and fashionable imitation jewellery directly from local manufacturing units. By packaging and dispatching from our Surat headquarters, we eliminate multi-tier distributor markups and deliver dependable quality straight to your door.
             </p>
 
             {/* Real Verifiable Numbers ONLY */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-[#E8E5DF]">
               <div>
-                <p className="font-serif text-2xl sm:text-3xl font-bold text-[#4A1D3F]">19,000+</p>
-                <p className="text-[11px] text-[#6B7280] font-medium mt-0.5">PIN Codes Served</p>
+                <p className="font-serif text-2xl sm:text-3xl font-bold text-[#7B1E2B]">19,000+</p>
+                <p className="text-[11px] text-[#5C5855] font-medium mt-0.5">PIN Codes Served</p>
               </div>
               <div>
-                <p className="font-serif text-2xl sm:text-3xl font-bold text-[#4A1D3F]">7 Days</p>
-                <p className="text-[11px] text-[#6B7280] font-medium mt-0.5">Hassle-Free Returns</p>
+                <p className="font-serif text-2xl sm:text-3xl font-bold text-[#7B1E2B]">7 Days</p>
+                <p className="text-[11px] text-[#5C5855] font-medium mt-0.5">Hassle-Free Returns</p>
               </div>
               <div>
                 <p className="font-serif text-2xl sm:text-3xl font-bold text-[#C6A15B]">18% GST</p>
-                <p className="text-[11px] text-[#6B7280] font-medium mt-0.5">All-Inclusive Tax</p>
+                <p className="text-[11px] text-[#5C5855] font-medium mt-0.5">All-Inclusive Tax</p>
               </div>
               <div>
-                <p className="font-serif text-2xl sm:text-3xl font-bold text-[#4A1D3F]">₹999</p>
-                <p className="text-[11px] text-[#6B7280] font-medium mt-0.5">Free Shipping Cap</p>
+                <p className="font-serif text-2xl sm:text-3xl font-bold text-[#7B1E2B]">₹999</p>
+                <p className="text-[11px] text-[#5C5855] font-medium mt-0.5">Free Shipping Cap</p>
               </div>
             </div>
           </div>
@@ -945,12 +958,12 @@ export const Home: React.FC = () => {
 
       {/* ─── 8. REVIEWS MARQUEE (HIDES CLEANLY IF NO REVIEWS) ─────────── */}
       {reviews.length > 0 && (
-        <section className="py-20 sm:py-28 bg-white border-y border-[#E8E5DF] overflow-hidden">
+        <section className="py-18 sm:py-28 bg-white border-y border-[#E8E5DF] overflow-hidden">
           <div className="max-w-7xl mx-auto px-5 sm:px-8 mb-8 text-center">
             <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#C6A15B] block mb-1">
               Patron Reflections
             </span>
-            <h2 className="font-serif text-2xl sm:text-4xl text-[#1A1A1A] font-medium">
+            <h2 className="font-serif text-2xl sm:text-4xl text-[#111111] font-medium">
               Loved Across India
             </h2>
           </div>
@@ -967,14 +980,14 @@ export const Home: React.FC = () => {
                       <Star key={i} size={14} fill="currentColor" />
                     ))}
                   </div>
-                  <p className="text-xs sm:text-sm text-[#4A4A4A] italic leading-relaxed">
+                  <p className="text-xs sm:text-sm text-[#5C5855] italic leading-relaxed">
                     "{r.comment}"
                   </p>
                 </div>
 
                 <div className="pt-3 border-t border-[#E8E5DF]/60">
-                  <p className="font-semibold text-xs text-[#1A1A1A]">{r.customer?.fullName || 'Verified Customer'}</p>
-                  <p className="text-[10px] text-[#6B7280]">Verified Purchase</p>
+                  <p className="font-semibold text-xs text-[#111111]">{r.customer?.fullName || 'Verified Customer'}</p>
+                  <p className="text-[10px] text-[#5C5855]">Verified Purchase</p>
                 </div>
               </div>
             ))}
@@ -983,15 +996,15 @@ export const Home: React.FC = () => {
       )}
 
       {/* ─── 9. LOOKBOOK / EDITORIAL BENTO GRID ───────────────────────── */}
-      <section className="py-20 sm:py-32 max-w-7xl mx-auto px-5 sm:px-8">
+      <section className="py-18 sm:py-32 max-w-7xl mx-auto px-5 sm:px-8">
         <div className="text-center max-w-xl mx-auto mb-10 sm:mb-14">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#4A1D3F] block mb-1.5">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7B1E2B] block mb-1.5">
             Visual Diary
           </span>
-          <h2 className="font-serif text-2xl sm:text-4xl text-[#1A1A1A] font-medium leading-tight">
+          <h2 className="font-serif text-2xl sm:text-4xl text-[#111111] font-medium leading-tight">
             The Sakshi Lookbook
           </h2>
-          <p className="text-xs sm:text-sm text-[#6B7280] mt-1.5">
+          <p className="text-xs sm:text-sm text-[#5C5855] mt-1.5">
             Real styling inspirations from daily office elegance to family celebratory functions.
           </p>
         </div>
@@ -1051,13 +1064,13 @@ export const Home: React.FC = () => {
       {/* ─── 10. NEWSLETTER CALLOUT ───────────────────────────────────── */}
       <section className="py-16 sm:py-24 bg-[#FAF8F5] border-t border-[#E8E5DF]">
         <div className="max-w-2xl mx-auto px-5 sm:px-8 text-center space-y-4">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#4A1D3F] block">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7B1E2B] block">
             Direct from Surat
           </span>
-          <h2 className="font-serif text-2xl sm:text-3xl font-medium text-[#1A1A1A]">
+          <h2 className="font-serif text-2xl sm:text-3xl font-medium text-[#111111]">
             Stay in Touch with Festive Launches
           </h2>
-          <p className="text-xs sm:text-sm text-[#6B7280]">
+          <p className="text-xs sm:text-sm text-[#5C5855]">
             Receive early previews of new fabric arrivals and imitation jewellery sets. No spam, ever.
           </p>
 
@@ -1067,7 +1080,7 @@ export const Home: React.FC = () => {
               value={newsletterEmail}
               onChange={(e) => setNewsletterEmail(e.target.value)}
               placeholder="Enter your email address"
-              className="flex-1 px-4 py-3 bg-white border border-[#E8E5DF] rounded-full text-xs text-[#1A1A1A] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#4A1D3F] transition-colors"
+              className="flex-1 px-4 py-3 bg-white border border-[#E8E5DF] rounded-full text-xs text-[#111111] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#7B1E2B] transition-colors"
               required
             />
             <Button 

@@ -17,14 +17,14 @@ export const ShippingPolicy: React.FC = () => {
         
         {/* Breadcrumb Navigation */}
         <nav aria-label="Breadcrumb" className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FAF8F5] border border-[#E8E5DF] text-[11px] text-[#6B7280]">
-          <Link to="/" className="hover:text-[#4A1D3F] transition-colors">Home</Link>
+          <Link to="/" className="hover:text-[#7B1E2B] transition-colors">Home</Link>
           <ChevronRight size={12} />
           <span className="text-[#1A1A1A] font-semibold">Shipping Policy</span>
         </nav>
 
         {/* Page Header */}
         <header className="space-y-3 border-b border-[#E8E5DF] pb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F6EFF4] text-[#4A1D3F] text-xs font-semibold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FDF4F5] text-[#7B1E2B] text-xs font-semibold uppercase tracking-wider">
             <Truck size={14} />
             <span>Fulfillment & Logistics</span>
           </div>
@@ -39,7 +39,7 @@ export const ShippingPolicy: React.FC = () => {
         {/* Dispatch & Delivery SLA Summary */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-white p-5 rounded-2xl border border-[#E8E5DF] space-y-2 shadow-xs">
-            <div className="w-9 h-9 rounded-full bg-[#F6EFF4] text-[#4A1D3F] flex items-center justify-center">
+            <div className="w-9 h-9 rounded-full bg-[#FDF4F5] text-[#7B1E2B] flex items-center justify-center">
               <Clock size={18} />
             </div>
             <h3 className="font-semibold text-sm text-[#1A1A1A]">24-48h Dispatch</h3>
@@ -103,7 +103,7 @@ export const ShippingPolicy: React.FC = () => {
         {/* Section 2: Cash on Delivery Guidelines */}
         <section className="bg-white p-6 sm:p-8 rounded-2xl border border-[#E8E5DF] space-y-4 shadow-xs">
           <h2 className="font-serif text-xl sm:text-2xl font-medium text-[#1A1A1A] flex items-center gap-2">
-            <Banknote size={20} className="text-[#4A1D3F]" />
+            <Banknote size={20} className="text-[#7B1E2B]" />
             <span>2. Cash on Delivery (COD) Terms</span>
           </h2>
           <div className="space-y-3 text-xs sm:text-sm text-[#4B5563] leading-relaxed">
@@ -128,7 +128,7 @@ export const ShippingPolicy: React.FC = () => {
             All consignments are handed over to tier-one national logistics providers including <strong>Bluedart, Delhivery, DTDC, Xpressbees, and India Post Speed Post</strong>.
           </p>
           <p className="text-xs sm:text-sm text-[#4B5563] leading-relaxed">
-            Immediately upon courier scanning, an SMS and email containing the Air Waybill (AWB) number and direct tracking link are dispatched to you. You can also monitor your live package status directly via our <Link to="/track-order" className="text-[#4A1D3F] font-semibold underline">Track Order Portal</Link>.
+            Immediately upon courier scanning, an SMS and email containing the Air Waybill (AWB) number and direct tracking link are dispatched to you. You can also monitor your live package status directly via our <Link to="/track-order" className="text-[#7B1E2B] font-semibold underline">Track Order Portal</Link>.
           </p>
         </section>
 
@@ -150,7 +150,7 @@ export const ShippingPolicy: React.FC = () => {
 
         {/* Section 5: Origin & Grievance Contact */}
         <section className="bg-white p-6 sm:p-8 rounded-2xl border border-[#3E2B40]/20 space-y-4 shadow-sm bg-gradient-to-br from-white to-[#FAF8F5]">
-          <h2 className="font-serif text-xl sm:text-2xl font-medium text-[#4A1D3F]">
+          <h2 className="font-serif text-xl sm:text-2xl font-medium text-[#7B1E2B]">
             5. Atelier Origin & Logistics Inquiries
           </h2>
           <p className="text-xs sm:text-sm text-[#4B5563] leading-relaxed">
@@ -159,7 +159,7 @@ export const ShippingPolicy: React.FC = () => {
           <div className="p-4 sm:p-5 rounded-xl bg-[#FAF8F5] border border-[#E8E5DF] space-y-2 text-xs text-[#1A1A1A]">
             <p><strong>Atelier & Dispatch Center:</strong> {BUSINESS_CONFIG.address.fullFormatted}</p>
             <p><strong>Logistics Helpline:</strong> {BUSINESS_CONFIG.supportPhone}</p>
-            <p><strong>Support Email:</strong> <a href={`mailto:${BUSINESS_CONFIG.supportEmail}`} className="text-[#4A1D3F] underline">{BUSINESS_CONFIG.supportEmail}</a></p>
+            <p><strong>Support Email:</strong> <a href={`mailto:${BUSINESS_CONFIG.supportEmail}`} className="text-[#7B1E2B] underline">{BUSINESS_CONFIG.supportEmail}</a></p>
           </div>
         </section>
 

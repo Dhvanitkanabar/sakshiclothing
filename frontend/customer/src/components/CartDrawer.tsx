@@ -53,10 +53,10 @@ export const CartDrawer: React.FC = () => {
             {/* Drawer Header */}
             <div className="p-5 sm:p-6 border-b border-[#E8E5DF] flex justify-between items-center bg-white shrink-0">
               <div className="flex items-center gap-3">
-                <div className="relative text-[#4A1D3F]">
+                <div className="relative text-[#7B1E2B]">
                   <ShoppingBag size={22} />
                   {cart.length > 0 && (
-                    <span className="absolute -top-1.5 -right-2 bg-[#4A1D3F] text-white text-[8px] font-sans font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                    <span className="absolute -top-1.5 -right-2 bg-[#7B1E2B] text-white text-[8px] font-sans font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
                       {cart.length}
                     </span>
                   )}
@@ -72,7 +72,7 @@ export const CartDrawer: React.FC = () => {
               </div>
               <button 
                 onClick={() => setIsCartOpen(false)} 
-                className="min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-[#F6EFF4] hover:text-[#4A1D3F] rounded-full transition-colors text-[#6B7280]"
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-[#FDF4F5] hover:text-[#7B1E2B] rounded-full transition-colors text-[#6B7280]"
                 aria-label="Close Shopping Bag"
               >
                 <X size={20} />
@@ -84,10 +84,10 @@ export const CartDrawer: React.FC = () => {
               <div className="bg-[#FAF8F5] px-5 py-3 border-b border-[#E8E5DF] shrink-0">
                 <div className="flex items-center justify-between text-xs mb-1.5 font-medium">
                   <span className="flex items-center gap-1.5 text-[#1A1A1A]">
-                    <Truck size={14} className="text-[#4A1D3F]" />
+                    <Truck size={14} className="text-[#7B1E2B]" />
                     {remainingForFreeShipping > 0 ? (
                       <span>
-                        Add <strong className="text-[#4A1D3F]">₹{remainingForFreeShipping.toLocaleString('en-IN')}</strong> more for <span className="text-[#15803D] font-bold">FREE Delivery</span>
+                        Add <strong className="text-[#7B1E2B]">₹{remainingForFreeShipping.toLocaleString('en-IN')}</strong> more for <span className="text-[#15803D] font-bold">FREE Delivery</span>
                       </span>
                     ) : (
                       <span className="text-[#15803D] font-bold">
@@ -99,7 +99,7 @@ export const CartDrawer: React.FC = () => {
                 </div>
                 <div className="w-full h-1.5 bg-[#E8E5DF] rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-[#4A1D3F] transition-all duration-300 rounded-full"
+                    className="h-full bg-[#7B1E2B] transition-all duration-300 rounded-full"
                     style={{ width: `${progressPercent}%` }}
                   />
                 </div>
@@ -122,7 +122,7 @@ export const CartDrawer: React.FC = () => {
                       setIsCartOpen(false);
                       navigate('/shop');
                     }}
-                    className="bg-[#4A1D3F] text-white px-7 py-3 rounded-full font-sans font-semibold text-xs uppercase tracking-wider hover:bg-[#3B1632] transition-all shadow-md min-h-[44px]"
+                    className="bg-[#7B1E2B] text-white px-7 py-3 rounded-full font-sans font-semibold text-xs uppercase tracking-wider hover:bg-[#621721] transition-all shadow-md min-h-[44px]"
                   >
                     Explore Collections
                   </button>
@@ -172,7 +172,7 @@ export const CartDrawer: React.FC = () => {
                                   window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
                                 }}
                               >
-                                <h3 className="text-xs sm:text-sm font-serif font-medium text-[#1A1A1A] hover:text-[#4A1D3F] transition-colors line-clamp-1 leading-snug">
+                                <h3 className="text-xs sm:text-sm font-serif font-medium text-[#1A1A1A] hover:text-[#7B1E2B] transition-colors line-clamp-1 leading-snug">
                                   {item.name}
                                 </h3>
                               </Link>
@@ -250,7 +250,7 @@ export const CartDrawer: React.FC = () => {
                     setIsCartOpen(false);
                     navigate('/checkout');
                   }}
-                  className="w-full bg-[#4A1D3F] hover:bg-[#3B1632] text-white py-3.5 sm:py-4 min-h-[48px] rounded-full text-xs uppercase tracking-widest font-semibold transition-all flex items-center justify-center gap-2 shadow-md group active:scale-98"
+                  className="w-full bg-[#7B1E2B] hover:bg-[#621721] text-white py-3.5 sm:py-4 min-h-[48px] rounded-full text-xs uppercase tracking-widest font-semibold transition-all flex items-center justify-center gap-2 shadow-md group active:scale-98"
                 >
                   <span>Proceed to Secure Checkout</span>
                   <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />

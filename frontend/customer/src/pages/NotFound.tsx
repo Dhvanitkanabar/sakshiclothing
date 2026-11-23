@@ -22,12 +22,12 @@ export const NotFound: React.FC = () => {
         className="max-w-xl w-full text-center space-y-8"
       >
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#F6EFF4] text-[#4A1D3F] text-xs font-semibold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FDF4F5] text-[#7B1E2B] text-xs font-semibold uppercase tracking-wider">
             <Compass size={14} className="text-[#C6A15B]" />
             <span>Navigation Advisory</span>
           </div>
           
-          <h1 className="font-serif text-6xl sm:text-7xl font-bold tracking-tight text-[#4A1D3F]">
+          <h1 className="font-serif text-6xl sm:text-7xl font-bold tracking-tight text-[#7B1E2B]">
             404
           </h1>
           
@@ -44,7 +44,7 @@ export const NotFound: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2">
           <Link
             to="/"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3.5 px-7 bg-[#4A1D3F] hover:bg-[#3B1632] text-white rounded-full text-xs font-semibold uppercase tracking-wider transition-all min-h-[44px] shadow-sm active:scale-98"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3.5 px-7 bg-[#7B1E2B] hover:bg-[#621721] text-white rounded-full text-xs font-semibold uppercase tracking-wider transition-all min-h-[44px] shadow-sm active:scale-98"
           >
             <span>Return to Homepage</span>
             <ArrowRight size={14} />
@@ -64,17 +64,17 @@ export const NotFound: React.FC = () => {
           <p className="text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]">
             Looking for something specific?
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-[#4A1D3F]">
-            <Link to="/shop?category=Women&sub=Heritage Sarees" className="px-3 py-1.5 rounded-full bg-[#FAF8F5] border border-[#E8E5DF] hover:border-[#4A1D3F] transition-colors">
+          <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-[#7B1E2B]">
+            <Link to="/shop?category=Women&sub=Heritage Sarees" className="px-3 py-1.5 rounded-full bg-[#FAF8F5] border border-[#E8E5DF] hover:border-[#7B1E2B] transition-colors">
               Sarees
             </Link>
-            <Link to="/shop?category=Women&sub=Bridal Lehengas" className="px-3 py-1.5 rounded-full bg-[#FAF8F5] border border-[#E8E5DF] hover:border-[#4A1D3F] transition-colors">
+            <Link to="/shop?category=Women&sub=Bridal Lehengas" className="px-3 py-1.5 rounded-full bg-[#FAF8F5] border border-[#E8E5DF] hover:border-[#7B1E2B] transition-colors">
               Lehengas
             </Link>
-            <Link to="/shop?category=Jewellery" className="px-3 py-1.5 rounded-full bg-[#FAF8F5] border border-[#E8E5DF] hover:border-[#4A1D3F] transition-colors">
+            <Link to="/shop?category=Jewellery" className="px-3 py-1.5 rounded-full bg-[#FAF8F5] border border-[#E8E5DF] hover:border-[#7B1E2B] transition-colors">
               Imitation Jewellery
             </Link>
-            <Link to="/track-order" className="px-3 py-1.5 rounded-full bg-[#FAF8F5] border border-[#E8E5DF] hover:border-[#4A1D3F] transition-colors">
+            <Link to="/track-order" className="px-3 py-1.5 rounded-full bg-[#FAF8F5] border border-[#E8E5DF] hover:border-[#7B1E2B] transition-colors">
               Track Order
             </Link>
           </div>

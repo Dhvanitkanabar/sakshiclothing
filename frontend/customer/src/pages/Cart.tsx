@@ -57,7 +57,7 @@ export const Cart: React.FC = () => {
         
         {/* Header */}
         <header className="mb-8 space-y-1.5">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#4A1D3F]">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7B1E2B]">
             Your Bag
           </span>
           <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1A1A] font-medium tracking-tight">
@@ -69,10 +69,10 @@ export const Cart: React.FC = () => {
         <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#E8E5DF] mb-8 shadow-xs">
           <div className="flex items-center justify-between text-xs sm:text-sm mb-2">
             <span className="flex items-center gap-2 text-[#1A1A1A] font-medium">
-              <Truck size={16} className="text-[#4A1D3F]" />
+              <Truck size={16} className="text-[#7B1E2B]" />
               {remainingForFreeShipping > 0 ? (
                 <span>
-                  Add <strong className="text-[#4A1D3F]">₹{remainingForFreeShipping.toLocaleString('en-IN')}</strong> more for <strong className="text-[#15803D]">FREE Delivery</strong>
+                  Add <strong className="text-[#7B1E2B]">₹{remainingForFreeShipping.toLocaleString('en-IN')}</strong> more for <strong className="text-[#15803D]">FREE Delivery</strong>
                 </span>
               ) : (
                 <span className="text-[#15803D] font-bold">
@@ -84,7 +84,7 @@ export const Cart: React.FC = () => {
           </div>
           <div className="w-full h-2 bg-[#E8E5DF] rounded-full overflow-hidden">
             <div 
-              className="h-full bg-[#4A1D3F] transition-all duration-300 rounded-full"
+              className="h-full bg-[#7B1E2B] transition-all duration-300 rounded-full"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -122,7 +122,7 @@ export const Cart: React.FC = () => {
                       <div className="space-y-1.5">
                         <div className="flex justify-between items-start gap-2">
                           <Link to={`/product/${item.id}`}>
-                            <h3 className="font-serif text-sm sm:text-base font-medium text-[#1A1A1A] hover:text-[#4A1D3F] transition-colors truncate">
+                            <h3 className="font-serif text-sm sm:text-base font-medium text-[#1A1A1A] hover:text-[#7B1E2B] transition-colors truncate">
                               {item.name}
                             </h3>
                           </Link>
@@ -221,15 +221,15 @@ export const Cart: React.FC = () => {
 
               <div className="pt-2 border-t border-[#F0ECE4] space-y-2 text-[11px] text-[#6B7280]">
                 <p className="flex items-center gap-2">
-                  <ShieldCheck size={14} className="text-[#4A1D3F] shrink-0" />
+                  <ShieldCheck size={14} className="text-[#7B1E2B] shrink-0" />
                   <span>256-bit Encrypted SSL Checkout</span>
                 </p>
                 <p className="flex items-center gap-2">
-                  <RotateCcw size={14} className="text-[#4A1D3F] shrink-0" />
+                  <RotateCcw size={14} className="text-[#7B1E2B] shrink-0" />
                   <span>7-Day Hassle-Free Returns & Size Exchanges</span>
                 </p>
                 <p className="flex items-center gap-2">
-                  <Banknote size={14} className="text-[#4A1D3F] shrink-0" />
+                  <Banknote size={14} className="text-[#7B1E2B] shrink-0" />
                   <span>Cash on Delivery & Razorpay UPI Available</span>
                 </p>
               </div>

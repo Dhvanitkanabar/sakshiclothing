@@ -39,11 +39,11 @@ interface Order {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const STATUS_BADGE: Record<string, string> = {
-  pending: 'bg-[#FAF8F5] text-[#4A1D3F] border border-[#E8E5DF]',
-  pending_approval: 'bg-[#FAF8F5] text-[#4A1D3F] border border-[#E8E5DF]',
+  pending: 'bg-[#FAF8F5] text-[#7B1E2B] border border-[#E8E5DF]',
+  pending_approval: 'bg-[#FAF8F5] text-[#7B1E2B] border border-[#E8E5DF]',
   confirmed: 'bg-emerald-50 text-emerald-800 border border-emerald-200',
   processing: 'bg-blue-50 text-blue-800 border border-blue-200',
-  packed: 'bg-[#4A1D3F]/10 text-[#4A1D3F] border border-[#4A1D3F]/20',
+  packed: 'bg-[#7B1E2B]/10 text-[#7B1E2B] border border-[#7B1E2B]/20',
   shipped: 'bg-indigo-50 text-indigo-800 border border-indigo-200',
   dispatched: 'bg-indigo-50 text-indigo-800 border border-indigo-200',
   in_transit: 'bg-blue-50 text-blue-800 border border-blue-200',
@@ -282,13 +282,13 @@ const Profile: React.FC = () => {
               {displayAvatar ? (
                 <img src={displayAvatar} alt={displayName} className="w-full h-full object-cover" />
               ) : (
-                <span className="text-2xl font-serif font-bold text-[#4A1D3F]">{displayName.charAt(0).toUpperCase()}</span>
+                <span className="text-2xl font-serif font-bold text-[#7B1E2B]">{displayName.charAt(0).toUpperCase()}</span>
               )}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 mb-0.5">
                 <h1 className="text-xl sm:text-2xl font-serif font-medium text-[#1A1A1A] truncate">{displayName}</h1>
-                <span className="px-2 py-0.5 bg-[#FAF8F5] text-[#4A1D3F] text-[9px] font-bold uppercase tracking-wider rounded-md border border-[#E8E5DF] shrink-0">
+                <span className="px-2 py-0.5 bg-[#FAF8F5] text-[#7B1E2B] text-[9px] font-bold uppercase tracking-wider rounded-md border border-[#E8E5DF] shrink-0">
                   {displayRole}
                 </span>
               </div>
@@ -321,7 +321,7 @@ const Profile: React.FC = () => {
               onClick={() => setActiveTab(item.id)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all shrink-0 min-h-[44px] ${
                 activeTab === item.id
-                  ? 'bg-[#4A1D3F] text-white shadow-xs'
+                  ? 'bg-[#7B1E2B] text-white shadow-xs'
                   : 'bg-white text-[#6B7280] border border-[#E8E5DF] hover:bg-[#FAF8F5]'
               }`}
             >
@@ -356,13 +356,13 @@ const Profile: React.FC = () => {
                 {displayAvatar ? (
                   <img src={displayAvatar} alt={displayName} className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-3xl font-serif font-bold text-[#4A1D3F]">{displayName.charAt(0).toUpperCase()}</span>
+                  <span className="text-3xl font-serif font-bold text-[#7B1E2B]">{displayName.charAt(0).toUpperCase()}</span>
                 )}
               </div>
               <div className="text-center space-y-1">
                 <h2 className="text-xl font-serif font-medium text-[#1A1A1A]">{displayName}</h2>
                 <p className="text-xs text-[#6B7280] truncate">{displayEmail}</p>
-                <span className="inline-block px-3 py-0.5 bg-[#FAF8F5] text-[#4A1D3F] text-[9px] font-bold uppercase tracking-wider rounded-full border border-[#E8E5DF] mt-1">
+                <span className="inline-block px-3 py-0.5 bg-[#FAF8F5] text-[#7B1E2B] text-[9px] font-bold uppercase tracking-wider rounded-full border border-[#E8E5DF] mt-1">
                   {displayRole}
                 </span>
               </div>
@@ -388,7 +388,7 @@ const Profile: React.FC = () => {
                   onClick={() => setActiveTab(item.id)}
                   className={`w-full flex items-center justify-between p-3.5 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all min-h-[44px] ${
                     activeTab === item.id
-                      ? 'bg-[#4A1D3F] text-white shadow-xs'
+                      ? 'bg-[#7B1E2B] text-white shadow-xs'
                       : 'text-[#6B7280] hover:text-[#1A1A1A] hover:bg-[#FAF8F5]'
                   }`}
                 >
@@ -451,7 +451,7 @@ const Profile: React.FC = () => {
                     orders.map((order) => (
                       <motion.div
                         key={order._id}
-                        className="bg-white border border-[#E8E5DF] rounded-3xl overflow-hidden hover:border-[#4A1D3F]/30 shadow-xs transition-all duration-300"
+                        className="bg-white border border-[#E8E5DF] rounded-3xl overflow-hidden hover:border-[#7B1E2B]/30 shadow-xs transition-all duration-300"
                       >
                         {/* Order Header */}
                         <div className="bg-[#FAF8F5] p-4 sm:p-6 border-b border-[#E8E5DF]">
@@ -468,7 +468,7 @@ const Profile: React.FC = () => {
                             </div>
                             <div>
                               <p className="text-[9px] text-[#6B7280] uppercase tracking-wider font-bold">Total Amount</p>
-                              <p className="text-xs sm:text-sm font-bold text-[#4A1D3F]">₹{order.total.toLocaleString('en-IN')}</p>
+                              <p className="text-xs sm:text-sm font-bold text-[#7B1E2B]">₹{order.total.toLocaleString('en-IN')}</p>
                             </div>
                             <div>
                               <p className="text-[9px] text-[#6B7280] uppercase tracking-wider font-bold">Status</p>
@@ -483,7 +483,7 @@ const Profile: React.FC = () => {
                             <div className="mt-3 pt-3 border-t border-[#E8E5DF] flex items-center gap-2">
                               <Sparkles size={12} className="text-[#C6A15B]" />
                               <span className="text-xs text-[#6B7280]">Estimated Delivery:</span>
-                              <span className="text-xs font-bold text-[#4A1D3F] bg-[#FAF8F5] px-2.5 py-0.5 rounded-full border border-[#E8E5DF]">
+                              <span className="text-xs font-bold text-[#7B1E2B] bg-[#FAF8F5] px-2.5 py-0.5 rounded-full border border-[#E8E5DF]">
                                 {order.tracking.estimatedDeliveryTime}
                               </span>
                             </div>
@@ -563,7 +563,7 @@ const Profile: React.FC = () => {
                             <div className="flex flex-wrap items-center gap-2">
                               <Link
                                 to={`/track-order?orderId=${order.orderNumber}`}
-                                className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white bg-[#4A1D3F] hover:bg-[#3B1732] transition-colors px-3.5 py-2.5 rounded-xl shadow-xs min-h-[44px]"
+                                className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white bg-[#7B1E2B] hover:bg-[#621721] transition-colors px-3.5 py-2.5 rounded-xl shadow-xs min-h-[44px]"
                               >
                                 <Truck size={13} />
                                 <span>Track Live</span>
@@ -609,7 +609,7 @@ const Profile: React.FC = () => {
                     ))
                   ) : (
                     <div className="text-center py-20 sm:py-28 bg-white rounded-3xl border border-dashed border-[#E8E5DF] p-6 space-y-5">
-                      <div className="inline-flex items-center justify-center w-20 h-20 bg-[#FAF8F5] rounded-full text-[#4A1D3F]">
+                      <div className="inline-flex items-center justify-center w-20 h-20 bg-[#FAF8F5] rounded-full text-[#7B1E2B]">
                         <ShoppingBag size={36} />
                       </div>
                       <div className="space-y-1">
@@ -640,7 +640,7 @@ const Profile: React.FC = () => {
                       <div
                         key={addr._id}
                         className={`bg-white rounded-3xl p-5 sm:p-7 border-2 transition-all ${
-                          addr.isDefault ? 'border-[#C6A15B] shadow-xs' : 'border-[#E8E5DF] hover:border-[#4A1D3F]/30'
+                          addr.isDefault ? 'border-[#C6A15B] shadow-xs' : 'border-[#E8E5DF] hover:border-[#7B1E2B]/30'
                         }`}
                       >
                         <div className="flex justify-between items-start mb-3">
@@ -648,7 +648,7 @@ const Profile: React.FC = () => {
                             {addr.addressType || 'Home'}
                           </span>
                           {addr.isDefault && (
-                            <span className="text-[9px] font-bold uppercase tracking-wider text-[#4A1D3F] bg-[#FAF8F5] border border-[#4A1D3F]/30 px-3 py-1 rounded-full">
+                            <span className="text-[9px] font-bold uppercase tracking-wider text-[#7B1E2B] bg-[#FAF8F5] border border-[#7B1E2B]/30 px-3 py-1 rounded-full">
                               Default Address
                             </span>
                           )}
@@ -664,7 +664,7 @@ const Profile: React.FC = () => {
                           {!addr.isDefault && (
                             <button
                               onClick={() => handleSetDefault(addr._id)}
-                              className="text-xs font-bold uppercase tracking-wider text-[#4A1D3F] hover:text-[#3B1732] transition-colors min-h-[44px] py-1"
+                              className="text-xs font-bold uppercase tracking-wider text-[#7B1E2B] hover:text-[#621721] transition-colors min-h-[44px] py-1"
                             >
                               Set Default
                             </button>
@@ -704,7 +704,7 @@ const Profile: React.FC = () => {
                   exit={{ opacity: 0, y: -15 }}
                   className="space-y-6"
                 >
-                  <div className="bg-[#4A1D3F] text-white p-6 sm:p-10 rounded-3xl shadow-md border border-[#3B1732] flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
+                  <div className="bg-[#7B1E2B] text-white p-6 sm:p-10 rounded-3xl shadow-md border border-[#621721] flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-80 h-80 bg-[#C6A15B]/15 rounded-full blur-3xl pointer-events-none" />
 
                     <div className="space-y-2 text-center sm:text-left relative z-10">
@@ -778,7 +778,7 @@ const Profile: React.FC = () => {
                   {/* Data Protection Overview Card */}
                   <div className="bg-white border border-[#E8E5DF] rounded-3xl p-6 sm:p-8 shadow-xs space-y-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-[#4A1D3F]/10 text-[#4A1D3F] flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-xl bg-[#7B1E2B]/10 text-[#7B1E2B] flex items-center justify-center">
                         <Settings size={20} />
                       </div>
                       <div>
@@ -792,13 +792,13 @@ const Profile: React.FC = () => {
                     <div className="pt-2 flex flex-wrap gap-3">
                       <Link
                         to="/privacy"
-                        className="text-xs text-[#4A1D3F] hover:underline font-semibold flex items-center gap-1"
+                        className="text-xs text-[#7B1E2B] hover:underline font-semibold flex items-center gap-1"
                       >
                         Read Privacy Policy <ChevronRight size={12} />
                       </Link>
                       <Link
                         to="/terms"
-                        className="text-xs text-[#4A1D3F] hover:underline font-semibold flex items-center gap-1"
+                        className="text-xs text-[#7B1E2B] hover:underline font-semibold flex items-center gap-1"
                       >
                         Terms of Service <ChevronRight size={12} />
                       </Link>

@@ -31,6 +31,7 @@ import ProductReviews from '../components/ProductReviews';
 import { useWishlist } from '../context/WishlistContext';
 import { fetchProductById, fetchProducts } from '../lib/api';
 import { BUSINESS_CONFIG } from '../config/business';
+import { getSavedPincode, checkPincodeDelivery, savePincode, PincodeResult } from '../utils/pincode';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -52,8 +53,26 @@ export const ProductDetails: React.FC = () => {
   const [isSizeChartOpen, setIsSizeChartOpen] = useState(false);
 
   // PIN code checker state
-  const [pincode, setPincode] = useState('');
-  const [pincodeStatus, setPincodeStatus] = useState<{ checked: boolean; valid: boolean; message: string } | null>(null);
+  const [pincode, setPincode] = useState(() => getSavedPincode() || '');
+  const [pincodeStatus, setPincodeStatus] = useState<PincodeResult | null>(() => {
+    const saved = getSavedPincode();
+    return saved ? checkPincodeDelivery(saved) : null;
+  });
+
+  const handlePincodeCheck = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanPin = pincode.trim();
+    if (!/^[1-9][0-9]{5}$/.test(cleanPin)) {
+      toast.error('Please enter a valid 6-digit Indian postal PIN code.');
+      return;
+    }
+    const result = checkPincodeDelivery(cleanPin);
+    setPincodeStatus(result);
+    if (result.isServiceable) {
+      savePincode(cleanPin);
+      toast.success(`Serviceable to PIN ${cleanPin}`);
+    }
+  };
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
@@ -105,7 +124,7 @@ export const ProductDetails: React.FC = () => {
         <motion.div 
           animate={{ rotate: 360 }}
           transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-          className="w-10 h-10 border-2 border-[#E8E5DF] border-t-[#4A1D3F] rounded-full"
+          className="w-10 h-10 border-2 border-[#E8E5DF] border-t-[#7B1E2B] rounded-full"
         />
       </div>
     );
@@ -171,24 +190,7 @@ export const ProductDetails: React.FC = () => {
     }
   };
 
-  const handlePincodeCheck = (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanPin = pincode.trim();
-    if (!/^\d{6}$/.test(cleanPin)) {
-      setPincodeStatus({
-        checked: true,
-        valid: false,
-        message: 'Please enter a valid 6-digit Indian PIN code.'
-      });
-      return;
-    }
-    // All valid 6-digit PIN codes are deliverable in India with Cash on Delivery
-    setPincodeStatus({
-      checked: true,
-      valid: true,
-      message: `Delivery available at ${cleanPin} in 2-4 business days. Cash on Delivery eligible.`
-    });
-  };
+
 
   const productSchema = {
     '@context': 'https://schema.org',
@@ -253,9 +255,9 @@ export const ProductDetails: React.FC = () => {
       {/* Breadcrumb Navigation */}
       <div className="max-w-7xl mx-auto px-5 sm:px-8 pt-8 pb-4">
         <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-[#6B7280]">
-          <Link to="/" className="hover:text-[#4A1D3F] transition-colors">Home</Link>
+          <Link to="/" className="hover:text-[#7B1E2B] transition-colors">Home</Link>
           <ChevronRight size={12} />
-          <Link to={`/shop?category=${encodeURIComponent(product.category)}`} className="hover:text-[#4A1D3F] transition-colors">
+          <Link to={`/shop?category=${encodeURIComponent(product.category)}`} className="hover:text-[#7B1E2B] transition-colors">
             {product.category}
           </Link>
           <ChevronRight size={12} />
@@ -284,7 +286,7 @@ export const ProductDetails: React.FC = () => {
                     <span>Imitation Jewellery</span>
                   </span>
                 ) : (
-                  <span className="bg-white/95 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider text-[#4A1D3F] border border-[#4A1D3F]/20 shadow-xs">
+                  <span className="bg-white/95 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider text-[#7B1E2B] border border-[#7B1E2B]/20 shadow-xs">
                     {product.category}
                   </span>
                 )}
@@ -307,7 +309,7 @@ export const ProductDetails: React.FC = () => {
                     dialogTitle: `Share ${product.name}`
                   });
                 }}
-                className="absolute top-4 right-16 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full backdrop-blur-md transition-all z-20 bg-white/85 text-[#1A1A1A] hover:bg-white hover:text-[#4A1D3F] shadow-xs active:scale-95"
+                className="absolute top-4 right-16 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full backdrop-blur-md transition-all z-20 bg-white/85 text-[#1A1A1A] hover:bg-white hover:text-[#7B1E2B] shadow-xs active:scale-95"
                 aria-label="Share product"
               >
                 <Share2 className="w-4 h-4" />
@@ -321,8 +323,8 @@ export const ProductDetails: React.FC = () => {
                 }}
                 className={`absolute top-4 right-4 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full backdrop-blur-md transition-all z-20 ${
                   isWishlisted
-                    ? 'bg-[#4A1D3F] text-white shadow-md'
-                    : 'bg-white/85 text-[#1A1A1A] hover:bg-white hover:text-[#4A1D3F] shadow-xs'
+                    ? 'bg-[#7B1E2B] text-white shadow-md'
+                    : 'bg-white/85 text-[#1A1A1A] hover:bg-white hover:text-[#7B1E2B] shadow-xs'
                 }`}
                 aria-label={isWishlisted ? "Remove from wishlist" : "Save to wishlist"}
               >
@@ -342,7 +344,7 @@ export const ProductDetails: React.FC = () => {
                     key={idx}
                     onClick={() => setMainImage(imgUrl)}
                     className={`w-18 sm:w-20 aspect-[3/4] shrink-0 rounded-2xl overflow-hidden border-2 transition-all min-h-[44px] ${
-                      mainImage === imgUrl ? 'border-[#4A1D3F] shadow-sm scale-102' : 'border-[#E8E5DF] opacity-60 hover:opacity-100'
+                      mainImage === imgUrl ? 'border-[#7B1E2B] shadow-sm scale-102' : 'border-[#E8E5DF] opacity-60 hover:opacity-100'
                     }`}
                   >
                     <img 
@@ -364,7 +366,7 @@ export const ProductDetails: React.FC = () => {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className={`text-[11px] font-semibold uppercase tracking-[0.2em] ${
-                  isJewellery ? 'text-[#C6A15B]' : 'text-[#4A1D3F]'
+                  isJewellery ? 'text-[#C6A15B]' : 'text-[#7B1E2B]'
                 }`}>
                   {isJewellery ? 'Artisanal Imitation Jewellery' : (product.subCategory || 'Heirloom Fashion')}
                 </span>
@@ -429,7 +431,7 @@ export const ProductDetails: React.FC = () => {
                   </span>
                   <button
                     onClick={() => setIsSizeChartOpen(true)}
-                    className="inline-flex items-center gap-1.5 text-xs text-[#4A1D3F] hover:underline font-semibold min-h-[44px] py-1"
+                    className="inline-flex items-center gap-1.5 text-xs text-[#7B1E2B] hover:underline font-semibold min-h-[44px] py-1"
                   >
                     <Ruler size={14} />
                     <span>View Size Guide</span>
@@ -443,8 +445,8 @@ export const ProductDetails: React.FC = () => {
                       onClick={() => setSelectedSize(size)}
                       className={`min-w-14 h-12 px-3.5 rounded-xl border text-xs font-semibold transition-all min-h-[44px] flex items-center justify-center ${
                         selectedSize === size
-                          ? 'bg-[#4A1D3F] border-[#4A1D3F] text-white shadow-xs'
-                          : 'bg-white border-[#E8E5DF] text-[#1A1A1A] hover:border-[#4A1D3F]'
+                          ? 'bg-[#7B1E2B] border-[#7B1E2B] text-white shadow-xs'
+                          : 'bg-white border-[#E8E5DF] text-[#1A1A1A] hover:border-[#7B1E2B]'
                       }`}
                     >
                       {size}
@@ -500,8 +502,8 @@ export const ProductDetails: React.FC = () => {
 
             {/* PIN Code Delivery Checker */}
             <div className="p-4 rounded-2xl bg-white border border-[#E8E5DF] space-y-3">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#1A1A1A]">
-                <MapPin size={15} className="text-[#4A1D3F]" />
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#111111]">
+                <MapPin size={15} className="text-[#7B1E2B]" />
                 <span>Delivery & COD Availability</span>
               </div>
               <form onSubmit={handlePincodeCheck} className="flex gap-2">
@@ -510,18 +512,33 @@ export const ProductDetails: React.FC = () => {
                   maxLength={6}
                   value={pincode}
                   onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
-                  placeholder="Enter 6-digit PIN code"
-                  className="flex-1 px-3.5 py-2 text-base rounded-xl border border-[#E8E5DF] focus:outline-none focus:border-[#4A1D3F] min-h-[44px]"
+                  placeholder="Enter 6-digit PIN code (e.g. 394105)"
+                  className="flex-1 px-3.5 py-2 text-base rounded-xl border border-[#E8E5DF] focus:outline-none focus:border-[#7B1E2B] min-h-[44px]"
                 />
                 <Button type="submit" variant="outline" size="sm" className="shrink-0 min-h-[44px]">
                   Check
                 </Button>
               </form>
               {pincodeStatus && (
-                <p className={`text-xs ${pincodeStatus.valid ? 'text-[#15803D]' : 'text-[#B43E2B]'} flex items-start gap-1.5`}>
-                  {pincodeStatus.valid && <CheckCircle2 size={14} className="shrink-0 mt-0.5" />}
-                  <span>{pincodeStatus.message}</span>
-                </p>
+                <div className={`text-xs p-3 rounded-xl border flex flex-col gap-1 ${
+                  pincodeStatus.isServiceable 
+                    ? 'bg-[#F4FBF5] border-[#C6E8CD] text-[#15803D]' 
+                    : 'bg-[#FDF2F0] border-[#F8D7DA] text-[#B43E2B]'
+                }`}>
+                  <div className="flex items-center gap-1.5 font-semibold">
+                    {pincodeStatus.isServiceable ? <CheckCircle2 size={15} /> : <Info size={15} />}
+                    <span>{pincodeStatus.isServiceable ? `Delivering to PIN ${pincodeStatus.pincode} (${pincodeStatus.estimatedDays})` : pincodeStatus.message}</span>
+                  </div>
+                  {pincodeStatus.isServiceable && (
+                    <div className="text-[11px] text-[#5C5855] flex flex-wrap gap-x-3 gap-y-0.5">
+                      <span>Expected arrival: <strong className="text-[#111111]">{pincodeStatus.deliveryDateStr}</strong></span>
+                      <span>•</span>
+                      <span>Cash on Delivery: <strong className="text-[#15803D]">Eligible</strong></span>
+                      <span>•</span>
+                      <span>Free shipping above ₹999</span>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
@@ -537,12 +554,12 @@ export const ProductDetails: React.FC = () => {
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
                     className={`text-xs font-semibold uppercase tracking-wider pb-2 relative min-h-[40px] ${
-                      activeTab === tab.id ? 'text-[#4A1D3F]' : 'text-[#6B7280] hover:text-[#1A1A1A]'
+                      activeTab === tab.id ? 'text-[#7B1E2B]' : 'text-[#6B7280] hover:text-[#1A1A1A]'
                     }`}
                   >
                     {tab.label}
                     {activeTab === tab.id && (
-                      <motion.div layoutId="prodTabLine" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#4A1D3F]" />
+                      <motion.div layoutId="prodTabLine" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#7B1E2B]" />
                     )}
                   </button>
                 ))}
@@ -586,7 +603,7 @@ export const ProductDetails: React.FC = () => {
                       <ul className="space-y-1.5 text-xs pt-2 border-t border-[#E8E5DF]">
                         {product.craftAndFabric.map((line: string, idx: number) => (
                           <li key={idx} className="flex items-start gap-2">
-                            <span className="text-[#4A1D3F]">✦</span>
+                            <span className="text-[#7B1E2B]">✦</span>
                             <span>{line}</span>
                           </li>
                         ))}
@@ -656,7 +673,7 @@ export const ProductDetails: React.FC = () => {
         {relatedProducts.length > 0 && (
           <div className="mt-16 sm:mt-24 pt-12 border-t border-[#E8E5DF]">
             <div className="mb-8">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#4A1D3F] block mb-1">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7B1E2B] block mb-1">
                 Curated Pairings
               </span>
               <h2 className="font-serif text-2xl sm:text-3xl text-[#1A1A1A] font-medium">
@@ -687,7 +704,7 @@ export const ProductDetails: React.FC = () => {
         <div className="space-y-4 text-xs text-[#1A1A1A]">
           {Array.isArray(product.productFacts?.sizeChartGuide) && product.productFacts.sizeChartGuide.length > 0 && (
             <div className="p-3 bg-[#FAF8F5] border border-[#E8E5DF] rounded-xl space-y-1">
-              <p className="font-semibold text-[#4A1D3F]">Product Fit Notes:</p>
+              <p className="font-semibold text-[#7B1E2B]">Product Fit Notes:</p>
               <ul className="space-y-1 text-[#4B5563]">
                 {product.productFacts.sizeChartGuide.map((note: string, idx: number) => (
                   <li key={idx}>• {note}</li>
@@ -700,7 +717,7 @@ export const ProductDetails: React.FC = () => {
           </p>
           <div className="overflow-x-auto">
             <table className="w-full text-left border border-[#E8E5DF] rounded-xl overflow-hidden">
-              <thead className="bg-[#FAF8F5] text-[11px] font-semibold uppercase text-[#4A1D3F]">
+              <thead className="bg-[#FAF8F5] text-[11px] font-semibold uppercase text-[#7B1E2B]">
                 <tr>
                   <th className="p-3 border-b border-[#E8E5DF]">Size</th>
                   <th className="p-3 border-b border-[#E8E5DF]">Bust / Chest</th>
@@ -770,7 +787,7 @@ export const ProductDetails: React.FC = () => {
           className={`min-h-[44px] px-6 py-2.5 rounded-full text-xs uppercase tracking-wider font-semibold shadow-md flex items-center gap-1.5 active:scale-95 transition-all select-none ${
             isJewellery
               ? 'bg-[#C6A15B] text-white hover:bg-[#B38F48]'
-              : 'bg-[#4A1D3F] text-white hover:bg-[#3B1632]'
+              : 'bg-[#7B1E2B] text-white hover:bg-[#621721]'
           }`}
         >
           <ShoppingBag size={14} />

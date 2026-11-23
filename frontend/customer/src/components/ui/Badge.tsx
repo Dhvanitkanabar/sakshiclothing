@@ -4,7 +4,7 @@ import React from 'react';
 
 export interface BadgeProps {
   children: React.ReactNode;
-  variant?: 'sale' | 'plum' | 'jewellery' | 'neutral' | 'success' | 'outline';
+  variant?: 'sale' | 'maroon' | 'plum' | 'jewellery' | 'neutral' | 'success' | 'outline';
   size?: 'sm' | 'md';
   className?: string;
   pill?: boolean;
@@ -22,11 +22,12 @@ export const Badge: React.FC<BadgeProps> = ({
 
   const variants = {
     sale: 'bg-[#B43E2B] text-white font-semibold shadow-xs',
-    plum: 'bg-[#4A1D3F] text-white font-semibold shadow-xs',
+    maroon: 'bg-[#7B1E2B] text-white font-semibold shadow-xs',
+    plum: 'bg-[#7B1E2B] text-white font-semibold shadow-xs',
     jewellery: 'bg-[#C6A15B] text-white font-semibold shadow-xs',
-    neutral: 'bg-[#F2EFE9] text-[#1A1A1A] border border-[#E8E5DF]',
+    neutral: 'bg-[#F2EFE9] text-[#111111] border border-[#E8E5DF]',
     success: 'bg-[#EBF7EE] text-[#15803D] border border-[#C6E8CD]',
-    outline: 'bg-transparent text-[#4A1D3F] border border-[#4A1D3F]',
+    outline: 'bg-transparent text-[#7B1E2B] border border-[#7B1E2B]',
   };
 
   const sizes = {

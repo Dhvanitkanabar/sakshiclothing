@@ -202,7 +202,7 @@ const TrackOrder: React.FC = () => {
         {/* Top Header & Search Bar */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-[#E8E5DF]">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FAF8F5] text-[#4A1D3F] text-[11px] font-bold uppercase tracking-widest mb-2 border border-[#E8E5DF]">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FAF8F5] text-[#7B1E2B] text-[11px] font-bold uppercase tracking-widest mb-2 border border-[#E8E5DF]">
               <Sparkles size={12} className="text-[#C6A15B]" />
               <span>Surat Atelier Live Fulfillment</span>
             </div>
@@ -219,7 +219,7 @@ const TrackOrder: React.FC = () => {
                 placeholder="Enter Order # (e.g. ORDERSC1)"
                 value={orderId}
                 onChange={(e) => setOrderId(e.target.value.replace(/^#+/, '').toUpperCase())}
-                className="w-full bg-white border border-[#E8E5DF] px-4 py-2.5 rounded-xl text-base sm:text-xs font-semibold text-[#1A1A1A] focus:outline-none focus:border-[#4A1D3F] focus:ring-1 focus:ring-[#4A1D3F] transition-all uppercase placeholder:normal-case font-mono min-h-[44px]"
+                className="w-full bg-white border border-[#E8E5DF] px-4 py-2.5 rounded-xl text-base sm:text-xs font-semibold text-[#1A1A1A] focus:outline-none focus:border-[#7B1E2B] focus:ring-1 focus:ring-[#7B1E2B] transition-all uppercase placeholder:normal-case font-mono min-h-[44px]"
               />
             </div>
             <Button
@@ -253,7 +253,7 @@ const TrackOrder: React.FC = () => {
         {/* Empty State */}
         {!order && !loading && !error && (
           <div className="bg-white rounded-3xl p-8 sm:p-12 border border-[#E8E5DF] shadow-xs text-center max-w-xl mx-auto space-y-5 my-8">
-            <div className="w-14 h-14 rounded-full bg-[#FAF8F5] flex items-center justify-center mx-auto text-[#4A1D3F]">
+            <div className="w-14 h-14 rounded-full bg-[#FAF8F5] flex items-center justify-center mx-auto text-[#7B1E2B]">
               <Package size={26} />
             </div>
             <div className="space-y-2">
@@ -265,7 +265,7 @@ const TrackOrder: React.FC = () => {
             <div className="pt-2">
               <Link
                 to="/profile"
-                className="inline-flex items-center gap-2 text-xs font-bold text-[#4A1D3F] hover:text-[#3B1732] border-b border-[#4A1D3F] pb-0.5 transition-colors min-h-[44px]"
+                className="inline-flex items-center gap-2 text-xs font-bold text-[#7B1E2B] hover:text-[#621721] border-b border-[#7B1E2B] pb-0.5 transition-colors min-h-[44px]"
               >
                 <span>View Recent Orders in Account</span>
                 <ArrowRight size={13} />
@@ -283,7 +283,7 @@ const TrackOrder: React.FC = () => {
             className="space-y-6 sm:space-y-8"
           >
             {/* Status Spotlight Banner */}
-            <div className="bg-[#4A1D3F] text-white rounded-3xl p-6 sm:p-8 shadow-md border border-[#3B1732] relative overflow-hidden">
+            <div className="bg-[#7B1E2B] text-white rounded-3xl p-6 sm:p-8 shadow-md border border-[#621721] relative overflow-hidden">
               <div className="absolute top-0 right-0 w-80 h-80 bg-[#C6A15B]/15 rounded-full blur-3xl pointer-events-none" />
 
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/10 relative z-10">
@@ -380,7 +380,7 @@ const TrackOrder: React.FC = () => {
               <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#E8E5DF] shadow-xs space-y-6">
                 <div className="flex items-center justify-between pb-3 border-b border-[#E8E5DF]">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-[#1A1A1A] flex items-center gap-2">
-                    <Truck size={15} className="text-[#4A1D3F]" />
+                    <Truck size={15} className="text-[#7B1E2B]" />
                     <span>Fulfillment Progress</span>
                   </h3>
                   <span className="text-[11px] text-[#6B7280]">
@@ -402,7 +402,7 @@ const TrackOrder: React.FC = () => {
                         <div
                           className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                             isDone
-                              ? 'bg-[#4A1D3F] text-white shadow-xs'
+                              ? 'bg-[#7B1E2B] text-white shadow-xs'
                               : isCurrent
                               ? 'bg-[#C6A15B] text-[#1A1A1A] ring-4 ring-[#C6A15B]/30 scale-110 shadow-sm'
                               : 'bg-[#FAF8F5] text-[#9CA3AF] border border-[#E8E5DF]'
@@ -412,12 +412,12 @@ const TrackOrder: React.FC = () => {
                         </div>
                         <div className="text-center max-w-[90px]">
                           <span className={`text-[11px] font-bold block leading-tight ${
-                            isCurrent ? 'text-[#1A1A1A] font-extrabold' : isDone ? 'text-[#4A1D3F]' : 'text-[#9CA3AF]'
+                            isCurrent ? 'text-[#1A1A1A] font-extrabold' : isDone ? 'text-[#7B1E2B]' : 'text-[#9CA3AF]'
                           }`}>
                             {step.shortLabel}
                           </span>
                           {isCurrent && (
-                            <span className="text-[9px] font-bold uppercase tracking-wider text-[#4A1D3F] bg-[#FAF8F5] px-1.5 py-0.5 rounded mt-0.5 inline-block border border-[#E8E5DF]">
+                            <span className="text-[9px] font-bold uppercase tracking-wider text-[#7B1E2B] bg-[#FAF8F5] px-1.5 py-0.5 rounded mt-0.5 inline-block border border-[#E8E5DF]">
                               Active
                             </span>
                           )}
@@ -437,17 +437,17 @@ const TrackOrder: React.FC = () => {
                     return (
                       <div key={step.key} className="flex items-center gap-3">
                         <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                          isDone ? 'bg-[#4A1D3F] text-white' :
+                          isDone ? 'bg-[#7B1E2B] text-white' :
                           isCurrent ? 'bg-[#C6A15B] text-[#1A1A1A] ring-2 ring-[#C6A15B]/40' :
                           'bg-[#FAF8F5] text-[#9CA3AF] border border-[#E8E5DF]'
                         }`}>
                           {isDone ? '✓' : idx + 1}
                         </div>
-                        <span className={`text-xs ${isCurrent ? 'font-bold text-[#1A1A1A]' : isDone ? 'text-[#4A1D3F] font-medium' : 'text-[#9CA3AF]'}`}>
+                        <span className={`text-xs ${isCurrent ? 'font-bold text-[#1A1A1A]' : isDone ? 'text-[#7B1E2B] font-medium' : 'text-[#9CA3AF]'}`}>
                           {step.label}
                         </span>
                         {isCurrent && (
-                          <span className="text-[9px] font-bold uppercase text-[#4A1D3F] bg-[#FAF8F5] px-1.5 py-0.5 rounded ml-auto border border-[#E8E5DF]">
+                          <span className="text-[9px] font-bold uppercase text-[#7B1E2B] bg-[#FAF8F5] px-1.5 py-0.5 rounded ml-auto border border-[#E8E5DF]">
                             In Progress
                           </span>
                         )}
@@ -469,7 +469,7 @@ const TrackOrder: React.FC = () => {
                   <div className="bg-white p-6 sm:p-7 rounded-3xl border border-[#E8E5DF] shadow-xs space-y-4">
                     <div className="flex items-center justify-between pb-3 border-b border-[#E8E5DF]">
                       <h3 className="text-xs font-bold uppercase tracking-wider text-[#1A1A1A] flex items-center gap-2">
-                        <ShoppingBag size={14} className="text-[#4A1D3F]" />
+                        <ShoppingBag size={14} className="text-[#7B1E2B]" />
                         <span>Items in this Package ({order.products.length})</span>
                       </h3>
                       <span className="text-xs font-bold text-[#1A1A1A]">
@@ -517,7 +517,7 @@ const TrackOrder: React.FC = () => {
                 {order.timeline && order.timeline.length > 0 && (
                   <div className="bg-white p-6 sm:p-7 rounded-3xl border border-[#E8E5DF] shadow-xs space-y-4">
                     <h3 className="text-xs font-bold uppercase tracking-wider text-[#1A1A1A] flex items-center gap-2 pb-3 border-b border-[#E8E5DF]">
-                      <Clock size={14} className="text-[#4A1D3F]" />
+                      <Clock size={14} className="text-[#7B1E2B]" />
                       <span>Tracking Timeline</span>
                     </h3>
 
@@ -555,7 +555,7 @@ const TrackOrder: React.FC = () => {
                       href={mapExternalUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[11px] font-bold text-[#4A1D3F] hover:text-[#3B1732] flex items-center gap-1 transition-colors min-h-[44px] py-1"
+                      className="text-[11px] font-bold text-[#7B1E2B] hover:text-[#621721] flex items-center gap-1 transition-colors min-h-[44px] py-1"
                     >
                       <ExternalLink size={12} /> Open Map
                     </a>
