@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence, useScroll, useTransform, useReducedMotion } from 'motion/react';
+import { motion, AnimatePresence, useScroll, useTransform, useReducedMotion, useInView } from 'motion/react';
 import { 
   ArrowRight, 
   ArrowLeft,
@@ -29,6 +29,45 @@ import SEOHead, { getOrganizationSchema } from '../components/SEOHead';
 import { useCart } from '../context/CartContext';
 import { toast } from 'sonner';
 
+const AnimatedCounter: React.FC<{ value: number; prefix?: string; suffix?: string; colorClass?: string }> = ({ 
+  value, 
+  prefix = '', 
+  suffix = '',
+  colorClass = 'text-[#7B1E2B]'
+}) => {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLParagraphElement>(null);
+  const isInView = useInView(ref, { once: true, margin: '-40px' });
+  const prefersReduced = useReducedMotion();
+
+  useEffect(() => {
+    if (!isInView) return;
+    if (prefersReduced) {
+      setCount(value);
+      return;
+    }
+    let startTime: number | null = null;
+    const duration = 1200;
+    const step = (now: number) => {
+      if (!startTime) startTime = now;
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      setCount(Math.floor(ease * value));
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      }
+    };
+    requestAnimationFrame(step);
+  }, [isInView, value, prefersReduced]);
+
+  return (
+    <p ref={ref} className={`font-serif text-2xl sm:text-3xl font-bold ${colorClass}`}>
+      {prefix}{count.toLocaleString('en-IN')}{suffix}
+    </p>
+  );
+};
+
 export const Home: React.FC = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
@@ -54,6 +93,7 @@ export const Home: React.FC = () => {
 
   // Parallax ref for hero & brand story
   const heroRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress: pageScrollProgress } = useScroll();
   const { scrollYProgress: heroScrollProgress } = useScroll({
     target: heroRef,
     offset: ['start start', 'end start']
@@ -235,9 +275,15 @@ export const Home: React.FC = () => {
 
   return (
     <div className="bg-[#FAF8F5] text-[#111111] min-h-screen selection:bg-[#7B1E2B] selection:text-white overflow-x-hidden font-sans">
+      {/* Dynamic Top Scroll Progress Indicator */}
+      <motion.div
+        style={{ scaleX: pageScrollProgress }}
+        className="fixed top-0 left-0 right-0 h-1 bg-[#7B1E2B] origin-left z-[150] pointer-events-none"
+      />
+
       <SEOHead
         title="Sakshi Clothing | Everyday Indian Fashion & Imitation Jewellery | Surat"
-        description="Everyday sarees, kurti sets, and skin-friendly imitation jewellery dispatched directly from Surat. Free shipping above ₹999 with Cash on Delivery."
+        description={`Everyday sarees, kurti sets, and skin-friendly imitation jewellery dispatched directly from Surat. Free shipping above ₹${BUSINESS_CONFIG.policies.freeShippingThreshold} with Cash on Delivery.`}
         jsonLd={getOrganizationSchema()}
       />
 
@@ -392,7 +438,7 @@ export const Home: React.FC = () => {
           <span className="text-[#C6A15B]">✦</span>
           <span className="flex items-center gap-2">
             <RotateCcw size={14} className="text-[#7B1E2B]" />
-            <span>{BUSINESS_CONFIG.policies.returnWindowDays}-Day Return & Exchange Window on Clothing</span>
+            <span>No Returns — 48h Transit Damage Guarantee with Unboxing Video</span>
           </span>
           <span className="text-[#C6A15B]">✦</span>
           <span className="flex items-center gap-2">
@@ -423,7 +469,7 @@ export const Home: React.FC = () => {
           <span className="text-[#C6A15B]">✦</span>
           <span className="flex items-center gap-2">
             <RotateCcw size={14} className="text-[#7B1E2B]" />
-            <span>{BUSINESS_CONFIG.policies.returnWindowDays}-Day Return & Exchange Window on Clothing</span>
+            <span>No Returns — 48h Transit Damage Guarantee with Unboxing Video</span>
           </span>
           <span className="text-[#C6A15B]">✦</span>
         </div>
@@ -932,22 +978,22 @@ export const Home: React.FC = () => {
               Surat is world-renowned for textile production, weaving, and rapid fashion iteration. At Sakshi Clothing, we curate everyday ethnic apparel and fashionable imitation jewellery directly from local manufacturing units. By packaging and dispatching from our Surat headquarters, we eliminate multi-tier distributor markups and deliver dependable quality straight to your door.
             </p>
 
-            {/* Real Verifiable Numbers ONLY */}
+            {/* Real Verifiable Numbers with Motion CountUp */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-[#E8E5DF]">
               <div>
-                <p className="font-serif text-2xl sm:text-3xl font-bold text-[#7B1E2B]">19,000+</p>
+                <AnimatedCounter value={19000} suffix="+" colorClass="text-[#7B1E2B]" />
                 <p className="text-[11px] text-[#5C5855] font-medium mt-0.5">PIN Codes Served</p>
               </div>
               <div>
-                <p className="font-serif text-2xl sm:text-3xl font-bold text-[#7B1E2B]">7 Days</p>
-                <p className="text-[11px] text-[#5C5855] font-medium mt-0.5">Hassle-Free Returns</p>
+                <AnimatedCounter value={48} suffix="h" colorClass="text-[#7B1E2B]" />
+                <p className="text-[11px] text-[#5C5855] font-medium mt-0.5">Damage Claim Window</p>
               </div>
               <div>
                 <p className="font-serif text-2xl sm:text-3xl font-bold text-[#C6A15B]">18% GST</p>
                 <p className="text-[11px] text-[#5C5855] font-medium mt-0.5">All-Inclusive Tax</p>
               </div>
               <div>
-                <p className="font-serif text-2xl sm:text-3xl font-bold text-[#7B1E2B]">₹999</p>
+                <AnimatedCounter value={BUSINESS_CONFIG.policies.freeShippingThreshold} prefix="₹" colorClass="text-[#7B1E2B]" />
                 <p className="text-[11px] text-[#5C5855] font-medium mt-0.5">Free Shipping Cap</p>
               </div>
             </div>

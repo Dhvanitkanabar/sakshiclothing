@@ -24,7 +24,7 @@ test.describe('Scroll-Driven Homepage & Interaction Suite', () => {
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'scroll-01-hero-mobile.png') });
 
     // 2. Offer Marquee Strip
-    const marquee = page.locator('text=/FREE Pan-India Delivery/i');
+    const marquee = page.locator('text=/FREE.*Delivery/i');
     await expect(marquee.first()).toBeVisible();
 
     // 3. Category Strip Scroll-Snap

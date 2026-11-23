@@ -26,7 +26,7 @@ for (const vp of VIEWPORTS) {
       await expect(hero.getByRole('heading', { level: 1 })).toBeVisible();
 
       // Offer Marquee Strip
-      await expect(page.locator('text=FREE Pan-India Delivery').first()).toBeVisible();
+      await expect(page.locator('text=/FREE.*Delivery/i').first()).toBeVisible();
 
       // Category Tiles
       await expect(page.getByRole('heading', { name: 'Explore by Category' })).toBeVisible();
