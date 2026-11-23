@@ -166,7 +166,14 @@ export default function ProductList() {
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <div className="font-bold text-slate-900 text-sm line-clamp-1">{product.name}</div>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <div className="font-bold text-slate-900 text-sm line-clamp-1">{product.name}</div>
+                      {product.isDemo && (
+                        <span className="px-1.5 py-0.5 rounded-md bg-purple-100 text-purple-800 border border-purple-200 text-[9px] font-bold tracking-wider uppercase">
+                          DEMO
+                        </span>
+                      )}
+                    </div>
                     <div className="text-[11px] text-amber-700 font-medium mt-0.5 flex items-center gap-1">
                       <Tag size={12} /> {product.category?.name || 'Jewellery & Apparel'}
                     </div>
@@ -261,7 +268,14 @@ export default function ProductList() {
                         </div>
                       )}
                       <div>
-                        <div className="font-bold text-slate-900 text-sm">{product.name}</div>
+                        <div className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                          <span>{product.name}</span>
+                          {product.isDemo && (
+                            <span className="px-1.5 py-0.5 rounded-md bg-purple-100 text-purple-800 border border-purple-200 text-[9px] font-bold tracking-wider uppercase">
+                              DEMO
+                            </span>
+                          )}
+                        </div>
                         <div className="text-[11px] text-amber-700 font-medium mt-0.5 flex items-center gap-1">
                           <Tag size={12} /> {product.category?.name || 'Jewellery & Apparel'}
                         </div>

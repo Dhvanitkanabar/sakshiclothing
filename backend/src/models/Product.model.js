@@ -133,6 +133,7 @@ const productSchema = new Schema(
     isBestSeller: { type: Boolean, default: false },
     isNewArrival: { type: Boolean, default: false },
     isPublished: { type: Boolean, default: false },
+    isDemo: { type: Boolean, default: false, index: true },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
     updatedBy: { type: Schema.Types.ObjectId, ref: 'User' }
   },
