@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Sakshi Clothing</string>
+    <string name="title_activity_main">Sakshi Clothing</string>
+    <string name="package_name">store.sakshiclothing.customer</string>
+    <string name="custom_url_scheme">store.sakshiclothing.customer</string>
+</resources>
