@@ -24,6 +24,18 @@ export const BUSINESS_CONFIG = {
     defaultShippingCharge: Number(process.env.DEFAULT_SHIPPING_FEE) || 49,
     codHandlingFee: Number(process.env.COD_HANDLING_FEE) || 0,
   },
+  payment: {
+    allowedMethods: ['upi', 'cod'],
+    defaultOnlineMethod: 'upi',
+    razorpayHiddenMethods: [
+      { method: 'card' },
+      { method: 'netbanking' },
+      { method: 'wallet' },
+      { method: 'emi' },
+      { method: 'cardless_emi' },
+      { method: 'paylater' }
+    ],
+  },
   policies: {
     returnWindowHours: 48,
     noReturnsPermitted: true,

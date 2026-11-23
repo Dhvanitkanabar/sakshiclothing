@@ -115,6 +115,11 @@ class CmsController {
         defaultShippingCharge: BUSINESS_CONFIG.shipping.defaultShippingCharge,
         codHandlingFee: BUSINESS_CONFIG.shipping.codHandlingFee || 0,
       },
+      payment: {
+        allowedMethods: BUSINESS_CONFIG.payment?.allowedMethods || ['upi', 'cod'],
+        defaultOnlineMethod: BUSINESS_CONFIG.payment?.defaultOnlineMethod || 'upi',
+        razorpayHiddenMethods: BUSINESS_CONFIG.payment?.razorpayHiddenMethods || []
+      },
       policies: {
         returnPolicy: BUSINESS_CONFIG.policies.returnPolicy,
         cancellationPolicy: BUSINESS_CONFIG.policies.cancellationPolicy,

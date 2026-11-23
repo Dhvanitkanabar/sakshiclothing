@@ -11,19 +11,22 @@ import {
   Smartphone, Navigation, Banknote, CheckCircle2
 } from 'lucide-react';
 import MapPicker from '../components/MapPicker';
-import { fetchAddresses, addAddress, placeOrder, initiateOrderCheckout } from '../lib/api';
+import { fetchAddresses, addAddress, placeOrder, initiateOrderCheckout, fetchCartQuote, CartQuote } from '../lib/api';
 import { Button } from '../components/ui/Button';
 import SEOHead from '../components/SEOHead';
 import { BUSINESS_CONFIG } from '../config/business';
+import { formatPrice } from '../utils/format';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
 export const Checkout: React.FC = () => {
-  const { cart, totalPrice, clearCart, loading: cartLoading } = useCart();
+  const { cart, cartQuote, totalPrice, clearCart, loading: cartLoading } = useCart();
   const { user, getClerkToken } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [clerkToken, setClerkToken] = useState<string | null>(null);
+  const [liveQuote, setLiveQuote] = useState<CartQuote | null>(cartQuote);
+  const [quoteLoading, setQuoteLoading] = useState(false);
 
   const [addresses, setAddresses] = useState<any[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
@@ -55,25 +58,64 @@ export const Checkout: React.FC = () => {
   });
 
   const [couponCode, setCouponCode] = useState('');
-  const [discount, setDiscount] = useState(0);
   const [loyaltyPoints, setLoyaltyPoints] = useState(0);
   const [useLoyalty, setUseLoyalty] = useState(false);
-  const [paymentGateway, setPaymentGateway] = useState('razorpay');
-  const [selectedPaymentMode, setSelectedPaymentMode] = useState<'upi' | 'cards_all'>('upi');
+  const [paymentGateway, setPaymentGateway] = useState<'razorpay' | 'cod'>('razorpay');
 
   // Exact Delivery GPS Coordinates State
   const [detectedCoords, setDetectedCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [detectingLocation, setDetectingLocation] = useState(false);
   const [noReturnPolicyAcknowledged, setNoReturnPolicyAcknowledged] = useState(false);
 
-  const baseTotal = totalPrice;
-  const loyaltyDiscount = useLoyalty ? Math.min(loyaltyPoints, baseTotal - discount) : 0;
-  const subtotalAfterDiscount = Math.max(0, baseTotal - discount - loyaltyDiscount);
-  const freeThreshold = BUSINESS_CONFIG.policies.freeShippingThreshold || 300;
-  const isFreeShipping = subtotalAfterDiscount >= freeThreshold;
-  const shippingFee = isFreeShipping ? 0 : (BUSINESS_CONFIG.policies.standardShippingFee || 49);
-  const codFee = paymentGateway === 'cod' ? (BUSINESS_CONFIG.policies.codHandlingFee || 0) : 0;
-  const finalTotal = Math.max(0, subtotalAfterDiscount + shippingFee + codFee);
+  // Authoritative server-side quote calculation
+  const fetchAuthoritativeQuote = async (codeToApply?: string, gatewayToUse?: string): Promise<CartQuote | null> => {
+    if (cart.length === 0) return null;
+    try {
+      setQuoteLoading(true);
+      const token = await getFreshClerkToken();
+      const code = codeToApply !== undefined ? codeToApply : couponCode;
+      const gateway = gatewayToUse !== undefined ? gatewayToUse : paymentGateway;
+      const res = await fetchCartQuote(
+        cart.map(i => ({ productId: i.id, variantId: (i as any).variantId, quantity: i.quantity, originalCartPrice: i.price })),
+        code.trim() || undefined,
+        gateway,
+        token
+      );
+      if (res.success && res.data) {
+        setLiveQuote(res.data);
+        if (res.data.warnings && res.data.warnings.length > 0) {
+          res.data.warnings.forEach(w => toast.info(w));
+        }
+        return res.data;
+      }
+    } catch (e) {
+      console.error('Error fetching authoritative checkout quote:', e);
+    } finally {
+      setQuoteLoading(false);
+    }
+    return null;
+  };
+
+  useEffect(() => {
+    if (cart.length > 0) {
+      fetchAuthoritativeQuote();
+    }
+  }, [cart, paymentGateway]);
+
+  const quoteTotals = liveQuote?.totals;
+  const baseTotal = quoteTotals ? quoteTotals.itemsTotal : totalPrice;
+  const quoteDiscount = quoteTotals ? quoteTotals.discount : 0;
+  const loyaltyDiscount = useLoyalty ? Math.min(loyaltyPoints, baseTotal - quoteDiscount) : 0;
+  const subtotalAfterDiscount = quoteTotals
+    ? Math.max(0, quoteTotals.subtotalAfterDiscount - loyaltyDiscount)
+    : Math.max(0, baseTotal - quoteDiscount - loyaltyDiscount);
+  const freeThreshold = quoteTotals?.freeShippingThreshold || BUSINESS_CONFIG.policies.freeShippingThreshold || 300;
+  const isFreeShipping = quoteTotals ? quoteTotals.isFreeShipping : (subtotalAfterDiscount >= freeThreshold);
+  const shippingFee = quoteTotals ? quoteTotals.shippingCharges : (isFreeShipping ? 0 : 49);
+  const codFee = quoteTotals ? quoteTotals.codCharges : (paymentGateway === 'cod' ? (BUSINESS_CONFIG.policies.codHandlingFee || 0) : 0);
+  const finalTotal = quoteTotals
+    ? Math.max(0, quoteTotals.grandTotal - loyaltyDiscount)
+    : Math.max(0, subtotalAfterDiscount + shippingFee + codFee);
 
   useEffect(() => {
     // Load Razorpay checkout script
@@ -113,21 +155,16 @@ export const Checkout: React.FC = () => {
   }, [user]);
 
   const handleApplyCoupon = async () => {
-    if (!couponCode) return;
+    if (!couponCode.trim()) {
+      toast.error('Please enter a coupon code');
+      return;
+    }
     try {
-      const res = await fetch(`${API_URL}/coupons/validate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: couponCode, orderAmount: totalPrice }),
-        credentials: 'include'
-      });
-      const data = await res.json();
-      if (data.success) {
-        setDiscount(data.data.discount);
-        toast.success(`Coupon applied! Saved ₹${data.data.discount}`);
+      const q = await fetchAuthoritativeQuote(couponCode.trim(), paymentGateway);
+      if (q && q.totals.discount > 0) {
+        toast.success(`Coupon "${couponCode.trim().toUpperCase()}" applied! Saved ${formatPrice(q.totals.discount)}`);
       } else {
-        setDiscount(0);
-        toast.error(data.message || 'Invalid coupon');
+        toast.error('Invalid or expired coupon code, or minimum order requirement not met.');
       }
     } catch (e) {
       toast.error('Error applying coupon');
@@ -223,24 +260,19 @@ export const Checkout: React.FC = () => {
       name: 'Sakshi Clothing',
       description: `Order #${initiatedOrder.orderNumber}`,
       order_id: razorpayOrder.order_id,
-      ...(selectedPaymentMode === 'upi' ? {
-        config: {
-          display: {
-            blocks: {
-              upi: {
-                name: 'Pay with UPI (GPay, PhonePe, Paytm, QR)',
-                instruments: [{ method: 'upi' }]
-              },
-              cards: {
-                name: 'Cards, Netbanking & Others',
-                instruments: [{ method: 'card' }, { method: 'netbanking' }, { method: 'wallet' }]
-              }
-            },
-            sequence: ['block.upi', 'block.cards'],
-            preferences: { show_default_blocks: true }
-          }
+      config: {
+        display: {
+          hide: BUSINESS_CONFIG.payment?.razorpayHiddenMethods || [
+            { method: 'card' },
+            { method: 'netbanking' },
+            { method: 'wallet' },
+            { method: 'emi' },
+            { method: 'cardless_emi' },
+            { method: 'paylater' }
+          ],
+          preferences: { show_default_blocks: true }
         }
-      } : {}),
+      },
       handler: async function (response: any) {
         setLoading(true);
         const toastId = toast.loading('Payment successful! Verifying and finalizing your order...');
@@ -328,7 +360,7 @@ export const Checkout: React.FC = () => {
         }
       },
       notes: {
-        selected_mode: selectedPaymentMode,
+        selected_mode: 'upi',
         orderNumber: initiatedOrder.orderNumber
       },
       theme: { color: '#7B1E2B' }
@@ -412,10 +444,54 @@ export const Checkout: React.FC = () => {
           razorpayOrder,
           initiatedOrder,
           finalAddressId,
-          activeToken,
-          true
+          activeToken
         );
         return;
+      }
+
+      // Cash on Delivery Order Flow
+      if (paymentGateway === 'cod') {
+        toast.loading('Securing order & finalizing Cash on Delivery...');
+
+        const orderRes = await placeOrder(
+          finalAddressId,
+          true,
+          activeToken,
+          cart.map(item => ({
+            productId: item.id,
+            variantId: item.variantId,
+            quantity: item.quantity
+          })),
+          'cod',
+          undefined,
+          couponCode.trim() || undefined,
+          true
+        );
+        toast.dismiss();
+
+        if (orderRes && orderRes.success) {
+          try {
+            const bc = new BroadcastChannel('sakshi_order_sync');
+            bc.postMessage({ type: 'ORDER_PLACED', orderId: orderRes.data.orderNumber });
+            bc.close();
+          } catch {}
+          toast.success(`Order placed successfully! Order #${orderRes.data.orderNumber}`);
+          clearCart();
+          setShowConfirmation(false);
+          navigate('/order-success', {
+            state: {
+              orderId: orderRes.data.orderNumber,
+              orderDbId: orderRes.data._id,
+              total: orderRes.data.totals?.grandTotal ?? finalTotal,
+              isPending: false
+            }
+          });
+          return;
+        } else {
+          toast.error(orderRes.message || 'Failed to place Cash on Delivery order');
+          setLoading(false);
+          return;
+        }
       }
 
     } catch (error) {
@@ -608,7 +684,7 @@ export const Checkout: React.FC = () => {
                 )}
               </section>
 
-              {/* 2. Payment Section */}
+              {/* 2. Payment Section: UPI Only + Cash On Delivery */}
               <section className="bg-white p-5 sm:p-8 rounded-3xl shadow-xs border border-[#E8E5DF]">
                 <div className="flex items-center gap-3.5 mb-6">
                   <div className="w-8 h-8 rounded-full bg-[#7B1E2B] text-white flex items-center justify-center text-xs font-bold">2</div>
@@ -616,11 +692,11 @@ export const Checkout: React.FC = () => {
                 </div>
 
                 <div className="space-y-3.5">
-                  {/* Option 1: UPI */}
+                  {/* Option 1: UPI Online (Razorpay) */}
                   <div
-                    onClick={() => setSelectedPaymentMode('upi')}
+                    onClick={() => setPaymentGateway('razorpay')}
                     className={`p-5 rounded-2xl border-2 transition-all cursor-pointer ${
-                      selectedPaymentMode === 'upi' 
+                      paymentGateway === 'razorpay' 
                         ? 'border-[#7B1E2B] bg-[#FDF4F5]/60 shadow-xs' 
                         : 'border-[#E8E5DF] bg-white hover:border-[#7B1E2B]/40'
                     }`}
@@ -631,49 +707,54 @@ export const Checkout: React.FC = () => {
                           <span className="font-bold text-xs uppercase tracking-wider">UPI</span>
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-[#1A1A1A]">UPI (Google Pay, PhonePe, Paytm, QR)</p>
-                          <p className="text-xs text-[#6B7280] mt-0.5">Pay seamlessly with any UPI app or instant QR code</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-semibold text-[#1A1A1A]">Pay Online with UPI</p>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#E8F5E9] text-[#2E7D32] uppercase tracking-wider">Instant</span>
+                          </div>
+                          <p className="text-xs text-[#6B7280] mt-0.5">Google Pay, PhonePe, Paytm, BHIM & Instant QR Code</p>
                         </div>
                       </div>
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                        selectedPaymentMode === 'upi' ? 'border-[#7B1E2B]' : 'border-[#9CA3AF]'
+                        paymentGateway === 'razorpay' ? 'border-[#7B1E2B]' : 'border-[#9CA3AF]'
                       }`}>
-                        {selectedPaymentMode === 'upi' && <div className="w-2.5 h-2.5 rounded-full bg-[#7B1E2B]" />}
+                        {paymentGateway === 'razorpay' && <div className="w-2.5 h-2.5 rounded-full bg-[#7B1E2B]" />}
                       </div>
                     </div>
                   </div>
 
-                  {/* Option 2: Cards & Netbanking */}
-                  <div
-                    onClick={() => setSelectedPaymentMode('cards_all')}
-                    className={`p-5 rounded-2xl border-2 transition-all cursor-pointer ${
-                      selectedPaymentMode === 'cards_all' 
-                        ? 'border-[#7B1E2B] bg-[#FDF4F5]/60 shadow-xs' 
-                        : 'border-[#E8E5DF] bg-white hover:border-[#7B1E2B]/40'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3.5">
-                        <div className="w-11 h-11 bg-[#FAF8F5] text-[#1A1A1A] border border-[#E8E5DF] rounded-xl flex items-center justify-center shadow-xs">
-                          <CreditCard size={20} />
+                  {/* Option 2: Cash on Delivery (COD) */}
+                  {BUSINESS_CONFIG.policies.codAvailable && (
+                    <div
+                      onClick={() => setPaymentGateway('cod')}
+                      className={`p-5 rounded-2xl border-2 transition-all cursor-pointer ${
+                        paymentGateway === 'cod' 
+                          ? 'border-[#7B1E2B] bg-[#FDF4F5]/60 shadow-xs' 
+                          : 'border-[#E8E5DF] bg-white hover:border-[#7B1E2B]/40'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-11 h-11 bg-[#FAF8F5] text-[#1A1A1A] border border-[#E8E5DF] rounded-xl flex items-center justify-center shadow-xs">
+                            <Banknote size={20} className="text-[#7B1E2B]" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-[#1A1A1A]">Cash on Delivery (COD)</p>
+                            <p className="text-xs text-[#6B7280] mt-0.5">Pay in cash when order is delivered to your doorstep</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-semibold text-[#1A1A1A]">Cards, Netbanking & Wallets</p>
-                          <p className="text-xs text-[#6B7280] mt-0.5">Visa, Mastercard, RuPay, Netbanking & Wallets</p>
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          paymentGateway === 'cod' ? 'border-[#7B1E2B]' : 'border-[#9CA3AF]'
+                        }`}>
+                          {paymentGateway === 'cod' && <div className="w-2.5 h-2.5 rounded-full bg-[#7B1E2B]" />}
                         </div>
-                      </div>
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                        selectedPaymentMode === 'cards_all' ? 'border-[#7B1E2B]' : 'border-[#9CA3AF]'
-                      }`}>
-                        {selectedPaymentMode === 'cards_all' && <div className="w-2.5 h-2.5 rounded-full bg-[#7B1E2B]" />}
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 <div className="mt-4 p-3.5 rounded-2xl bg-[#FAF8F5] border border-[#E8E5DF] text-xs text-[#6B7280] flex items-center gap-2">
                   <Lock size={14} className="text-[#7B1E2B] shrink-0" />
-                  <span>256-bit Encrypted SSL & PCI-DSS compliant checkout via Razorpay.</span>
+                  <span>256-bit Encrypted SSL & PCI-DSS compliant secure UPI payment gateway via Razorpay.</span>
                 </div>
               </section>
 
@@ -695,11 +776,11 @@ export const Checkout: React.FC = () => {
               {/* Mobile Place Order Button */}
               <div className="lg:hidden pt-2 space-y-2">
                 <button
-                  disabled={loading}
+                  disabled={loading || quoteLoading}
                   type="submit"
                   className="w-full min-h-[50px] bg-[#7B1E2B] hover:bg-[#621721] text-white py-4 rounded-full font-semibold uppercase tracking-wider text-xs shadow-md disabled:opacity-50 transition-all active:scale-98"
                 >
-                  {loading ? 'Processing...' : `Place Order — ₹${finalTotal.toLocaleString('en-IN')}`}
+                  {loading ? 'Processing...' : (paymentGateway === 'cod' ? `Place Order (COD) — ${formatPrice(finalTotal)}` : `Confirm & Pay with UPI — ${formatPrice(finalTotal)}`)}
                 </button>
                 <p className="text-[11px] text-[#6B7280] text-center px-1 leading-relaxed">
                   By placing your order, you agree to our{' '}
@@ -714,56 +795,81 @@ export const Checkout: React.FC = () => {
           {/* Right Column: Order Summary & Coupon */}
           <aside className="lg:col-span-5">
             <div className="bg-white rounded-3xl shadow-xs border border-[#E8E5DF] p-6 sm:p-8 sticky top-20 space-y-6">
-              <h2 className="font-serif text-xl font-medium text-[#1A1A1A]">Order Summary</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="font-serif text-xl font-medium text-[#1A1A1A]">Order Summary</h2>
+                {quoteLoading && (
+                  <span className="text-[10px] text-[#C6A15B] font-semibold animate-pulse uppercase tracking-wider">Verifying quote...</span>
+                )}
+              </div>
 
               {/* Items List */}
               <div className="space-y-4 max-h-[360px] overflow-y-auto pr-1">
-                {cart.map((item) => (
-                  <div key={`${item.id}-${item.selectedSize}`} className="flex gap-3.5">
-                    <div className="w-16 aspect-[3/4] bg-[#FAF8F5] rounded-xl overflow-hidden shrink-0 border border-[#E8E5DF]">
-                      <img 
-                        src={item.image} 
-                        alt={item.name} 
-                        className="w-full h-full object-cover" 
-                        referrerPolicy="no-referrer" 
-                      />
-                    </div>
-                    <div className="flex-1 py-0.5 flex flex-col justify-between min-w-0">
-                      <div>
-                        <h4 className="font-serif text-sm font-medium text-[#1A1A1A] truncate">{item.name}</h4>
-                        <p className="text-[11px] text-[#6B7280] mt-0.5">
-                          Size: <strong className="text-[#1A1A1A]">{item.selectedSize}</strong> · Qty: {item.quantity}
-                        </p>
+                {cart.map((item) => {
+                  const quotedLine = liveQuote?.lineItems?.find(
+                    li => li.productId.toString() === item.id.toString() && (!li.variantId || li.variantId.toString() === (item as any).variantId?.toString())
+                  );
+                  const effectivePrice = quotedLine ? quotedLine.price : item.price;
+                  const itemSubtotal = quotedLine ? quotedLine.subtotal : (effectivePrice * item.quantity);
+                  const priceChanged = quotedLine?.priceChanged;
+
+                  return (
+                    <div key={`${item.id}-${item.selectedSize}`} className="flex gap-3.5">
+                      <div className="w-16 aspect-[3/4] bg-[#FAF8F5] rounded-xl overflow-hidden shrink-0 border border-[#E8E5DF]">
+                        <img 
+                          src={item.image} 
+                          alt={item.name} 
+                          className="w-full h-full object-cover" 
+                          referrerPolicy="no-referrer" 
+                        />
                       </div>
-                      <p className="text-xs sm:text-sm font-bold text-[#1A1A1A]">₹{(item.price * item.quantity).toLocaleString('en-IN')}</p>
+                      <div className="flex-1 py-0.5 flex flex-col justify-between min-w-0">
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <h4 className="font-serif text-sm font-medium text-[#1A1A1A] truncate">{item.name}</h4>
+                            {priceChanged && (
+                              <span className="text-[9px] font-bold text-[#C6A15B] bg-[#FDF4F5] px-1 py-0.2 rounded border border-[#C6A15B]/40 shrink-0">Updated</span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-[#6B7280] mt-0.5">
+                            Size: <strong className="text-[#1A1A1A]">{item.selectedSize}</strong> · Qty: {item.quantity} · {formatPrice(effectivePrice)}
+                          </p>
+                        </div>
+                        <p className="text-xs sm:text-sm font-bold text-[#1A1A1A]">{formatPrice(itemSubtotal)}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Price Breakdown */}
               <div className="pt-4 border-t border-[#E8E5DF] space-y-2.5 text-xs sm:text-sm">
                 <div className="flex justify-between text-[#6B7280]">
                   <span>Subtotal</span>
-                  <span className="font-semibold text-[#1A1A1A]">₹{totalPrice.toLocaleString('en-IN')}</span>
+                  <span className="font-semibold text-[#1A1A1A]">{formatPrice(baseTotal)}</span>
                 </div>
                 <div className="flex justify-between text-[#6B7280]">
                   <span>Shipping</span>
                   {isFreeShipping ? (
                     <span className="text-[#15803D] font-semibold">FREE</span>
                   ) : (
-                    <span className="font-semibold text-[#1A1A1A]">₹{shippingFee}</span>
+                    <span className="font-semibold text-[#1A1A1A]">{formatPrice(shippingFee)}</span>
                   )}
                 </div>
                 {!isFreeShipping && (
                   <p className="text-[11px] text-[#7B1E2B] bg-[#FDF4F5] p-2 rounded-lg border border-[#7B1E2B]/10">
-                    Add <strong className="font-bold">₹{(freeThreshold - subtotalAfterDiscount).toLocaleString('en-IN')}</strong> more for <span className="font-bold text-[#15803D]">FREE Delivery</span> (orders over ₹{freeThreshold}).
+                    Add <strong className="font-bold">{formatPrice(freeThreshold - subtotalAfterDiscount)}</strong> more for <span className="font-bold text-[#15803D]">FREE Delivery</span> (orders over {formatPrice(freeThreshold)}).
                   </p>
                 )}
-                {discount > 0 && (
+                {quoteDiscount > 0 && (
                   <div className="flex justify-between text-[#B43E2B] font-semibold">
                     <span>Coupon Discount</span>
-                    <span>-₹{discount.toLocaleString('en-IN')}</span>
+                    <span>-{formatPrice(quoteDiscount)}</span>
+                  </div>
+                )}
+                {codFee > 0 && (
+                  <div className="flex justify-between text-[#6B7280]">
+                    <span>COD Handling Fee</span>
+                    <span className="font-semibold text-[#1A1A1A]">{formatPrice(codFee)}</span>
                   </div>
                 )}
                 <div className="pt-3 border-t border-[#E8E5DF] flex justify-between items-baseline text-base sm:text-lg font-bold text-[#1A1A1A]">
@@ -771,7 +877,7 @@ export const Checkout: React.FC = () => {
                     <span>Total Amount</span>
                     <p className="text-[10px] text-[#6B7280] font-normal">All taxes included</p>
                   </div>
-                  <span>₹{finalTotal.toLocaleString('en-IN')}</span>
+                  <span>{formatPrice(finalTotal)}</span>
                 </div>
               </div>
 
@@ -792,16 +898,17 @@ export const Checkout: React.FC = () => {
                   <Button
                     type="button"
                     variant="outline"
+                    disabled={quoteLoading}
                     onClick={handleApplyCoupon}
                     className="shrink-0 min-h-[44px]"
                   >
-                    Apply
+                    {quoteLoading ? 'Checking...' : 'Apply'}
                   </Button>
                 </div>
-                {discount > 0 && (
+                {quoteDiscount > 0 && (
                   <p className="text-xs text-[#15803D] font-semibold flex items-center gap-1">
                     <CheckCircle2 size={13} />
-                    <span>Coupon applied! Saved ₹{discount.toLocaleString('en-IN')}</span>
+                    <span>Coupon applied! Saved {formatPrice(quoteDiscount)}</span>
                   </p>
                 )}
               </div>
@@ -809,7 +916,7 @@ export const Checkout: React.FC = () => {
               {/* Desktop Place Order Button */}
               <div className="hidden lg:block pt-2 space-y-2">
                 <button
-                  disabled={loading}
+                  disabled={loading || quoteLoading}
                   onClick={() => {
                     const form = document.querySelector('form');
                     if (form) {
@@ -822,7 +929,7 @@ export const Checkout: React.FC = () => {
                   }}
                   className="w-full min-h-[50px] bg-[#7B1E2B] hover:bg-[#621721] text-white py-4 rounded-full font-semibold uppercase tracking-wider text-xs shadow-md disabled:opacity-50 transition-all active:scale-98 select-none"
                 >
-                  {loading ? 'Processing...' : `Place Order — ₹${finalTotal.toLocaleString('en-IN')}`}
+                  {loading ? 'Processing...' : (paymentGateway === 'cod' ? `Place Order (COD) — ${formatPrice(finalTotal)}` : `Confirm & Pay with UPI — ${formatPrice(finalTotal)}`)}
                 </button>
                 <p className="text-[11px] text-[#6B7280] text-center px-1 leading-relaxed">
                   By placing your order, you agree to our{' '}
@@ -876,22 +983,22 @@ export const Checkout: React.FC = () => {
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280] mb-0.5">Payment Method</p>
                   <p className="font-medium text-[#1A1A1A] flex items-center gap-2">
-                    {selectedPaymentMode === 'upi' ? (
+                    {paymentGateway === 'razorpay' ? (
                       <>
                         <Smartphone size={15} className="text-[#7B1E2B]" />
                         <span>UPI (Google Pay, PhonePe, Paytm, QR)</span>
                       </>
                     ) : (
                       <>
-                        <CreditCard size={15} className="text-[#7B1E2B]" />
-                        <span>Cards, Netbanking & Wallets</span>
+                        <Banknote size={15} className="text-[#7B1E2B]" />
+                        <span>Cash on Delivery (COD)</span>
                       </>
                     )}
                   </p>
                 </div>
                 <div className="pt-3 border-t border-[#E8E5DF] flex justify-between items-center">
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">Total Amount</span>
-                  <span className="font-bold text-base text-[#1A1A1A]">₹{finalTotal.toLocaleString('en-IN')}</span>
+                  <span className="font-bold text-base text-[#1A1A1A]">{formatPrice(finalTotal)}</span>
                 </div>
               </div>
 
@@ -913,7 +1020,7 @@ export const Checkout: React.FC = () => {
                   onClick={executePayment} 
                   className="flex-1 min-h-[44px]"
                 >
-                  {loading ? 'Processing...' : 'Confirm & Pay'}
+                  {loading ? 'Processing...' : (paymentGateway === 'cod' ? 'Confirm & Place Order' : `Confirm & Pay ${formatPrice(finalTotal)}`)}
                 </Button>
               </div>
             </motion.div>

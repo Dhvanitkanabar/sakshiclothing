@@ -12,6 +12,7 @@ router.get('/all', verifyJWT, authorizeRoles('admin', 'superadmin'), cartControl
 router.use(optionalAuthenticate);
 
 router.get('/', cartController.getCart);
+router.post('/quote', cartController.getCartQuote);
 router.post('/add', cartController.addToCart);
 router.patch('/update', cartController.updateQuantity);
 router.delete('/remove', cartController.removeItem);

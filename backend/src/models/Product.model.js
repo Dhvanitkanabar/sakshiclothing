@@ -180,22 +180,33 @@ productSchema.pre('save', function(next) {
 
 // Schema Methods
 productSchema.methods.calculateDiscount = function(variantId = null) {
+  let variant = null;
   if (variantId) {
-    let variant = null;
     if (typeof this.variants?.id === 'function') {
       try { variant = this.variants.id(variantId); } catch {}
     }
     if (!variant && Array.isArray(this.variants)) {
       variant = this.variants.find(v => v._id?.toString() === variantId.toString());
     }
-    if (variant && variant.discount) {
-      return variant.price - variant.discount;
-    }
   }
-  if (this.pricing.discountPrice) {
+
+  // 1. Variant-level specific discount takes precedence if defined
+  if (variant && typeof variant.discount === 'number' && variant.discount > 0) {
+    return Math.max(0, (variant.price || this.pricing?.basePrice || 0) - variant.discount);
+  }
+
+  // 2. Product-level sale/discount price takes precedence over default base price
+  if (this.pricing && typeof this.pricing.discountPrice === 'number' && this.pricing.discountPrice > 0) {
     return this.pricing.discountPrice;
   }
-  return this.pricing.basePrice;
+
+  // 3. Variant-level specific price override
+  if (variant && typeof variant.price === 'number' && variant.price > 0) {
+    return variant.price;
+  }
+
+  // 4. Product base price (MRP) fallback
+  return this.pricing?.basePrice || 0;
 };
 
 const Product = mongoose.model('Product', productSchema);

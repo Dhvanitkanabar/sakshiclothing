@@ -6,15 +6,17 @@ import { X, ShoppingBag, Trash2, Minus, Plus, ArrowRight, ShieldCheck, Sparkles,
 import { useCart } from '../context/CartContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { BUSINESS_CONFIG } from '../config/business';
-
-const FREE_SHIPPING_THRESHOLD = BUSINESS_CONFIG.policies.freeShippingThreshold;
+import { formatPrice } from '../utils/format';
 
 export const CartDrawer: React.FC = () => {
-  const { cart, isCartOpen, setIsCartOpen, removeFromCart, updateQuantity, totalPrice } = useCart();
+  const { cart, cartQuote, isCartOpen, setIsCartOpen, removeFromCart, updateQuantity, totalPrice } = useCart();
   const navigate = useNavigate();
 
-  const progressPercent = Math.min(100, Math.round((totalPrice / FREE_SHIPPING_THRESHOLD) * 100));
-  const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - totalPrice);
+  const threshold = cartQuote?.totals?.freeShippingThreshold || BUSINESS_CONFIG.policies.freeShippingThreshold || 300;
+  const itemsTotal = cartQuote?.totals?.itemsTotal ?? totalPrice;
+  const progressPercent = Math.min(100, Math.round((itemsTotal / threshold) * 100));
+  const remainingForFreeShipping = cartQuote ? cartQuote.totals.amountNeededForFreeShipping : Math.max(0, threshold - itemsTotal);
+  const isFreeShipping = cartQuote ? cartQuote.totals.isFreeShipping : (itemsTotal >= threshold);
 
   React.useEffect(() => {
     if (!isCartOpen) return;
@@ -132,6 +134,11 @@ export const CartDrawer: React.FC = () => {
                 <AnimatePresence mode="popLayout">
                   {cart.map((item, index) => {
                     const isJewel = (item.category || '').toLowerCase().includes('jewel');
+                    const quotedLine = cartQuote?.lineItems?.find(
+                      li => li.productId.toString() === item.id.toString() && (!li.variantId || li.variantId.toString() === (item as any).variantId?.toString())
+                    );
+                    const effectivePrice = quotedLine ? quotedLine.price : item.price;
+                    const itemSubtotal = quotedLine ? quotedLine.subtotal : (effectivePrice * item.quantity);
                     return (
                       <motion.div 
                         key={`${item.id}-${item.selectedSize}`} 
@@ -194,7 +201,7 @@ export const CartDrawer: React.FC = () => {
                                 )}
                               </span>
                               <span>·</span>
-                              <span>₹{item.price.toLocaleString('en-IN')}</span>
+                              <span>{formatPrice(effectivePrice)}</span>
                             </div>
                           </div>
                           
@@ -217,7 +224,7 @@ export const CartDrawer: React.FC = () => {
                               </button>
                             </div>
                             <p className="text-sm font-bold text-[#1A1A1A]">
-                              ₹{(item.price * item.quantity).toLocaleString('en-IN')}
+                              {formatPrice(itemSubtotal)}
                             </p>
                           </div>
                         </div>
@@ -235,13 +242,13 @@ export const CartDrawer: React.FC = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-semibold uppercase tracking-wider text-[#6B7280]">Subtotal</span>
                     <span className="text-xl font-bold text-[#1A1A1A]">
-                      ₹{totalPrice.toLocaleString('en-IN')}
+                      {formatPrice(itemsTotal)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-[#6B7280]">Shipping</span>
-                    <span className={`font-semibold ${totalPrice >= FREE_SHIPPING_THRESHOLD ? 'text-[#15803D]' : 'text-[#1A1A1A]'}`}>
-                      {totalPrice >= FREE_SHIPPING_THRESHOLD ? 'FREE' : 'Calculated at checkout'}
+                    <span className={`font-semibold ${isFreeShipping ? 'text-[#15803D]' : 'text-[#1A1A1A]'}`}>
+                      {isFreeShipping ? 'FREE' : 'Calculated at checkout'}
                     </span>
                   </div>
                 </div>

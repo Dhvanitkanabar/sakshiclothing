@@ -34,6 +34,11 @@ export interface BusinessConfig {
     jewelleryPolicy: string;
     clothingPolicy: string;
   };
+  payment: {
+    allowedMethods: string[];
+    defaultOnlineMethod: string;
+    razorpayHiddenMethods: Array<{ method: string }>;
+  };
   grievanceOfficer: {
     name: string;
     designation: string;
@@ -86,6 +91,18 @@ export const BUSINESS_CONFIG: BusinessConfig = {
     jewelleryPolicy: 'Fashion & imitation jewellery collection crafted with brass/copper alloy and micro-plated finish. Strict No Return Policy. 48-hour reporting window for verified transit damage or defect with unboxing proof.',
     clothingPolicy: 'Authentic Indian ethnic and daily wear clothing from Surat textile markets. Strict No Return Policy for size or fit preference. Damaged or wrong items replaced or refunded upon 48-hour unboxing verification.',
   },
+  payment: {
+    allowedMethods: ['upi', 'cod'],
+    defaultOnlineMethod: 'upi',
+    razorpayHiddenMethods: [
+      { method: 'card' },
+      { method: 'netbanking' },
+      { method: 'wallet' },
+      { method: 'emi' },
+      { method: 'cardless_emi' },
+      { method: 'paylater' }
+    ]
+  },
   grievanceOfficer: {
     name: 'Grievance Redressal Officer',
     designation: 'Head of Customer Relations & Compliance',
@@ -131,6 +148,13 @@ export async function fetchBusinessConfig(): Promise<BusinessConfig> {
         }
         if (remote.policies?.returnPolicy) {
           BUSINESS_CONFIG.policies.returnPolicySummary = remote.policies.returnPolicy;
+        }
+        if (remote.payment) {
+          BUSINESS_CONFIG.payment = {
+            allowedMethods: remote.payment.allowedMethods || BUSINESS_CONFIG.payment.allowedMethods,
+            defaultOnlineMethod: remote.payment.defaultOnlineMethod || BUSINESS_CONFIG.payment.defaultOnlineMethod,
+            razorpayHiddenMethods: remote.payment.razorpayHiddenMethods || BUSINESS_CONFIG.payment.razorpayHiddenMethods
+          };
         }
       }
     }

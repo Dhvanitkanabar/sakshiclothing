@@ -90,6 +90,13 @@ class CartController {
     res.status(200).json({ success: true, message: 'Cart cleared' });
   });
 
+  getCartQuote = asyncHandler(async (req, res) => {
+    const { userId, guestId } = getUserIdAndGuestId(req, res);
+    const { items, couponCode, paymentMethod = 'razorpay' } = req.body || {};
+    const quote = await cartService.getCartQuote(userId, guestId, { items, couponCode, paymentMethod });
+    res.status(200).json({ success: true, data: quote, message: 'Cart quote generated successfully' });
+  });
+
   getAllCarts = asyncHandler(async (req, res) => {
     const carts = await cartService.getAllCarts();
     res.status(200).json({ success: true, data: carts });

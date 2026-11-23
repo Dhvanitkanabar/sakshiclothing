@@ -2,15 +2,18 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { CartItem, Product } from '../types';
 import { toast } from 'sonner';
 import { useAuth as useClerkAuth } from '@clerk/clerk-react';
+import { fetchCartQuote, CartQuote } from '../lib/api';
 
 interface CartContextType {
   cart: CartItem[];
+  cartQuote: CartQuote | null;
   loading: boolean;
   addToCart: (product: Product, size: string, quantity: number) => Promise<boolean>;
   removeFromCart: (productId: string, size: string) => void;
   updateQuantity: (productId: string, size: string, quantity: number) => void;
   clearCart: () => void;
   totalPrice: number;
+  refreshCartQuote: (couponCode?: string, paymentMethod?: string) => Promise<CartQuote | null>;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
 }
@@ -36,12 +39,30 @@ const buildOptions = (clerkToken: string | null, extra: RequestInit = {}): Reque
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { getToken, isSignedIn } = useClerkAuth();
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartQuote, setCartQuote] = useState<CartQuote | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const getClerkToken = useCallback(async (): Promise<string | null> => {
     try { return await getToken(); } catch { return null; }
   }, [getToken]);
+
+  const refreshCartQuote = useCallback(async (couponCode?: string, paymentMethod: string = 'razorpay'): Promise<CartQuote | null> => {
+    try {
+      const token = await getClerkToken();
+      const quoteRes = await fetchCartQuote(undefined, couponCode, paymentMethod, token);
+      if (quoteRes.success && quoteRes.data) {
+        setCartQuote(quoteRes.data);
+        if (quoteRes.data.warnings && quoteRes.data.warnings.length > 0) {
+          quoteRes.data.warnings.forEach(w => toast.info(w));
+        }
+        return quoteRes.data;
+      }
+    } catch (e) {
+      console.error('Error refreshing cart quote:', e);
+    }
+    return null;
+  }, [getClerkToken]);
 
   const fetchCart = useCallback(async () => {
     try {
@@ -64,8 +85,18 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           variantId: item.variantId
         }));
         setCart(frontendCartItems);
+        // Synchronously request live quote
+        fetchCartQuote(undefined, undefined, 'razorpay', token).then(qRes => {
+          if (qRes.success && qRes.data) {
+            setCartQuote(qRes.data);
+            if (qRes.data.warnings && qRes.data.warnings.length > 0) {
+              qRes.data.warnings.forEach(w => toast.info(w));
+            }
+          }
+        }).catch(() => {});
       } else {
         setCart([]);
+        setCartQuote(null);
       }
     } catch (err) {
       console.error(err);
@@ -73,6 +104,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     }
   }, [getClerkToken]);
+
+  // Refresh quote whenever cart drawer opens
+  useEffect(() => {
+    if (isCartOpen) {
+      refreshCartQuote();
+    }
+  }, [isCartOpen, refreshCartQuote]);
 
   // Fetch cart when auth state changes & restore pending cart item
   useEffect(() => {
@@ -197,10 +235,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCart([]);
   };
 
-  const totalPrice = cart.reduce((total, item) => total + item.price * item.quantity, 0);
+  const totalPrice = cartQuote ? cartQuote.totals.itemsTotal : cart.reduce((total, item) => total + item.price * item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ cart, loading, addToCart, removeFromCart, updateQuantity, clearCart, totalPrice, isCartOpen, setIsCartOpen }}>
+    <CartContext.Provider value={{ cart, cartQuote, loading, addToCart, removeFromCart, updateQuantity, clearCart, totalPrice, refreshCartQuote, isCartOpen, setIsCartOpen }}>
       {children}
     </CartContext.Provider>
   );

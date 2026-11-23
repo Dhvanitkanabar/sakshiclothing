@@ -12,6 +12,8 @@ export interface Product {
   id: string;
   name: string;
   price: number;
+  mrp?: number;
+  originalPrice?: number;
   category: 'Women' | 'Men' | 'Kids' | 'Jewellery' | 'Bridal' | string;
   subCategory: string;
   sizes: string[];
