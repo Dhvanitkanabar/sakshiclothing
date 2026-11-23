@@ -324,7 +324,16 @@ export const Footer: React.FC = () => {
 
         </div>
 
-        {/* 4. COPYRIGHT & PAYMENT CHIPS */}
+        {/* 4. LARGE EDITORIAL WORDMARK REVEAL */}
+        <div className="pt-12 pb-6 border-t border-[#37142E] overflow-hidden select-none">
+          <div className="text-center">
+            <span className="font-serif text-5xl sm:text-7xl md:text-9xl font-bold tracking-[0.22em] text-white/5 uppercase block transform hover:text-[#C6A15B]/15 transition-colors duration-700">
+              SAKSHI
+            </span>
+          </div>
+        </div>
+
+        {/* 5. COPYRIGHT & PAYMENT CHIPS */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-[#8A818B] pt-2">
           <div className="space-y-1 text-center sm:text-left">
             <p>© 2026 {BUSINESS_CONFIG.legal.entityName}. All Rights Reserved. Surat, Gujarat, India.</p>

@@ -21,7 +21,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useScroll, useSpring } from 'motion/react';
 import { useUser } from '@clerk/clerk-react';
 import { getCachedProducts, fetchProducts } from '../lib/api';
 import type { Product } from '../types';
@@ -143,6 +143,13 @@ export const Navbar: React.FC = () => {
   const [expandedMobileCategory, setExpandedMobileCategory] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
 
   const announcements = [
     { text: "Free Express Shipping on Orders Above ₹999 Across India", icon: Truck },
@@ -306,6 +313,12 @@ export const Navbar: React.FC = () => {
 
   return (
     <>
+      {/* ─── SCROLL PROGRESS INDICATOR ─────────────────────────────────── */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-[#4A1D3F] via-[#C6A15B] to-[#4A1D3F] origin-left z-50 pointer-events-none"
+        style={{ scaleX }}
+      />
+
       {/* ─── 1. TOP ANNOUNCEMENT TICKER ───────────────────────────────── */}
       <div className="w-full bg-[#4A1D3F] text-white text-[11px] font-sans border-b border-[#3B1632] relative z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 h-8 sm:h-8.5 flex items-center justify-between">
@@ -486,9 +499,15 @@ export const Navbar: React.FC = () => {
             >
               <Heart size={19} />
               {wishlist.length > 0 && (
-                <span className="absolute top-1.5 right-1.5 bg-[#4A1D3F] text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                <motion.span 
+                  key={`wish-${wishlist.length}`}
+                  initial={{ scale: 0.6 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                  className="absolute top-1.5 right-1.5 bg-[#4A1D3F] text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs"
+                >
                   {wishlist.length}
-                </span>
+                </motion.span>
               )}
             </Link>
 
@@ -501,9 +520,15 @@ export const Navbar: React.FC = () => {
             >
               <ShoppingBag size={19} />
               {cartCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 bg-[#4A1D3F] text-white text-[9px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center shadow-xs">
+                <motion.span 
+                  key={`cart-${cartCount}`}
+                  initial={{ scale: 0.6 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                  className="absolute top-1.5 right-1.5 bg-[#4A1D3F] text-white text-[9px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center shadow-xs"
+                >
                   {cartCount}
-                </span>
+                </motion.span>
               )}
             </button>
 
