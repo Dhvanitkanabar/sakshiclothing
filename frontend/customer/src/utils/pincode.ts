@@ -4,6 +4,8 @@
  * Supports all 19,000+ serviceable India Post / Delhivery / Shiprocket PIN codes.
  */
 
+import { BUSINESS_CONFIG } from '../config/business';
+
 export interface PincodeResult {
   pincode: string;
   isServiceable: boolean;
@@ -33,7 +35,7 @@ export function checkPincodeDelivery(rawPin: string): PincodeResult {
       estimatedDays: 'N/A',
       deliveryDateStr: 'N/A',
       codAvailable: false,
-      freeShippingThreshold: 999,
+      freeShippingThreshold: BUSINESS_CONFIG.policies.freeShippingThreshold,
       message: 'Please enter a valid 6-digit Indian postal PIN code.',
     };
   }
@@ -62,7 +64,7 @@ export function checkPincodeDelivery(rawPin: string): PincodeResult {
       estimatedDays: '1–2 Business Days',
       deliveryDateStr: `by ${addDays(2)}`,
       codAvailable: true,
-      freeShippingThreshold: 999,
+      freeShippingThreshold: BUSINESS_CONFIG.policies.freeShippingThreshold,
       message: 'Same-City Express Delivery available directly from our Surat hub.',
     };
   }
@@ -78,7 +80,7 @@ export function checkPincodeDelivery(rawPin: string): PincodeResult {
       estimatedDays: '2–3 Business Days',
       deliveryDateStr: `by ${addDays(3)}`,
       codAvailable: true,
-      freeShippingThreshold: 999,
+      freeShippingThreshold: BUSINESS_CONFIG.policies.freeShippingThreshold,
       message: 'Express intra-state courier transit with Cash on Delivery.',
     };
   }
@@ -94,7 +96,7 @@ export function checkPincodeDelivery(rawPin: string): PincodeResult {
       estimatedDays: '2–4 Business Days',
       deliveryDateStr: `by ${addDays(4)}`,
       codAvailable: true,
-      freeShippingThreshold: 999,
+      freeShippingThreshold: BUSINESS_CONFIG.policies.freeShippingThreshold,
       message: 'Fast Western transit via air & surface express.',
     };
   }
@@ -110,7 +112,7 @@ export function checkPincodeDelivery(rawPin: string): PincodeResult {
       estimatedDays: '3–5 Business Days',
       deliveryDateStr: `by ${addDays(5)}`,
       codAvailable: true,
-      freeShippingThreshold: 999,
+      freeShippingThreshold: BUSINESS_CONFIG.policies.freeShippingThreshold,
       message: 'Pan-India standard delivery with real-time tracking.',
     };
   }
@@ -126,7 +128,7 @@ export function checkPincodeDelivery(rawPin: string): PincodeResult {
       estimatedDays: '3–5 Business Days',
       deliveryDateStr: `by ${addDays(5)}`,
       codAvailable: true,
-      freeShippingThreshold: 999,
+      freeShippingThreshold: BUSINESS_CONFIG.policies.freeShippingThreshold,
       message: 'Express air-cargo transit to all major southern metros & towns.',
     };
   }
@@ -141,7 +143,7 @@ export function checkPincodeDelivery(rawPin: string): PincodeResult {
     estimatedDays: '4–7 Business Days',
     deliveryDateStr: `by ${addDays(7)}`,
     codAvailable: true,
-    freeShippingThreshold: 999,
+    freeShippingThreshold: BUSINESS_CONFIG.policies.freeShippingThreshold,
     message: 'Nationwide coverage across 19,000+ PIN codes with COD.',
   };
 }

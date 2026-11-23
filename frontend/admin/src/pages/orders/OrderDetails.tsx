@@ -95,6 +95,12 @@ const OrderDetails = () => {
   const [customLng, setCustomLng] = useState('');
   const [savingCoords, setSavingCoords] = useState(false);
 
+  // Transit Damage Claim State
+  const [claimStatusInput, setClaimStatusInput] = useState('submitted');
+  const [claimResolutionInput, setClaimResolutionInput] = useState('none');
+  const [claimAdminNotesInput, setClaimAdminNotesInput] = useState('');
+  const [savingClaim, setSavingClaim] = useState(false);
+
   useEffect(() => {
     if (!id) return;
     const fetchOrder = async () => {
@@ -118,6 +124,11 @@ const OrderDetails = () => {
             if (data.data.tracking.estimatedDeliveryTime) {
               setEstimatedDeliveryInput(data.data.tracking.estimatedDeliveryTime);
             }
+          }
+          if (data.data.claim) {
+            setClaimStatusInput(data.data.claim.status || 'submitted');
+            setClaimResolutionInput(data.data.claim.resolutionType || 'none');
+            setClaimAdminNotesInput(data.data.claim.adminNotes || '');
           }
         } else {
           setError(data.message || 'Order not found');
@@ -338,6 +349,34 @@ const OrderDetails = () => {
       alert('Network error updating coordinates');
     } finally {
       setSavingCoords(false);
+    }
+  };
+
+  const handleReviewClaim = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingClaim(true);
+    try {
+      const res = await adminFetch(`${API_URL}/orders/admin/${id}/claim`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: claimStatusInput,
+          resolutionType: claimResolutionInput,
+          adminNotes: claimAdminNotesInput
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setOrder(data.data);
+        broadcastOrderSync(data.data);
+        toast.success(`Claim status updated to ${claimStatusInput.replace(/_/g, ' ')}`);
+      } else {
+        toast.error(data.message || 'Failed to update claim');
+      }
+    } catch {
+      toast.error('Network error reviewing claim');
+    } finally {
+      setSavingClaim(false);
     }
   };
 
@@ -661,6 +700,23 @@ const OrderDetails = () => {
                   Maison VIP Cleared
                 </span>
               </div>
+
+              <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-1.5 sm:col-span-2">
+                <div className="flex items-center gap-2 text-xs font-extrabold text-gray-900">
+                  <ShieldCheck size={14} className="text-emerald-600" /> No-Return Policy Legal Consent
+                </div>
+                <p className="text-xs text-gray-600">
+                  Consent Status: <span className="font-bold text-gray-900">{order.noReturnPolicyAcknowledged ? 'Mandatory Consent Checkbox Signed at Checkout' : 'Standard Terms'}</span>
+                </p>
+                <p className="text-xs text-gray-500">
+                  Customer agreed: No returns/exchanges for change of mind, fit, size, or color. 48-hour transit damage proof applies.
+                </p>
+                <span className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
+                  order.noReturnPolicyAcknowledged ? 'text-emerald-700 bg-emerald-100/60' : 'text-gray-700 bg-gray-200'
+                }`}>
+                  {order.noReturnPolicyAcknowledged ? 'Legally Bound (E-Commerce Rules 2020)' : 'Standard'}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -861,6 +917,160 @@ const OrderDetails = () => {
               </div>
             );
           })()}
+
+          {/* Transit Damage & Defect Claims Suite */}
+          <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 space-y-6">
+            <div className="flex flex-wrap justify-between items-center gap-4 border-b border-gray-100 pb-4">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#7B1E2B] flex items-center gap-1.5">
+                  <ShieldCheck size={14} /> No-Return Policy & Transit Guarantee
+                </span>
+                <h3 className="text-lg font-bold text-gray-900 mt-1">Transit Damage & Defect Claims</h3>
+              </div>
+              {order.claim?.hasClaim ? (
+                <span className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider ${
+                  order.claim.status === 'approved' || order.claim.status === 'resolved'
+                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                    : order.claim.status === 'rejected'
+                    ? 'bg-rose-50 text-rose-800 border border-rose-200'
+                    : 'bg-amber-50 text-amber-900 border border-amber-200'
+                }`}>
+                  Claim: {order.claim.status?.replace(/_/g, ' ') || 'Submitted'}
+                </span>
+              ) : (
+                <span className="px-3 py-1 rounded-full text-xs font-semibold text-gray-500 bg-gray-50 border border-gray-200">
+                  No Claims Filed
+                </span>
+              )}
+            </div>
+
+            {order.claim?.hasClaim ? (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-1">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Reported Reason</p>
+                    <p className="text-sm font-bold text-gray-900 capitalize">
+                      {order.claim.reason?.replace(/_/g, ' ')}
+                    </p>
+                    <p className="text-[11px] text-gray-500">
+                      Reported: {order.claim.reportedAt ? new Date(order.claim.reportedAt).toLocaleString('en-IN') : 'Recently'}
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-1">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Checkout Consent</p>
+                    <p className="text-sm font-bold text-gray-900">
+                      {order.noReturnPolicyAcknowledged ? 'Consented at Checkout' : 'Standard Terms'}
+                    </p>
+                    <p className="text-[11px] text-gray-500">
+                      Customer acknowledged No-Return Policy
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <p className="text-xs font-bold text-gray-700">Customer Description of Issue:</p>
+                  <p className="text-xs text-gray-800 bg-gray-50 p-4 rounded-2xl border border-gray-100 leading-relaxed">
+                    "{order.claim.description || 'No description provided'}"
+                  </p>
+                </div>
+
+                {/* Evidence: Video & Photos */}
+                <div className="space-y-3">
+                  <p className="text-xs font-bold text-gray-700">Submitted Proof / Evidence:</p>
+                  <div className="flex flex-wrap gap-3">
+                    {order.claim.unboxingVideoUrl && (
+                      <a
+                        href={order.claim.unboxingVideoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-xl border border-blue-200 transition-colors"
+                      >
+                        <ExternalLink size={14} /> Open Unboxing Video Proof
+                      </a>
+                    )}
+                    {order.claim.photoUrls && order.claim.photoUrls.length > 0 && order.claim.photoUrls.map((url: string, idx: number) => (
+                      <a
+                        key={idx}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs rounded-xl border border-gray-200 transition-colors"
+                      >
+                        <ExternalLink size={14} /> View Evidence Photo {idx + 1}
+                      </a>
+                    ))}
+                    {!order.claim.unboxingVideoUrl && (!order.claim.photoUrls || order.claim.photoUrls.length === 0) && (
+                      <p className="text-xs text-amber-700 bg-amber-50 px-3 py-2 rounded-xl">
+                        No direct media links attached. Contact customer for unboxing footage.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Claim Review Action Form */}
+                <form onSubmit={handleReviewClaim} className="p-5 bg-gray-50 rounded-2xl border border-gray-200 space-y-4">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-gray-800">
+                    Atelier Quality & Claims Resolution
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-600 mb-1">Claim Status</label>
+                      <select
+                        value={claimStatusInput}
+                        onChange={(e) => setClaimStatusInput(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-bold bg-white text-gray-900 focus:outline-none"
+                      >
+                        <option value="submitted">Submitted (Under Initial Review)</option>
+                        <option value="under_review">Under Review (Atelier Inspecting)</option>
+                        <option value="approved">Approved (Valid Transit Damage)</option>
+                        <option value="rejected">Rejected (Does Not Meet Policy Proof)</option>
+                        <option value="resolved">Resolved (Completed)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-600 mb-1">Resolution Action</label>
+                      <select
+                        value={claimResolutionInput}
+                        onChange={(e) => setClaimResolutionInput(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-bold bg-white text-gray-900 focus:outline-none"
+                      >
+                        <option value="none">None / Pending Decision</option>
+                        <option value="replacement">Send Free Replacement Piece</option>
+                        <option value="refund_to_source">Refund to Source Account (Razorpay)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-600 mb-1">Admin Notes / Decision Rationale</label>
+                    <textarea
+                      rows={2}
+                      value={claimAdminNotesInput}
+                      onChange={(e) => setClaimAdminNotesInput(e.target.value)}
+                      placeholder="e.g. Unboxing video verified. Minor clasp breakage during courier transit. Approved for express replacement piece."
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs text-gray-900 bg-white focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={savingClaim}
+                      className="px-6 py-2.5 bg-black hover:bg-gray-800 text-white text-xs font-extrabold uppercase tracking-wider rounded-xl transition-colors disabled:opacity-50"
+                    >
+                      {savingClaim ? 'Saving Decision…' : 'Save Claim Resolution'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 text-xs text-gray-500 flex items-center justify-between">
+                <span>Customer is bound by the No-Return Policy (48h transit damage window). No claim has been submitted.</span>
+                <span className="font-bold text-gray-700">Consent: {order.noReturnPolicyAcknowledged ? 'Consented' : 'Standard'}</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right Column: Order Timeline, Courier Tracking Info, Payment Summary */}
@@ -972,10 +1182,24 @@ const OrderDetails = () => {
                 <span>Items Subtotal</span>
                 <span className="font-bold text-gray-900">₹{(order.totals?.itemsTotal || 0).toLocaleString('en-IN')}</span>
               </div>
+              {order.totals?.discount > 0 && (
+                <div className="flex justify-between text-emerald-600">
+                  <span>Coupon Discount</span>
+                  <span className="font-bold">-₹{order.totals.discount.toLocaleString('en-IN')}</span>
+                </div>
+              )}
               <div className="flex justify-between text-gray-500">
-                <span>Shipping & Atelier Handling</span>
-                <span className="font-bold text-emerald-600">Complimentary</span>
+                <span>Shipping Fee</span>
+                <span className={`font-bold ${order.totals?.shippingCharges > 0 ? 'text-gray-900' : 'text-emerald-600'}`}>
+                  {order.totals?.shippingCharges > 0 ? `₹${order.totals.shippingCharges}` : 'Complimentary (Free above ₹300)'}
+                </span>
               </div>
+              {order.totals?.codCharges > 0 && (
+                <div className="flex justify-between text-gray-500">
+                  <span>COD Handling Fee</span>
+                  <span className="font-bold text-gray-900">₹{order.totals.codCharges}</span>
+                </div>
+              )}
               <div className="flex justify-between text-gray-900 font-extrabold text-sm pt-2 border-t border-gray-100">
                 <span>Total Amount Paid</span>
                 <span>₹{(order.totals?.grandTotal || 0).toLocaleString('en-IN')}</span>

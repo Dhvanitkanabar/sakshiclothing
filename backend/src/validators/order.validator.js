@@ -12,7 +12,8 @@ export const checkoutSchema = z.object({
   items: z.array(orderItemSchema).optional(),
   couponCode: z.string().optional(),
   paymentMethod: z.enum(['cod', 'razorpay', 'stripe']).optional(),
-  payment: z.record(z.any()).optional()
+  payment: z.record(z.any()).optional(),
+  noReturnPolicyAcknowledged: z.boolean().optional()
 });
 
 export const buyNowSchema = z.object({

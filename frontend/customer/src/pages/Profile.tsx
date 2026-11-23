@@ -7,16 +7,17 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   Package, LogOut, ChevronRight, ShoppingBag,
   MapPin, CreditCard, Settings, FileText, XCircle, RefreshCcw,
-  Clock, CheckCircle, Truck, Award, Sparkles
+  Clock, CheckCircle, Truck, Award, Sparkles, ShieldAlert
 } from 'lucide-react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   fetchOrders, cancelOrder, getInvoiceUrl,
   fetchAddresses, deleteAddress, setDefaultAddress,
-  authedFetch, API_URL
+  authedFetch, API_URL, submitOrderClaim
 } from '../lib/api';
 import { Button } from '../components/ui/Button';
+import { Reveal } from '../lib/motion';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type OrderStatus =
@@ -29,12 +30,26 @@ interface OrderItem {
   quantity: number; price: number; image: string;
 }
 
+interface OrderClaim {
+  hasClaim: boolean;
+  reason?: string;
+  description?: string;
+  photoUrls?: string[];
+  unboxingVideoUrl?: string;
+  status?: string;
+  resolutionType?: string;
+  adminNotes?: string;
+  reportedAt?: string;
+  resolvedAt?: string;
+}
+
 interface Order {
   _id: string; id: string; orderNumber: string;
   items: OrderItem[]; total: number; address: string;
   status: OrderStatus; createdAt: string; timeline: any[];
   paymentStatus: string; paymentMethod: string;
   tracking?: any;
+  claim?: OrderClaim;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -91,7 +106,7 @@ const resolveProductImage = (p: any): string => {
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
-  const { user, isSignedIn, logout, loading: authLoading } = useAuth();
+  const { user, isSignedIn, logout, loading: authLoading, getClerkToken } = useAuth();
   const { user: clerkUser } = useUser();
 
   const displayName = user?.fullName || clerkUser?.fullName || clerkUser?.firstName || 'Patron';
@@ -109,6 +124,14 @@ const Profile: React.FC = () => {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
+  // Transit Damage Claim State
+  const [claimModalOrder, setClaimModalOrder] = useState<Order | null>(null);
+  const [claimReason, setClaimReason] = useState('damaged_in_transit');
+  const [claimDescription, setClaimDescription] = useState('');
+  const [claimPhotoUrls, setClaimPhotoUrls] = useState('');
+  const [claimVideoUrl, setClaimVideoUrl] = useState('');
+  const [isSubmittingClaim, setIsSubmittingClaim] = useState(false);
+
   const loadLoyalty = useCallback(async () => {
     if (!user) return;
     try {
@@ -124,7 +147,8 @@ const Profile: React.FC = () => {
     if (!user) return;
     if (!isSilent) setLoading(true);
     try {
-      const data = await fetchOrders();
+      const token = await getClerkToken();
+      const data = await fetchOrders(token);
       const mapped = data.map((o: any): Order => {
         const effectiveStatus = (o.orderStatus === 'rejected' || o.approvalStatus === 'rejected')
           ? 'rejected'
@@ -152,6 +176,7 @@ const Profile: React.FC = () => {
           createdAt: o.createdAt,
           timeline: o.timeline || [],
           tracking: o.tracking,
+          claim: o.claim || { hasClaim: false },
           paymentStatus: o.paymentStatus || 'pending',
           paymentMethod: o.payment?.method || 'razorpay'
         };
@@ -162,7 +187,7 @@ const Profile: React.FC = () => {
     } finally {
       if (!isSilent) setLoading(false);
     }
-  }, [user]);
+  }, [user, getClerkToken]);
 
   const loadAddresses = useCallback(async () => {
     if (!user) return;
@@ -261,6 +286,45 @@ const Profile: React.FC = () => {
     }
   };
 
+  const handleClaimSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!claimModalOrder) return;
+    if (!claimDescription.trim()) {
+      toast.error('Please describe the damage or defect.');
+      return;
+    }
+    if (!claimVideoUrl.trim() && !claimPhotoUrls.trim()) {
+      toast.error('Please provide an unboxing video link or photo proof URL.');
+      return;
+    }
+
+    setIsSubmittingClaim(true);
+    try {
+      const token = await getClerkToken();
+      const res = await submitOrderClaim(
+        claimModalOrder._id,
+        {
+          reason: claimReason,
+          description: claimDescription.trim(),
+          photoUrls: claimPhotoUrls.trim() ? [claimPhotoUrls.trim()] : [],
+          unboxingVideoUrl: claimVideoUrl.trim()
+        },
+        token
+      );
+      if (res.success) {
+        toast.success('Transit damage claim submitted successfully. The atelier team will review within 24–48 hours.');
+        setClaimModalOrder(null);
+        loadOrders();
+      } else {
+        toast.error(res.message || 'Failed to submit claim.');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'An error occurred while submitting your claim.');
+    } finally {
+      setIsSubmittingClaim(false);
+    }
+  };
+
   if (authLoading) return null;
   if (!isSignedIn) return <Navigate to="/login" />;
 
@@ -276,42 +340,44 @@ const Profile: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Mobile/Tablet User Profile Header Card */}
-        <div className="lg:hidden bg-white rounded-3xl p-5 sm:p-6 border border-[#E8E5DF] shadow-xs mb-6">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#FAF8F5] rounded-2xl flex items-center justify-center border border-[#E8E5DF] overflow-hidden shrink-0">
-              {displayAvatar ? (
-                <img src={displayAvatar} alt={displayName} className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-2xl font-serif font-bold text-[#7B1E2B]">{displayName.charAt(0).toUpperCase()}</span>
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 mb-0.5">
-                <h1 className="text-xl sm:text-2xl font-serif font-medium text-[#1A1A1A] truncate">{displayName}</h1>
-                <span className="px-2 py-0.5 bg-[#FAF8F5] text-[#7B1E2B] text-[9px] font-bold uppercase tracking-wider rounded-md border border-[#E8E5DF] shrink-0">
-                  {displayRole}
-                </span>
+        <Reveal variant="fromBottom" amount={0.1} className="lg:hidden mb-6">
+          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#E8E5DF] shadow-xs">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#FAF8F5] rounded-2xl flex items-center justify-center border border-[#E8E5DF] overflow-hidden shrink-0">
+                {displayAvatar ? (
+                  <img src={displayAvatar} alt={displayName} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-2xl font-serif font-bold text-[#7B1E2B]">{displayName.charAt(0).toUpperCase()}</span>
+                )}
               </div>
-              <p className="text-xs text-[#6B7280] truncate">{displayEmail}</p>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <h1 className="text-xl sm:text-2xl font-serif font-medium text-[#1A1A1A] truncate">{displayName}</h1>
+                  <span className="px-2 py-0.5 bg-[#FAF8F5] text-[#7B1E2B] text-[9px] font-bold uppercase tracking-wider rounded-md border border-[#E8E5DF] shrink-0">
+                    {displayRole}
+                  </span>
+                </div>
+                <p className="text-xs text-[#6B7280] truncate">{displayEmail}</p>
+              </div>
             </div>
-          </div>
 
-          {/* Quick Metrics Strip */}
-          <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-[#E8E5DF] text-center">
-            <div className="bg-[#FAF8F5] rounded-xl p-2.5">
-              <span className="text-base sm:text-lg font-bold text-[#1A1A1A] block">{orders.length}</span>
-              <span className="text-[9px] text-[#6B7280] uppercase tracking-wider">Orders</span>
-            </div>
-            <div className="bg-[#FAF8F5] rounded-xl p-2.5">
-              <span className="text-base sm:text-lg font-bold text-[#C6A15B] block">{loyaltyData.points}</span>
-              <span className="text-[9px] text-[#6B7280] uppercase tracking-wider">Points</span>
-            </div>
-            <div className="bg-[#FAF8F5] rounded-xl p-2.5">
-              <span className="text-base sm:text-lg font-bold text-[#1A1A1A] block">{addresses.length}</span>
-              <span className="text-[9px] text-[#6B7280] uppercase tracking-wider">Addresses</span>
+            {/* Quick Metrics Strip */}
+            <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-[#E8E5DF] text-center">
+              <div className="bg-[#FAF8F5] rounded-xl p-2.5">
+                <span className="text-base sm:text-lg font-bold text-[#1A1A1A] block">{orders.length}</span>
+                <span className="text-[9px] text-[#6B7280] uppercase tracking-wider">Orders</span>
+              </div>
+              <div className="bg-[#FAF8F5] rounded-xl p-2.5">
+                <span className="text-base sm:text-lg font-bold text-[#C6A15B] block">{loyaltyData.points}</span>
+                <span className="text-[9px] text-[#6B7280] uppercase tracking-wider">Points</span>
+              </div>
+              <div className="bg-[#FAF8F5] rounded-xl p-2.5">
+                <span className="text-base sm:text-lg font-bold text-[#1A1A1A] block">{addresses.length}</span>
+                <span className="text-[9px] text-[#6B7280] uppercase tracking-wider">Addresses</span>
+              </div>
             </div>
           </div>
-        </div>
+        </Reveal>
 
         {/* Mobile / Tablet Horizontal Tab Navigation Bar */}
         <div className="lg:hidden flex items-center gap-2 overflow-x-auto no-scrollbar pb-3 mb-6">
@@ -350,7 +416,7 @@ const Profile: React.FC = () => {
         {/* Desktop Responsive Layout */}
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
           {/* Desktop Left Sidebar */}
-          <aside className="hidden lg:block w-72 xl:w-80 shrink-0 sticky top-24 space-y-6">
+          <Reveal variant="fromLeft" className="hidden lg:block w-72 xl:w-80 shrink-0 sticky top-24 space-y-6">
             <div className="bg-white rounded-3xl p-6 border border-[#E8E5DF] shadow-xs space-y-4">
               <div className="w-20 h-20 bg-[#FAF8F5] rounded-2xl flex items-center justify-center border border-[#E8E5DF] overflow-hidden mx-auto">
                 {displayAvatar ? (
@@ -418,10 +484,10 @@ const Profile: React.FC = () => {
                 <span>Logout</span>
               </button>
             </nav>
-          </aside>
+          </Reveal>
 
           {/* Main Content Area */}
-          <main className="flex-1 min-w-0 space-y-6 sm:space-y-8">
+          <Reveal variant="fromRight" className="flex-1 min-w-0 space-y-6 sm:space-y-8">
             <header className="hidden lg:block space-y-1 pb-4 border-b border-[#E8E5DF]">
               <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#C6A15B]">
                 Patron Sanctuary
@@ -555,12 +621,68 @@ const Profile: React.FC = () => {
                             </div>
                           )}
 
+                          {/* Transit Damage Claim Status (if filed) */}
+                          {order.claim?.hasClaim && (
+                            <div className="mt-3 p-3.5 sm:p-4 rounded-2xl bg-[#FAF8F5] border border-[#E8E5DF] text-xs space-y-2">
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-[#7B1E2B] flex items-center gap-1.5">
+                                  <ShieldAlert size={14} /> Transit Damage Claim
+                                </span>
+                                <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                                  order.claim.status === 'approved' || order.claim.status === 'resolved'
+                                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                    : order.claim.status === 'rejected'
+                                    ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                                    : 'bg-amber-100 text-amber-900 border border-amber-200'
+                                }`}>
+                                  Status: {order.claim.status?.replace(/_/g, ' ') || 'Submitted'}
+                                </span>
+                              </div>
+                              <p className="text-[#6B7280] text-xs leading-relaxed">
+                                <span className="font-bold text-[#1A1A1A] capitalize">{order.claim.reason?.replace(/_/g, ' ')}:</span> {order.claim.description || 'Under evaluation by our quality assurance team.'}
+                              </p>
+                              {order.claim.resolutionType && order.claim.resolutionType !== 'none' && (
+                                <p className="text-[11px] font-bold text-[#7B1E2B]">
+                                  Resolution: {order.claim.resolutionType.replace(/_/g, ' ')}
+                                </p>
+                              )}
+                              {order.claim.adminNotes && (
+                                <div className="p-2.5 bg-white rounded-xl border border-[#E8E5DF] text-[11px] text-[#1A1A1A]">
+                                  <span className="font-bold text-[#7B1E2B]">Atelier Review: </span>
+                                  {order.claim.adminNotes}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
                           {/* Actions Suite */}
                           <div className="pt-4 border-t border-[#E8E5DF] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <p className="text-xs text-[#6B7280] truncate max-w-sm">
                               {order.address || 'Delivery Address'}
                             </p>
                             <div className="flex flex-wrap items-center gap-2">
+                              {order.claim?.hasClaim ? (
+                                <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#7B1E2B] bg-[#FAF8F5] border border-[#7B1E2B]/20 px-3.5 py-2.5 rounded-xl min-h-[44px]">
+                                  <ShieldAlert size={13} />
+                                  <span>Claim {order.claim.status?.replace(/_/g, ' ') || 'Submitted'}</span>
+                                </span>
+                              ) : (
+                                order.status !== 'cancelled' && order.status !== 'rejected' && (
+                                  <button
+                                    onClick={() => {
+                                      setClaimModalOrder(order);
+                                      setClaimReason('damaged_in_transit');
+                                      setClaimDescription('');
+                                      setClaimPhotoUrls('');
+                                      setClaimVideoUrl('');
+                                    }}
+                                    className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#7B1E2B] bg-white hover:bg-[#FAF8F5] transition-colors border border-[#7B1E2B]/30 px-3.5 py-2.5 rounded-xl min-h-[44px]"
+                                  >
+                                    <ShieldAlert size={13} />
+                                    <span>Report Damage</span>
+                                  </button>
+                                )
+                              )}
                               <Link
                                 to={`/track-order?orderId=${order.orderNumber}`}
                                 className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white bg-[#7B1E2B] hover:bg-[#621721] transition-colors px-3.5 py-2.5 rounded-xl shadow-xs min-h-[44px]"
@@ -836,9 +958,116 @@ const Profile: React.FC = () => {
                 </motion.div>
               )}
             </AnimatePresence>
-          </main>
+          </Reveal>
         </div>
       </div>
+
+      {/* Transit Damage Claim Submission Modal */}
+      {claimModalOrder && (
+        <div className="fixed inset-0 z-50 bg-[#1A1A1A]/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 border border-[#E8E5DF] shadow-2xl space-y-5 my-auto animate-in fade-in zoom-in-95">
+            <div className="flex items-start justify-between border-b border-[#E8E5DF] pb-4">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#7B1E2B] flex items-center gap-1.5">
+                  <ShieldAlert size={14} /> 48-Hour Transit Guarantee
+                </span>
+                <h3 className="text-xl font-serif font-medium text-[#1A1A1A] mt-1">Report Transit Damage / Issue</h3>
+                <p className="text-xs text-[#6B7280] mt-0.5">Order #{claimModalOrder.orderNumber}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setClaimModalOrder(null)}
+                className="text-[#6B7280] hover:text-[#1A1A1A] p-1.5 rounded-xl hover:bg-[#FAF8F5] transition-colors"
+              >
+                <XCircle size={20} />
+              </button>
+            </div>
+
+            <div className="p-3.5 bg-[#FAF8F5] rounded-2xl border border-[#E8E5DF] text-xs text-[#6B7280] leading-relaxed">
+              <strong className="text-[#1A1A1A]">No-Return Policy Notice:</strong> Under Sakshi Clothing policy, we do not accept returns for change of mind, fit, or color. However, items damaged in transit, defective, or incorrect are 100% covered when reported within 48 hours of delivery with raw unboxing video or photo proof.
+            </div>
+
+            <form onSubmit={handleClaimSubmit} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-[11px] font-bold text-[#1A1A1A] uppercase tracking-wider mb-1">
+                  Reason for Claim *
+                </label>
+                <select
+                  value={claimReason}
+                  onChange={(e) => setClaimReason(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#E8E5DF] bg-white text-[#1A1A1A] font-medium focus:outline-none focus:border-[#7B1E2B] min-h-[44px]"
+                  required
+                >
+                  <option value="damaged_in_transit">Damaged in Transit (Broken / Torn packaging)</option>
+                  <option value="defective_piece">Defective Piece (Stitching / Fabric / Stone defect)</option>
+                  <option value="incorrect_item_sent">Incorrect Item Sent (Wrong size / color / product)</option>
+                  <option value="missing_item">Missing Item from Parcel</option>
+                  <option value="other">Other Transit Issue</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-[#1A1A1A] uppercase tracking-wider mb-1">
+                  Unboxing Video Link (Recommended)
+                </label>
+                <input
+                  type="url"
+                  value={claimVideoUrl}
+                  onChange={(e) => setClaimVideoUrl(e.target.value)}
+                  placeholder="https://drive.google.com/... or video link"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#E8E5DF] bg-white text-[#1A1A1A] focus:outline-none focus:border-[#7B1E2B] min-h-[44px]"
+                />
+                <p className="text-[10px] text-[#9CA3AF] mt-1">A raw, 360-degree unboxing video speeds up claim approval significantly.</p>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-[#1A1A1A] uppercase tracking-wider mb-1">
+                  Photo Proof URL
+                </label>
+                <input
+                  type="url"
+                  value={claimPhotoUrls}
+                  onChange={(e) => setClaimPhotoUrls(e.target.value)}
+                  placeholder="https://... direct image link"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#E8E5DF] bg-white text-[#1A1A1A] focus:outline-none focus:border-[#7B1E2B] min-h-[44px]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-[#1A1A1A] uppercase tracking-wider mb-1">
+                  Description of Issue *
+                </label>
+                <textarea
+                  value={claimDescription}
+                  onChange={(e) => setClaimDescription(e.target.value)}
+                  rows={3}
+                  required
+                  placeholder="Describe the exact damage, defect, or missing item observed upon opening the delivery parcel..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#E8E5DF] bg-white text-[#1A1A1A] focus:outline-none focus:border-[#7B1E2B]"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E8E5DF]">
+                <button
+                  type="button"
+                  onClick={() => setClaimModalOrder(null)}
+                  className="px-4 py-2.5 text-xs font-bold text-[#6B7280] hover:text-[#1A1A1A] rounded-xl hover:bg-[#FAF8F5] min-h-[44px]"
+                >
+                  Cancel
+                </button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="md"
+                  isLoading={isSubmittingClaim}
+                >
+                  Submit Transit Claim
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Account Deletion Confirmation Modal */}
       {showDeleteModal && (

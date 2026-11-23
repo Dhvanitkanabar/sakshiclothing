@@ -5,20 +5,21 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Product } from '../types';
 import { useCart } from '../context/CartContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  ShoppingBag, 
-  ChevronRight, 
-  Star, 
-  ShieldCheck, 
-  Truck, 
-  RotateCcw, 
-  Heart, 
-  Ruler, 
-  Plus, 
-  Minus, 
-  Sparkles, 
-  Check, 
-  MapPin, 
+import {
+  ShoppingBag,
+  ChevronRight,
+  Star,
+  ShieldCheck,
+  ShieldAlert,
+  Truck,
+  RotateCcw,
+  Heart,
+  Ruler,
+  Plus,
+  Minus,
+  Sparkles,
+  Check,
+  MapPin,
   CheckCircle2,
   Banknote,
   Info,
@@ -37,6 +38,7 @@ import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
 import SEOHead from '../components/SEOHead';
+import { Reveal, StaggerGroup, StaggerItem } from '../lib/motion';
 
 export const ProductDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -98,7 +100,7 @@ export const ProductDetails: React.FC = () => {
         const validImgs = (data.images || []).map((i: any) => typeof i === 'string' ? i : i.url).filter((u: string) => u && !DEAD_IMG_LIST.some(d => u.includes(d)));
         const primary = validImgs[0] || (data.image && !DEAD_IMG_LIST.some(d => data.image.includes(d)) ? data.image : '');
         setMainImage(primary);
-        
+
         // Fetch related pieces from database
         try {
           const related = await fetchProducts({ category: data.category, limit: 4 });
@@ -121,7 +123,7 @@ export const ProductDetails: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FBF9F6] flex items-center justify-center">
-        <motion.div 
+        <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
           className="w-10 h-10 border-2 border-[#E8E5DF] border-t-[#7B1E2B] rounded-full"
@@ -214,6 +216,13 @@ export const ProductDetails: React.FC = () => {
         '@type': 'Organization',
         name: BUSINESS_CONFIG.storeName,
       },
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'IN',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnNotPermitted',
+        merchantReturnDays: 0,
+        returnMethod: 'https://schema.org/ReturnNotPermitted',
+      },
     },
   };
 
@@ -251,7 +260,7 @@ export const ProductDetails: React.FC = () => {
         ogImage={mainImage || allImages[0] || product.image}
         jsonLd={[productSchema, breadcrumbSchema]}
       />
-      
+
       {/* Breadcrumb Navigation */}
       <div className="max-w-7xl mx-auto px-5 sm:px-8 pt-8 pb-4">
         <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-[#6B7280]">
@@ -267,17 +276,17 @@ export const ProductDetails: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-5 sm:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
-          
+
           {/* Left Column: Image Gallery */}
-          <div className="lg:col-span-7 space-y-4">
+          <Reveal variant="fromLeft" className="lg:col-span-7 space-y-4">
             <div className="w-full aspect-[3/4] max-h-[640px] rounded-3xl overflow-hidden bg-[#F4EFEA] border border-[#E8E5DF] shadow-sm relative group">
-              <img 
-                src={mainImage || allImages[0] || product.image} 
-                alt={product.name} 
-                className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-102" 
-                referrerPolicy="no-referrer" 
+              <img
+                src={mainImage || allImages[0] || product.image}
+                alt={product.name}
+                className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-102"
+                referrerPolicy="no-referrer"
               />
-              
+
               {/* Category & Imitation Badges */}
               <div className="absolute top-4 left-4 flex flex-col gap-2">
                 {isJewellery ? (
@@ -321,11 +330,10 @@ export const ProductDetails: React.FC = () => {
                   e.preventDefault();
                   toggleWishlist(product);
                 }}
-                className={`absolute top-4 right-4 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full backdrop-blur-md transition-all z-20 ${
-                  isWishlisted
-                    ? 'bg-[#7B1E2B] text-white shadow-md'
-                    : 'bg-white/85 text-[#1A1A1A] hover:bg-white hover:text-[#7B1E2B] shadow-xs'
-                }`}
+                className={`absolute top-4 right-4 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full backdrop-blur-md transition-all z-20 ${isWishlisted
+                  ? 'bg-[#7B1E2B] text-white shadow-md'
+                  : 'bg-white/85 text-[#1A1A1A] hover:bg-white hover:text-[#7B1E2B] shadow-xs'
+                  }`}
                 aria-label={isWishlisted ? "Remove from wishlist" : "Save to wishlist"}
               >
                 <Heart
@@ -335,39 +343,37 @@ export const ProductDetails: React.FC = () => {
                 />
               </button>
             </div>
-            
+
             {/* Gallery Thumbnails */}
             {allImages.length > 1 && (
               <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
                 {allImages.map((imgUrl, idx) => (
-                  <button 
+                  <button
                     key={idx}
                     onClick={() => setMainImage(imgUrl)}
-                    className={`w-18 sm:w-20 aspect-[3/4] shrink-0 rounded-2xl overflow-hidden border-2 transition-all min-h-[44px] ${
-                      mainImage === imgUrl ? 'border-[#7B1E2B] shadow-sm scale-102' : 'border-[#E8E5DF] opacity-60 hover:opacity-100'
-                    }`}
+                    className={`w-18 sm:w-20 aspect-[3/4] shrink-0 rounded-2xl overflow-hidden border-2 transition-all min-h-[44px] ${mainImage === imgUrl ? 'border-[#7B1E2B] shadow-sm scale-102' : 'border-[#E8E5DF] opacity-60 hover:opacity-100'
+                      }`}
                   >
-                    <img 
-                      src={imgUrl} 
-                      alt={`Thumbnail ${idx + 1}`} 
-                      className="w-full h-full object-cover" 
-                      referrerPolicy="no-referrer" 
+                    <img
+                      src={imgUrl}
+                      alt={`Thumbnail ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
                     />
                   </button>
                 ))}
               </div>
             )}
-          </div>
+          </Reveal>
 
           {/* Right Column: Details & Actions */}
-          <div className="lg:col-span-5 space-y-6">
-            
+          <Reveal variant="fromRight" className="lg:col-span-5 space-y-6">
+
             {/* Header / Titles / Price */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className={`text-[11px] font-semibold uppercase tracking-[0.2em] ${
-                  isJewellery ? 'text-[#C6A15B]' : 'text-[#7B1E2B]'
-                }`}>
+                <span className={`text-[11px] font-semibold uppercase tracking-[0.2em] ${isJewellery ? 'text-[#C6A15B]' : 'text-[#7B1E2B]'
+                  }`}>
                   {isJewellery ? 'Artisanal Imitation Jewellery' : (product.subCategory || 'Heirloom Fashion')}
                 </span>
                 <div className="flex items-center gap-1 text-[#C6A15B]">
@@ -397,7 +403,7 @@ export const ProductDetails: React.FC = () => {
                 )}
               </div>
               <p className="text-xs text-[#6B7280]">
-                Inclusive of all taxes · Free Express Delivery on ₹999+
+                Inclusive of all taxes · Free Express Delivery on ₹{BUSINESS_CONFIG.policies.freeShippingThreshold}+
               </p>
             </div>
 
@@ -409,11 +415,11 @@ export const ProductDetails: React.FC = () => {
                   <span>Artificial / Imitation Jewellery Specification</span>
                 </div>
                 <p className="text-xs text-[#6B5528] leading-relaxed">
-                  {product.productFacts?.hypoallergenicClaim 
-                    ? product.productFacts.hypoallergenicClaim 
-                    : (product.productFacts?.material 
-                        ? `Crafted with ${product.productFacts.material}${product.productFacts.plating ? ` and finished in ${product.productFacts.plating}` : ''}. Designed for comfortable festive wear.`
-                        : "Fashion imitation jewellery crafted with brass/alloy base metal and electroplated finish. Synthetic stones and faux beads.")}
+                  {product.productFacts?.hypoallergenicClaim
+                    ? product.productFacts.hypoallergenicClaim
+                    : (product.productFacts?.material
+                      ? `Crafted with ${product.productFacts.material}${product.productFacts.plating ? ` and finished in ${product.productFacts.plating}` : ''}. Designed for comfortable festive wear.`
+                      : "Fashion imitation jewellery crafted with brass/alloy base metal and electroplated finish. Synthetic stones and faux beads.")}
                 </p>
               </div>
             ) : (
@@ -443,11 +449,10 @@ export const ProductDetails: React.FC = () => {
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
-                      className={`min-w-14 h-12 px-3.5 rounded-xl border text-xs font-semibold transition-all min-h-[44px] flex items-center justify-center ${
-                        selectedSize === size
-                          ? 'bg-[#7B1E2B] border-[#7B1E2B] text-white shadow-xs'
-                          : 'bg-white border-[#E8E5DF] text-[#1A1A1A] hover:border-[#7B1E2B]'
-                      }`}
+                      className={`min-w-14 h-12 px-3.5 rounded-xl border text-xs font-semibold transition-all min-h-[44px] flex items-center justify-center ${selectedSize === size
+                        ? 'bg-[#7B1E2B] border-[#7B1E2B] text-white shadow-xs'
+                        : 'bg-white border-[#E8E5DF] text-[#1A1A1A] hover:border-[#7B1E2B]'
+                        }`}
                     >
                       {size}
                     </button>
@@ -498,6 +503,12 @@ export const ProductDetails: React.FC = () => {
                   {isSelectedOutOfStock ? 'Sold Out' : 'Add to Shopping Bag'}
                 </Button>
               </div>
+
+              {/* Policy Trust Notice */}
+              <div className="flex items-center gap-2 py-2 px-3 rounded-xl bg-[#FAF8F5] border border-[#E8E5DF] text-[11px] text-[#4B5563]">
+                <ShieldAlert size={14} className="text-[#7B1E2B] shrink-0" />
+                <span><strong>No returns</strong> (damaged or wrong items covered within 48h). <Link to="/refund-policy" className="text-[#7B1E2B] underline font-medium">Read policy</Link></span>
+              </div>
             </div>
 
             {/* PIN Code Delivery Checker */}
@@ -520,11 +531,10 @@ export const ProductDetails: React.FC = () => {
                 </Button>
               </form>
               {pincodeStatus && (
-                <div className={`text-xs p-3 rounded-xl border flex flex-col gap-1 ${
-                  pincodeStatus.isServiceable 
-                    ? 'bg-[#F4FBF5] border-[#C6E8CD] text-[#15803D]' 
-                    : 'bg-[#FDF2F0] border-[#F8D7DA] text-[#B43E2B]'
-                }`}>
+                <div className={`text-xs p-3 rounded-xl border flex flex-col gap-1 ${pincodeStatus.isServiceable
+                  ? 'bg-[#F4FBF5] border-[#C6E8CD] text-[#15803D]'
+                  : 'bg-[#FDF2F0] border-[#F8D7DA] text-[#B43E2B]'
+                  }`}>
                   <div className="flex items-center gap-1.5 font-semibold">
                     {pincodeStatus.isServiceable ? <CheckCircle2 size={15} /> : <Info size={15} />}
                     <span>{pincodeStatus.isServiceable ? `Delivering to PIN ${pincodeStatus.pincode} (${pincodeStatus.estimatedDays})` : pincodeStatus.message}</span>
@@ -535,7 +545,7 @@ export const ProductDetails: React.FC = () => {
                       <span>•</span>
                       <span>Cash on Delivery: <strong className="text-[#15803D]">Eligible</strong></span>
                       <span>•</span>
-                      <span>Free shipping above ₹999</span>
+                      <span>Free shipping above ₹{BUSINESS_CONFIG.policies.freeShippingThreshold}</span>
                     </div>
                   )}
                 </div>
@@ -553,9 +563,8 @@ export const ProductDetails: React.FC = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
-                    className={`text-xs font-semibold uppercase tracking-wider pb-2 relative min-h-[40px] ${
-                      activeTab === tab.id ? 'text-[#7B1E2B]' : 'text-[#6B7280] hover:text-[#1A1A1A]'
-                    }`}
+                    className={`text-xs font-semibold uppercase tracking-wider pb-2 relative min-h-[40px] ${activeTab === tab.id ? 'text-[#7B1E2B]' : 'text-[#6B7280] hover:text-[#1A1A1A]'
+                      }`}
                   >
                     {tab.label}
                     {activeTab === tab.id && (
@@ -659,19 +668,19 @@ export const ProductDetails: React.FC = () => {
                       <strong>Cash on Delivery (COD):</strong> {BUSINESS_CONFIG.policies.codAvailable ? 'Available nationwide across 19,000+ PIN codes with zero extra fees.' : 'Prepaid only.'}
                     </p>
                     <p>
-                      <strong>{BUSINESS_CONFIG.policies.returnWindowDays}-Day Returns:</strong> {isJewellery ? BUSINESS_CONFIG.policies.jewelleryPolicy : BUSINESS_CONFIG.policies.clothingPolicy}
+                      <strong>Strict No-Return Policy:</strong> {isJewellery ? BUSINESS_CONFIG.policies.jewelleryPolicy : BUSINESS_CONFIG.policies.clothingPolicy}
                     </p>
                   </div>
                 )}
               </div>
             </div>
 
-          </div>
+          </Reveal>
         </div>
 
         {/* Complete the Look Section */}
         {relatedProducts.length > 0 && (
-          <div className="mt-16 sm:mt-24 pt-12 border-t border-[#E8E5DF]">
+          <Reveal variant="fromBottom" className="mt-16 sm:mt-24 pt-12 border-t border-[#E8E5DF]">
             <div className="mb-8">
               <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7B1E2B] block mb-1">
                 Curated Pairings
@@ -680,18 +689,20 @@ export const ProductDetails: React.FC = () => {
                 Complete The Look
               </h2>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+            <StaggerGroup stagger={0.05} className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
               {relatedProducts.map((p) => (
-                <ProductCard key={p.id} product={p} />
+                <StaggerItem key={p.id} variant="fromBottom">
+                  <ProductCard product={p} />
+                </StaggerItem>
               ))}
-            </div>
-          </div>
+            </StaggerGroup>
+          </Reveal>
         )}
 
         {/* Reviews Section */}
-        <div className="mt-16 sm:mt-24">
+        <Reveal variant="fromBottom" className="mt-16 sm:mt-24">
           <ProductReviews productId={product.id} />
-        </div>
+        </Reveal>
       </div>
 
       {/* Size Chart Modal */}
@@ -784,11 +795,10 @@ export const ProductDetails: React.FC = () => {
         <button
           onClick={handleAddToCart}
           disabled={isSelectedOutOfStock}
-          className={`min-h-[44px] px-6 py-2.5 rounded-full text-xs uppercase tracking-wider font-semibold shadow-md flex items-center gap-1.5 active:scale-95 transition-all select-none ${
-            isJewellery
-              ? 'bg-[#C6A15B] text-white hover:bg-[#B38F48]'
-              : 'bg-[#7B1E2B] text-white hover:bg-[#621721]'
-          }`}
+          className={`min-h-[44px] px-6 py-2.5 rounded-full text-xs uppercase tracking-wider font-semibold shadow-md flex items-center gap-1.5 active:scale-95 transition-all select-none ${isJewellery
+            ? 'bg-[#C6A15B] text-white hover:bg-[#B38F48]'
+            : 'bg-[#7B1E2B] text-white hover:bg-[#621721]'
+            }`}
         >
           <ShoppingBag size={14} />
           <span>{isSelectedOutOfStock ? 'Sold Out' : 'Add to Bag'}</span>

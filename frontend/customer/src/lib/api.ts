@@ -57,10 +57,21 @@ export const mapBackendProductToFrontend = (backendProduct: any): Product => {
     parseImageUrl(backendProduct.image) ||
     '';
 
+  const effectivePrice =
+    (typeof backendProduct.pricing?.discountPrice === 'number' && backendProduct.pricing.discountPrice > 0)
+      ? backendProduct.pricing.discountPrice
+      : (typeof backendProduct.price === 'number' && backendProduct.price > 0
+          ? backendProduct.price
+          : (backendProduct.pricing?.basePrice ?? 0));
+
+  const mrp = backendProduct.pricing?.basePrice || effectivePrice;
+
   return {
     id: backendProduct._id || backendProduct.id,
     name: backendProduct.name,
-    price: backendProduct.pricing?.basePrice ?? backendProduct.price ?? 0,
+    price: effectivePrice,
+    mrp,
+    originalPrice: mrp,
     category: backendProduct.category?.name || backendProduct.category || '',
     subCategory: backendProduct.tags?.[0] || '', // Mapping tags to subcategory for UI compatibility
     sizes: backendProduct.variants?.map((v: any) => v.size).filter(Boolean) || [],
@@ -291,13 +302,14 @@ export const initiateOrderCheckout = async (
   items: any[],
   couponCode?: string,
   isFromCart: boolean = true,
-  clerkToken?: string | null
+  clerkToken?: string | null,
+  noReturnPolicyAcknowledged: boolean = true
 ) => {
   try {
     const res = await authedFetch(`${API_URL}/orders/initiate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ shippingAddressId, items, couponCode, isFromCart })
+      body: JSON.stringify({ shippingAddressId, items, couponCode, isFromCart, noReturnPolicyAcknowledged })
     }, clerkToken);
     return await res.json();
   } catch (e: any) {
@@ -313,18 +325,37 @@ export const placeOrder = async (
   items?: any[],
   paymentMethod: string = 'cod',
   payment?: any,
-  couponCode?: string
+  couponCode?: string,
+  noReturnPolicyAcknowledged: boolean = true
 ) => {
   try {
     const res = await authedFetch(`${API_URL}/orders/checkout`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ shippingAddressId, isFromCart, items, paymentMethod, payment, couponCode })
+      body: JSON.stringify({ shippingAddressId, isFromCart, items, paymentMethod, payment, couponCode, noReturnPolicyAcknowledged })
     }, clerkToken);
     return await res.json();
   } catch (e) {
     console.error(e);
     return { success: false };
+  }
+};
+
+export const submitOrderClaim = async (
+  orderId: string,
+  claimData: { reason: string; description?: string; photoUrls?: string[]; unboxingVideoUrl?: string },
+  clerkToken?: string | null
+) => {
+  try {
+    const res = await authedFetch(`${API_URL}/orders/${orderId}/claim`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(claimData)
+    }, clerkToken);
+    return await res.json();
+  } catch (e: any) {
+    console.error('Claim submission error:', e);
+    return { success: false, message: e.message || 'Failed to submit claim' };
   }
 };
 
@@ -377,4 +408,67 @@ export const cancelOrder = async (id: string, clerkToken?: string | null) => {
 
 export const getInvoiceUrl = (orderId: string) =>
   `${API_URL}/orders/${orderId}/invoice`;
+
+export interface CartQuoteLineItem {
+  productId: string;
+  variantId?: string;
+  name: string;
+  size?: string;
+  color?: string;
+  sku?: string;
+  quantity: number;
+  price: number;
+  originalCartPrice?: number;
+  priceChanged?: boolean;
+  subtotal: number;
+}
+
+export interface CartQuoteTotals {
+  itemsTotal: number;
+  subtotalAfterDiscount: number;
+  shippingCharges: number;
+  codCharges: number;
+  discount: number;
+  grandTotal: number;
+  freeShippingThreshold: number;
+  amountNeededForFreeShipping: number;
+  isFreeShipping: boolean;
+}
+
+export interface CartQuote {
+  lineItems: CartQuoteLineItem[];
+  totals: CartQuoteTotals;
+  coupon?: {
+    code: string;
+    discountType: string;
+    discountValue: number;
+    discount: number;
+  } | null;
+  warnings?: string[];
+}
+
+/**
+ * Single source of truth quote engine.
+ * Retrieves authoritative server-side line item prices, discounts, shipping and grand total.
+ */
+export const fetchCartQuote = async (
+  items?: Array<{ productId: string; variantId?: string; quantity: number; originalCartPrice?: number }>,
+  couponCode?: string,
+  paymentMethod: string = 'razorpay',
+  clerkToken?: string | null
+): Promise<{ success: boolean; data?: CartQuote; message?: string }> => {
+  try {
+    const res = await authedFetch(`${API_URL}/cart/quote`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items, couponCode, paymentMethod })
+    }, clerkToken);
+    return await res.json();
+  } catch (err: any) {
+    return { success: false, message: err.message || 'Failed to fetch authoritative cart quote' };
+  }
+};
+
+
+
 

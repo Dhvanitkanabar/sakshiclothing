@@ -20,11 +20,28 @@ export const BUSINESS_CONFIG = {
     fullFormatted: 'G-903 Sentosa Heights, Utran, Surat, Gujarat - 394105, India',
   },
   shipping: {
-    freeShippingThreshold: Number(process.env.FREE_SHIPPING_THRESHOLD) || 999,
-    defaultShippingCharge: 99,
+    freeShippingThreshold: Number(process.env.FREE_SHIPPING_THRESHOLD) || 300,
+    defaultShippingCharge: Number(process.env.DEFAULT_SHIPPING_FEE) || 49,
+    codHandlingFee: Number(process.env.COD_HANDLING_FEE) || 0,
+  },
+  payment: {
+    allowedMethods: ['upi', 'cod'],
+    defaultOnlineMethod: 'upi',
+    razorpayHiddenMethods: [
+      { method: 'card' },
+      { method: 'netbanking' },
+      { method: 'wallet' },
+      { method: 'emi' },
+      { method: 'cardless_emi' },
+      { method: 'paylater' }
+    ],
   },
   policies: {
-    returnWindowDays: 7,
+    returnWindowHours: 48,
+    noReturnsPermitted: true,
+    damagedOrDefectiveCovered: true,
+    returnPolicy: 'No returns or exchanges for change of mind, fit, size, or color. Damaged, defective, or incorrect items are covered if reported within 48 hours of delivery with an unboxing video and photo proof.',
+    cancellationPolicy: 'Orders may be cancelled prior to dispatch. Refunds for prepaid orders cancelled before dispatch are processed within 5–7 business days to the original payment source.',
     codAvailable: true,
   },
   grievanceOfficer: {

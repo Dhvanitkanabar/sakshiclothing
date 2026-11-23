@@ -6,6 +6,7 @@ import Review from '../models/Review.model.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import { HTTP_STATUS, PRODUCT_STATUS } from '../constants/index.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import BUSINESS_CONFIG from '../config/business.config.js';
 
 class CmsController {
   // --- Homepage Aggregation for Customer Frontend ---
@@ -99,6 +100,38 @@ class CmsController {
   getAnnouncements = asyncHandler(async (req, res) => {
     const settings = await StoreSettings.findOne();
     return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, settings?.announcementBar || [], 'Announcements retrieved'));
+  });
+
+  getBusinessConfig = asyncHandler(async (req, res) => {
+    return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, {
+      storeName: BUSINESS_CONFIG.storeName,
+      supportEmail: BUSINESS_CONFIG.supportEmail,
+      supportPhone: BUSINESS_CONFIG.supportPhone,
+      whatsappNumber: BUSINESS_CONFIG.whatsappNumber,
+      gstNumber: BUSINESS_CONFIG.gstNumber,
+      address: BUSINESS_CONFIG.address,
+      shipping: {
+        freeShippingThreshold: BUSINESS_CONFIG.shipping.freeShippingThreshold,
+        defaultShippingCharge: BUSINESS_CONFIG.shipping.defaultShippingCharge,
+        codHandlingFee: BUSINESS_CONFIG.shipping.codHandlingFee || 0,
+      },
+      payment: {
+        allowedMethods: BUSINESS_CONFIG.payment?.allowedMethods || ['upi', 'cod'],
+        defaultOnlineMethod: BUSINESS_CONFIG.payment?.defaultOnlineMethod || 'upi',
+        razorpayHiddenMethods: BUSINESS_CONFIG.payment?.razorpayHiddenMethods || []
+      },
+      policies: {
+        returnPolicy: BUSINESS_CONFIG.policies.returnPolicy,
+        cancellationPolicy: BUSINESS_CONFIG.policies.cancellationPolicy,
+        returnWindowHours: BUSINESS_CONFIG.policies.returnWindowHours || 48,
+        noReturnsPermitted: true,
+        damagedOrDefectiveCovered: true,
+        codAvailable: BUSINESS_CONFIG.policies.codAvailable,
+      },
+      grievanceOfficer: BUSINESS_CONFIG.grievanceOfficer,
+      legal: BUSINESS_CONFIG.legal,
+      socialLinks: BUSINESS_CONFIG.socialLinks,
+    }, 'Business configuration retrieved'));
   });
 
   getAppVersion = asyncHandler(async (req, res) => {

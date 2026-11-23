@@ -9,6 +9,7 @@ import { SearchX, SlidersHorizontal, X, Sparkles, ArrowRight, RotateCcw } from '
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import SEOHead from '../components/SEOHead';
+import { Reveal, StaggerGroup, StaggerItem } from '../lib/motion';
 
 const CATEGORY_META: Record<string, { badge: string; title: string; description: string; subcategories: string[] }> = {
   women: {
@@ -190,27 +191,29 @@ export const Shop: React.FC = () => {
       />
       
       {/* ─── 1. PAGE HEADER ─────────────────────────────────────────── */}
-      <header className="pt-10 sm:pt-14 pb-6 sm:pb-8 px-5 sm:px-8 max-w-7xl mx-auto">
-        <div className="text-center max-w-2xl mx-auto space-y-2.5">
-          <span className={`text-[11px] font-semibold uppercase tracking-[0.2em] block ${
-            isJewellerySelected ? 'text-[#C6A15B]' : 'text-[#7B1E2B]'
-          }`}>
-            {query ? `Search Archive · "${query}"` : categoryMeta.badge}
-          </span>
-          <h1 className="font-serif text-3xl sm:text-5xl text-[#1A1A1A] font-medium tracking-tight">
-            {query ? `Results for "${query}"` : (mood ? `${mood} Edit` : categoryMeta.title)}
-          </h1>
-          <p className="text-xs sm:text-sm text-[#6B7280] leading-relaxed">
-            {categoryMeta.description}
-          </p>
-          {isJewellerySelected && (
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#F4EEDF] text-[#A4813D] rounded-full text-[11px] font-semibold border border-[#C6A15B]/30 mt-1">
-              <Sparkles size={13} />
-              <span>100% Skin-Friendly Imitation Jewellery · Brass Base & Premium Plating</span>
-            </div>
-          )}
-        </div>
-      </header>
+      <Reveal variant="fromBottom" amount={0.1}>
+        <header className="pt-10 sm:pt-14 pb-6 sm:pb-8 px-5 sm:px-8 max-w-7xl mx-auto">
+          <div className="text-center max-w-2xl mx-auto space-y-2.5">
+            <span className={`text-[11px] font-semibold uppercase tracking-[0.2em] block ${
+              isJewellerySelected ? 'text-[#C6A15B]' : 'text-[#7B1E2B]'
+            }`}>
+              {query ? `Search Archive · "${query}"` : categoryMeta.badge}
+            </span>
+            <h1 className="font-serif text-3xl sm:text-5xl text-[#1A1A1A] font-medium tracking-tight">
+              {query ? `Results for "${query}"` : (mood ? `${mood} Edit` : categoryMeta.title)}
+            </h1>
+            <p className="text-xs sm:text-sm text-[#6B7280] leading-relaxed">
+              {categoryMeta.description}
+            </p>
+            {isJewellerySelected && (
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#F4EEDF] text-[#A4813D] rounded-full text-[11px] font-semibold border border-[#C6A15B]/30 mt-1">
+                <Sparkles size={13} />
+                <span>100% Skin-Friendly Imitation Jewellery · Brass Base & Premium Plating</span>
+              </div>
+            )}
+          </div>
+        </header>
+      </Reveal>
 
       {/* ─── 2. STICKY FILTER & SORT BAR ─────────────────────────────── */}
       <div className="sticky top-14 sm:top-16 z-30 bg-[#FBF9F6]/95 backdrop-blur-md border-y border-[#E8E5DF] py-3 px-4 sm:px-8 shadow-xs">
@@ -406,11 +409,13 @@ export const Shop: React.FC = () => {
 
         {/* 2 columns on mobile, 3 on tablet, 4 on desktop */}
         {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+          <StaggerGroup stagger={0.04} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <StaggerItem key={product.id} variant="fromBottom">
+                <ProductCard product={product} />
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         ) : (
           /* Clean Empty State */
           <div className="text-center py-20 sm:py-28 bg-white rounded-3xl border border-[#E8E5DF] p-8 max-w-xl mx-auto">

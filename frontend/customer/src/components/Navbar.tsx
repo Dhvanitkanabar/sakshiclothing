@@ -171,7 +171,7 @@ export const Navbar: React.FC = () => {
   const announcements = [
     { text: `Free Pan-India Delivery on Orders Above ₹${BUSINESS_CONFIG.policies.freeShippingThreshold}`, icon: Truck },
     { text: "Cash on Delivery (COD) Available Across India", icon: Banknote },
-    { text: "7-Day Return & Exchange Policy on Clothing", icon: RotateCcw },
+    { text: "No Returns — 48h Transit Damage Guarantee with Unboxing Video", icon: RotateCcw },
     { text: "Imitation & Fashion Jewellery · Brass & Copper Alloy with Gold Finish", icon: Sparkles }
   ];
   const [tickerIndex, setTickerIndex] = useState(0);
@@ -251,7 +251,18 @@ export const Navbar: React.FC = () => {
   };
 
   // Nav categories matching exact spec: Women, Men, Kids, Imitation Jewellery, New In, Sale
-  const navCategories = [
+  interface NavCategoryItem {
+    name: string;
+    path: string;
+    isJewellery: boolean;
+    badge?: string;
+    sections?: {
+      title: string;
+      items: { label: string; path: string }[];
+    }[];
+  }
+
+  const navCategories: NavCategoryItem[] = [
     {
       name: "Women",
       path: "/shop?category=Women",
@@ -341,7 +352,6 @@ export const Navbar: React.FC = () => {
       name: "Imitation Jewellery",
       path: "/shop?category=Jewellery",
       isJewellery: true,
-      badge: "Jewellery",
       sections: [
         {
           title: "Neckpieces & Chokers",
@@ -378,7 +388,6 @@ export const Navbar: React.FC = () => {
       name: "Sale",
       path: "/shop?sort=discount",
       isJewellery: false,
-      badge: "Offers",
     }
   ];
 

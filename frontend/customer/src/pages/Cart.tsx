@@ -7,16 +7,20 @@ import { Trash2, ShoppingBag, ArrowRight, Minus, Plus, Sparkles, Truck, ShieldCh
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '../components/ui/Button';
 import SEOHead from '../components/SEOHead';
-
-const FREE_SHIPPING_THRESHOLD = 999;
+import { BUSINESS_CONFIG } from '../config/business';
+import { formatPrice } from '../utils/format';
+import { Reveal } from '../lib/motion';
 
 export const Cart: React.FC = () => {
-  const { cart, removeFromCart, updateQuantity, totalPrice } = useCart();
+  const { cart, cartQuote, removeFromCart, updateQuantity, totalPrice } = useCart();
   const navigate = useNavigate();
 
+  const threshold = cartQuote?.totals?.freeShippingThreshold || BUSINESS_CONFIG.policies.freeShippingThreshold || 300;
+  const itemsTotal = cartQuote?.totals?.itemsTotal ?? totalPrice;
   const totalItems = cart.reduce((sum, it) => sum + it.quantity, 0);
-  const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - totalPrice);
-  const progressPercent = Math.min(100, Math.round((totalPrice / FREE_SHIPPING_THRESHOLD) * 100));
+  const remainingForFreeShipping = cartQuote ? cartQuote.totals.amountNeededForFreeShipping : Math.max(0, threshold - itemsTotal);
+  const isFreeShipping = cartQuote ? cartQuote.totals.isFreeShipping : (itemsTotal >= threshold);
+  const progressPercent = Math.min(100, Math.round((itemsTotal / threshold) * 100));
 
   if (cart.length === 0) {
     return (
@@ -56,47 +60,58 @@ export const Cart: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
-        <header className="mb-8 space-y-1.5">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7B1E2B]">
-            Your Bag
-          </span>
-          <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1A1A] font-medium tracking-tight">
-            Shopping Bag ({totalItems} {totalItems === 1 ? 'Item' : 'Items'})
-          </h1>
-        </header>
+        <Reveal variant="fromLeft" amount={0.1}>
+          <header className="mb-8 space-y-1.5">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7B1E2B]">
+              Your Bag
+            </span>
+            <h1 className="font-serif text-3xl sm:text-4xl text-[#1A1A1A] font-medium tracking-tight">
+              Shopping Bag ({totalItems} {totalItems === 1 ? 'Item' : 'Items'})
+            </h1>
+          </header>
+        </Reveal>
 
         {/* Free Shipping Progress Indicator */}
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#E8E5DF] mb-8 shadow-xs">
-          <div className="flex items-center justify-between text-xs sm:text-sm mb-2">
-            <span className="flex items-center gap-2 text-[#1A1A1A] font-medium">
-              <Truck size={16} className="text-[#7B1E2B]" />
-              {remainingForFreeShipping > 0 ? (
-                <span>
-                  Add <strong className="text-[#7B1E2B]">₹{remainingForFreeShipping.toLocaleString('en-IN')}</strong> more for <strong className="text-[#15803D]">FREE Delivery</strong>
-                </span>
-              ) : (
-                <span className="text-[#15803D] font-bold">
-                  🎉 You have unlocked FREE Delivery across India!
-                </span>
-              )}
-            </span>
-            <span className="text-xs font-bold text-[#6B7280]">{progressPercent}%</span>
+        <Reveal variant="fromRight" amount={0.1}>
+          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#E8E5DF] mb-8 shadow-xs">
+            <div className="flex items-center justify-between text-xs sm:text-sm mb-2">
+              <span className="flex items-center gap-2 text-[#1A1A1A] font-medium">
+                <Truck size={16} className="text-[#7B1E2B]" />
+                {remainingForFreeShipping > 0 ? (
+                  <span>
+                    Add <strong className="text-[#7B1E2B]">₹{remainingForFreeShipping.toLocaleString('en-IN')}</strong> more for <strong className="text-[#15803D]">FREE Delivery</strong>
+                  </span>
+                ) : (
+                  <span className="text-[#15803D] font-bold">
+                    🎉 You have unlocked FREE Delivery across India!
+                  </span>
+                )}
+              </span>
+              <span className="text-xs font-bold text-[#6B7280]">{progressPercent}%</span>
+            </div>
+            <div className="w-full h-2 bg-[#E8E5DF] rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-[#7B1E2B] transition-all duration-300 rounded-full"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
           </div>
-          <div className="w-full h-2 bg-[#E8E5DF] rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-[#7B1E2B] transition-all duration-300 rounded-full"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-        </div>
+        </Reveal>
 
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
           
           {/* Cart Item Cards List */}
-          <div className="flex-1 w-full space-y-4">
+          <Reveal variant="fromLeft" className="flex-1 w-full space-y-4">
             <AnimatePresence mode="popLayout">
               {cart.map((item) => {
                 const isJewel = (item.category || '').toLowerCase().includes('jewel');
+                const quotedLine = cartQuote?.lineItems?.find(
+                  li => li.productId.toString() === item.id.toString() && (!li.variantId || li.variantId.toString() === (item as any).variantId?.toString())
+                );
+                const effectivePrice = quotedLine ? quotedLine.price : item.price;
+                const itemSubtotal = quotedLine ? quotedLine.subtotal : (effectivePrice * item.quantity);
+                const priceChanged = quotedLine?.priceChanged;
+
                 return (
                   <motion.div
                     key={`${item.id}-${item.selectedSize}`}
@@ -122,12 +137,17 @@ export const Cart: React.FC = () => {
                       <div className="space-y-1.5">
                         <div className="flex justify-between items-start gap-2">
                           <Link to={`/product/${item.id}`}>
-                            <h3 className="font-serif text-sm sm:text-base font-medium text-[#1A1A1A] hover:text-[#7B1E2B] transition-colors truncate">
-                              {item.name}
-                            </h3>
+                            <div className="flex items-center gap-1.5">
+                              <h3 className="font-serif text-sm sm:text-base font-medium text-[#1A1A1A] hover:text-[#7B1E2B] transition-colors truncate">
+                                {item.name}
+                              </h3>
+                              {priceChanged && (
+                                <span className="text-[9px] font-bold text-[#C6A15B] bg-[#FDF4F5] px-1.5 py-0.5 rounded border border-[#C6A15B]/40 shrink-0">Updated</span>
+                              )}
+                            </div>
                           </Link>
                           <p className="text-sm sm:text-base font-bold text-[#1A1A1A] shrink-0">
-                            ₹{(item.price * item.quantity).toLocaleString('en-IN')}
+                            {formatPrice(itemSubtotal)}
                           </p>
                         </div>
 
@@ -138,7 +158,7 @@ export const Cart: React.FC = () => {
                             <span>Size: <strong className="text-[#1A1A1A]">{item.selectedSize}</strong></span>
                           )}
                           <span>·</span>
-                          <span>₹{item.price.toLocaleString('en-IN')} each</span>
+                          <span>{formatPrice(effectivePrice)} each</span>
                         </div>
                       </div>
 
@@ -178,10 +198,10 @@ export const Cart: React.FC = () => {
                 );
               })}
             </AnimatePresence>
-          </div>
+          </Reveal>
 
           {/* Right Column: Order Summary */}
-          <div className="w-full lg:w-[380px] shrink-0">
+          <Reveal variant="fromRight" className="w-full lg:w-[380px] shrink-0">
             <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#E8E5DF] shadow-xs space-y-6 sticky top-20">
               <h2 className="font-serif text-xl font-medium text-[#1A1A1A]">
                 Order Summary
@@ -190,12 +210,12 @@ export const Cart: React.FC = () => {
               <div className="space-y-3 text-xs sm:text-sm">
                 <div className="flex justify-between items-center text-[#6B7280]">
                   <span>Subtotal ({totalItems} items)</span>
-                  <span className="font-semibold text-[#1A1A1A]">₹{totalPrice.toLocaleString('en-IN')}</span>
+                  <span className="font-semibold text-[#1A1A1A]">{formatPrice(itemsTotal)}</span>
                 </div>
                 <div className="flex justify-between items-center text-[#6B7280]">
                   <span>Shipping</span>
-                  <span className={`font-semibold ${totalPrice >= FREE_SHIPPING_THRESHOLD ? 'text-[#15803D]' : 'text-[#1A1A1A]'}`}>
-                    {totalPrice >= FREE_SHIPPING_THRESHOLD ? 'FREE' : 'Calculated at checkout'}
+                  <span className={`font-semibold ${isFreeShipping ? 'text-[#15803D]' : 'text-[#1A1A1A]'}`}>
+                    {isFreeShipping ? 'FREE' : 'Calculated at checkout'}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-[#6B7280]">
@@ -204,7 +224,7 @@ export const Cart: React.FC = () => {
                 </div>
                 <div className="border-t border-[#E8E5DF] pt-3 flex justify-between items-center text-base sm:text-lg font-bold text-[#1A1A1A]">
                   <span>Estimated Total</span>
-                  <span>₹{totalPrice.toLocaleString('en-IN')}</span>
+                  <span>{formatPrice(cartQuote?.totals.grandTotal ?? itemsTotal)}</span>
                 </div>
               </div>
 
@@ -226,7 +246,7 @@ export const Cart: React.FC = () => {
                 </p>
                 <p className="flex items-center gap-2">
                   <RotateCcw size={14} className="text-[#7B1E2B] shrink-0" />
-                  <span>7-Day Hassle-Free Returns & Size Exchanges</span>
+                  <span>No returns (damaged or wrong items covered within 48h)</span>
                 </p>
                 <p className="flex items-center gap-2">
                   <Banknote size={14} className="text-[#7B1E2B] shrink-0" />
@@ -234,7 +254,7 @@ export const Cart: React.FC = () => {
                 </p>
               </div>
             </div>
-          </div>
+          </Reveal>
 
         </div>
 
