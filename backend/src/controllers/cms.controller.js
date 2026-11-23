@@ -100,6 +100,23 @@ class CmsController {
     const settings = await StoreSettings.findOne();
     return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, settings?.announcementBar || [], 'Announcements retrieved'));
   });
+
+  getAppVersion = asyncHandler(async (req, res) => {
+    const minVersion = process.env.APP_MIN_VERSION || '1.0.0';
+    const latestVersion = process.env.APP_LATEST_VERSION || '1.0.0';
+    const forceUpdate = process.env.APP_FORCE_UPDATE === 'true';
+
+    return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, {
+      minVersion,
+      latestVersion,
+      forceUpdate,
+      title: 'Sakshi Couture App Update Available',
+      message: 'A newer release of Sakshi Clothing is ready with heightened performance, smoother gestures, and fresh collections.',
+      releaseNotes: 'Refined native animations, enhanced secure checkout flow, and catalog optimizations.',
+      playStoreUrl: 'https://play.google.com/store/apps/details?id=store.sakshiclothing.customer',
+      appStoreUrl: 'https://apps.apple.com/app/sakshi-clothing/id1234567890'
+    }, 'App version metadata retrieved'));
+  });
 }
 
 export default new CmsController();

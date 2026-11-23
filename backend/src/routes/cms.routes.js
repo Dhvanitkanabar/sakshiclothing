@@ -10,6 +10,7 @@ const router = Router();
 
 // PUBLIC ROUTES
 router.get('/homepage', CmsController.getHomepageData);
+router.get('/app-version', CmsController.getAppVersion);
 
 // PROTECTED ADMIN ROUTES
 router.use(authenticate);

@@ -2,9 +2,28 @@ import { Router } from 'express';
 import Order from '../models/Order.model.js';
 import Product from '../models/Product.model.js';
 import Notification from '../models/Notification.model.js';
+import pushNotificationService from '../services/pushNotification.service.js';
 import { verifyJWT, authorizeRoles } from '../middlewares/auth.middleware.js';
 
 const router = Router();
+
+// Register native mobile device push token (FCM / APNs)
+router.post('/register-token', verifyJWT, async (req, res) => {
+  try {
+    const { token, platform } = req.body;
+    if (!token) {
+      return res.status(400).json({ success: false, message: 'Device token is required' });
+    }
+    const registered = await pushNotificationService.registerToken(req.user._id, token, platform || 'android');
+    return res.status(200).json({
+      success: true,
+      message: registered ? 'Device token registered successfully' : 'Failed to register device token'
+    });
+  } catch (error) {
+    console.error('Error registering push token:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error while registering token' });
+  }
+});
 
 // Customer Notifications (strictly authenticated to requesting customer)
 router.get('/customer', verifyJWT, async (req, res) => {

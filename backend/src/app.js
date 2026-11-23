@@ -145,7 +145,10 @@ const defaultAllowedOrigins = [
   'https://sakshi-clothing-admin.vercel.app',
   'http://localhost:5173',
   'http://localhost:3000',
-  'http://localhost:3001'
+  'http://localhost:3001',
+  'https://localhost',
+  'capacitor://localhost',
+  'http://localhost'
 ].filter(Boolean);
 
 const allowedOriginsList = Array.from(new Set([...envOrigins, ...defaultAllowedOrigins]));
@@ -159,6 +162,11 @@ const corsOptions = {
 
     // Check exact whitelist match
     if (allowedOriginsList.includes(origin)) {
+      return callback(null, true);
+    }
+
+    // Allow Capacitor mobile webview origins explicitly
+    if (origin === 'https://localhost' || origin === 'capacitor://localhost' || origin === 'http://localhost') {
       return callback(null, true);
     }
 
@@ -320,6 +328,10 @@ app.use('/api/v1/products', productRouter);
 app.use('/api/v1/categories', categoryRouter);
 
 app.use('/api/v1/cms', cmsRouter);
+app.get('/api/v1/app-version', (req, res, next) => {
+  req.url = '/app-version';
+  cmsRouter(req, res, next);
+});
 app.use('/api/v1/orders', orderRouter);
 app.use('/api/v1/reviews', reviewRouter);
 app.use('/api/v1/cart', cartRouter);

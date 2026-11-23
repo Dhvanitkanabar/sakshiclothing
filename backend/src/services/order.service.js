@@ -6,6 +6,7 @@ import User from '../models/User.model.js';
 import Payment from '../models/Payment.model.js';
 import AuditLog from '../models/AuditLog.model.js';
 import Notification from '../models/Notification.model.js';
+import pushNotificationService from './pushNotification.service.js';
 import { ApiError } from '../utils/ApiError.js';
 import { ORDER_STATUS, PAYMENT_STATUS } from '../constants/index.js';
 import { sendOrderConfirmationEmail, sendOrderRejectionEmail } from '../utils/emailService.js';
@@ -469,6 +470,13 @@ class OrderService {
           currentLocation: order.tracking.currentLocation
         }
       });
+
+      // Dispatch Native Push Notification to Customer's Devices
+      pushNotificationService.sendToUser(order.customer?._id || order.customer, {
+        title: 'Order Approved & Packing Initiated',
+        body: `Your order #${order.orderNumber} has been verified and approved!`,
+        data: { orderId: order._id.toString(), orderNumber: order.orderNumber, status: nextStatus }
+      }).catch(err => console.error('Push notification error:', err));
     } catch (notifErr) {
       console.error('Failed to create customer notification:', notifErr);
     }
@@ -686,6 +694,13 @@ class OrderService {
           currentLocation: order.tracking?.currentLocation
         }
       });
+
+      // Dispatch Native Push Notification
+      pushNotificationService.sendToUser(order.customer?._id || order.customer, {
+        title: `Order Update: ${status.replace(/_/g, ' ').toUpperCase()}`,
+        body: statusNote,
+        data: { orderId: order._id.toString(), orderNumber: order.orderNumber, status }
+      }).catch(err => console.error('Push notification error:', err));
     } catch (e) {
       console.error('Notification creation failed:', e);
     }

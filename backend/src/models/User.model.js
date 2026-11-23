@@ -73,6 +73,20 @@ const userSchema = new Schema(
       type: Boolean,
       default: false
     },
+    isDeleted: {
+      type: Boolean,
+      default: false
+    },
+    deletedAt: {
+      type: Date
+    },
+    deviceTokens: [
+      {
+        token: { type: String, required: true },
+        platform: { type: String, enum: ['android', 'ios', 'web'], default: 'android' },
+        updatedAt: { type: Date, default: Date.now }
+      }
+    ],
     lastLogin: {
       type: Date
     },
